@@ -5,7 +5,7 @@
             "src": "SHOPNIQ/wsgi.py",
             "use": "@vercel/python",
             "config": {
-                "maxLambdaSize": "50mb"
+                "maxLambdaSize": "150mb"
             }
         }
     ],
