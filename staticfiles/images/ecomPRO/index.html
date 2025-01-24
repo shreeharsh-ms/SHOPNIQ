@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Website Title</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/SplitText.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/EasePack.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/DrawSVGPlugin.min.js"></script>
+    <style>
+        /* Loading Screen Styles */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            overflow: hidden;
+            animation: gradientAnimation 5s ease infinite;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background: linear-gradient(135deg, #6a11cb, #2575fc); }
+            50% { background: linear-gradient(135deg, #2575fc, #6a11cb); }
+            100% { background: linear-gradient(135deg, #6a11cb, #2575fc); }
+        }
+
+        .loader {
+            width: 100px;
+            height: 100px;
+            border: 8px solid transparent;
+            border-top: 8px solid #00f; /* Gradient color */
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .progress {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            background: conic-gradient(#00f, #0ff);
+            clip-path: circle(50%);
+            transform: translate(-50%, -50%);
+        }
+
+        .loading-text {
+            position: absolute;
+            bottom: 20px;
+            font-size: 20px;
+            color: white;
+        }
+
+        #skip-loading {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        /* Hero Section Styles */
+        #hero {
+            display: none;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .hero-title {
+            font-size: 3em;
+            opacity: 0;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            object-fit: cover;
+            z-index: -1;
+            max-width: 600px;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .cta-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background-color: #2575fc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Footer Styles */
+        footer {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <div class="loader">
+            <div class="progress"></div>
+        </div>
+        <div class="loading-text">Loading...</div>
+        <button id="skip-loading">Skip</button>
+    </div>
+
+    <div id="main-content" style="display: none;">
+        <img src="https://templatefor.net/wp-content/uploads/2018/09/AW-515456415.jpg" alt="Hero Image" class="hero-image">
+        <div id="hero">
+            <h1 class="hero-title">Welcome to Your Website</h1>
+            <button class="cta-button">Get Started</button>
+        </div>
+        <footer>
+            <p>© 2023 Your Website. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // GSAP Animation for Loading Screen
+        const loadingScreen = document.getElementById('loading-screen');
+        const mainContent = document.getElementById('main-content');
+        const loader = document.querySelector('.loader');
+        const progress = document.querySelector('.progress');
+        const loadingText = document.querySelector('.loading-text');
+        const skipButton = document.getElementById('skip-loading');
+        const hero = document.getElementById('hero');
+        const heroTitle = document.querySelector('.hero-title');
+        const heroImage = document.querySelector('.hero-image');
+
+        // Typewriter Effect for Loading Text
+        function typeWriter(text, i, fnCallback) {
+            if (i < (text.length)) {
+                loadingText.innerHTML = text.substring(0, i + 1) + '<span aria-hidden="true"></span>';
+                setTimeout(function() {
+                    typeWriter(text, i + 1, fnCallback);
+                }, 100);
+            } else if (typeof fnCallback == 'function') {
+                setTimeout(fnCallback, 700);
+            }
+        }
+
+        typeWriter("Loading...", 0);
+
+        // Initial Loader Animation
+        gsap.fromTo(loader, { scale: 0 }, { scale: 1, duration: 1, ease: "bounce.out" });
+        gsap.to(loader, { rotation: 360, repeat: -1, duration: 2, ease: "none" });
+
+        // Progress Bar Animation
+        gsap.to(progress, {
+            duration: 3,
+            onUpdate: function() {
+                const progressValue = Math.round((this.progress() * 100));
+                loadingText.innerText = `Loading... ${progressValue}%`;
+                // Change loader color based on progress
+                const color = `hsl(${progressValue * 1.2}, 100%, 50%)`;
+                loader.style.borderTopColor = color;
+            },
+            onComplete: () => {
+                // Loading Completion Transition
+                gsap.to(loader, { scale: 0, opacity: 0, duration: 1 });
+                gsap.to(loadingScreen, { opacity: 0, duration: 1, onComplete: () => {
+                    loadingScreen.style.display = 'none';
+                    mainContent.style.display = 'block';
+                    gsap.from(mainContent, { opacity: 0, scale: 0.9, duration: 1 });
+                    // Hero Section Animation
+                    hero.style.display = 'block';
+                    gsap.to(heroTitle, { opacity: 1, y: 0, duration: 1, stagger: 0.2 });
+                    gsap.to(heroImage, { opacity: 1, y: 0, duration: 1, delay: 0.5 });
+                }});
+            }
+        });
+
+        // Skip Button Functionality
+        skipButton.addEventListener('click', () => {
+            loadingScreen.style.display = 'none';
+            mainContent.style.display = 'block';
+            hero.style.display = 'block';
+            gsap.from(mainContent, { opacity: 0, scale: 0.9, duration: 1 });
+        });
+    </script>
+</body>
+</html>

@@ -19,8 +19,15 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Static files settings
+# URL to serve static files
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Directory where static files will be collected
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Additional directories for static files (if any)
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
 
 
 
