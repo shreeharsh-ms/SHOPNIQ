@@ -13,23 +13,14 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 
 import os
-from pathlib import Path
-
-# Base directory
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Static files settings
-# URL to serve static files
 STATIC_URL = '/static/'
+BASE_DIR = Path(__file__).resolve().parent.parent
+# Define the static files directory
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
-# Directory where static files will be collected
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# Additional directories for static files (if any)
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
-
-
+# Directory where static files are collected
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
