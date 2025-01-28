@@ -20,12 +20,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
+
 ]
 
 # Security settings
 SECRET_KEY = 'django-insecure-+x8naul6gx88@97vxm+oxbbc5cc0y+-i3+ys)zvjzs=b2tq9af'
 DEBUG = False  # Ensure this is False in production
-ALLOWED_HOSTS = ['.vercel.app', 'localhost']  # Add your Vercel domain here
+ALLOWED_HOSTS = ['.vercel.app', '127.0.0.1', 'localhost']  # Add your Vercel domain here
 
 # Application definition
 INSTALLED_APPS = [
@@ -36,7 +38,49 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'APIs',
+    'rest_framework',
+    'django.contrib.sites',  # Required for social authentication
+    'rest_framework.authtoken',
+    'dj_rest_auth',
+    'social_django',  # Social authentication
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',  # Google OAuth Backend
+    'django.contrib.auth.backends.ModelBackend',  # Default authentication
+)
+
+# Google OAuth Settings
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '560213457682-udbg5k8su2oi3okvt2hlm42kl353jv9g.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+
+# REST Framework Auth
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+}
+
+SITE_ID = 1
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+ACCOUNT_AUTHENTICATED_REDIRECT_URL = '/'
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    }
+}
 
 ROOT_URLCONF = 'SHOPNIQ.urls'
 
@@ -81,3 +125,10 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+DEBUG = True
+
+# MongoDB Connection using PyMongo
+import pymongo
+
+MONGO_CLIENT = pymongo.MongoClient("mongodb://localhost:27017/")
+MONGO_DB = MONGO_CLIENT["shopniq_db"]

@@ -28,18 +28,18 @@
     <![endif]-->
 
     <!-- Document Title -->
-   <title>SHOPNIQ Account</title>
-<script src="https://unpkg.com/split-type"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
-<script src="{% static 'js/loader.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/loader.css' %}">
+    <title>SHOPNIQ Account</title>
+    <script src="https://unpkg.com/split-type"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
+    <script src="{% static 'js/loader.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'css/loader.css' %}">
 </head>
 
 <body>
     <div id="page">
         <div class="loader">
-          <div class="loader-text">Loading...</div>
+            <div class="loader-text">Loading...</div>
         </div>
     </div>
     {% include 'partials/navbar.html' %}
@@ -63,7 +63,8 @@
             <div class="tab-content pt-2" id="login_register_tab_content">
                 <div class="tab-pane fade show active" id="tab-item-login" role="tabpanel" aria-labelledby="login-tab">
                     <div class="login-form">
-                        <form name="login-form" class="needs-validation" novalidate="">
+                        <form name="login-form" class="needs-validation" novalidate="" action="/api/login/"
+                            method="POST">
                             <div class="form-floating mb-3">
                                 <input name="login_email" type="email" class="form-control form-control_gray"
                                     id="customerNameEmailInput1" placeholder="Email address *" required="">
@@ -85,10 +86,46 @@
                                     <label class="form-check-label text-secondary" for="flexCheckDefault1">Remember
                                         me</label>
                                 </div>
-                                <a href="{% static './reset_password.html' %}" class="btn-text ms-auto">Lost password?</a>
+                                <a href="{% static './reset_password.html' %}" class="btn-text ms-auto">Lost
+                                    password?</a>
                             </div>
 
                             <button class="btn btn-primary w-100 text-uppercase" type="submit">Log In</button>
+
+                            <!-- Google API -->
+                            <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+                            <!-- Google Login Button -->
+                            <div id="g_id_onload" data-client_id="560213457682-udbg5k8su2oi3okvt2hlm42kl353jv9g.apps.googleusercontent.com"
+                                 data-callback="handleCredentialResponse" data-auto_prompt="false">
+                            </div>
+                            
+                            <div class="g_id_signin" data-type="standard"></div>
+                            
+                            <script>
+                                function handleCredentialResponse(response) {
+                                    console.log("Google Token:", response.credential);
+                            
+                                    // Send token to backend
+                                    fetch("/api/auth/google/", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ access_token: response.credential }),
+                                    })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.session_id) {
+                                                localStorage.setItem("session_id", data.session_id);
+                                                localStorage.setItem("user", JSON.stringify(data.user));
+                                                window.location.href = "/"; // Redirect after login
+                                            } else {
+                                                alert("Google login failed!");
+                                            }
+                                        })
+                                        .catch(error => console.error("Error:", error));
+                                }
+                            </script>
+                            
 
                             <div class="customer-option mt-4 text-center">
                                 <span class="text-secondary">No account yet?</span>
@@ -99,9 +136,11 @@
                 </div>
                 <div class="tab-pane fade" id="tab-item-register" role="tabpanel" aria-labelledby="register-tab">
                     <div class="register-form">
-                        <form name="register-form" class="needs-validation" novalidate="">
+                        <form name="register-form" class="needs-validation" novalidate="" action="/api/register/"
+                            method="POST">
+                            {% csrf_token %}
                             <div class="form-floating mb-3">
-                                <input name="register_username" type="text" class="form-control form-control_gray"
+                                <input name="username" type="text" class="form-control form-control_gray"
                                     id="customerNameRegisterInput" placeholder="Username" required="">
                                 <label for="customerNameRegisterInput">Username</label>
                             </div>
@@ -109,7 +148,7 @@
                             <div class="pb-3"></div>
 
                             <div class="form-floating mb-3">
-                                <input name="register_email" type="email" class="form-control form-control_gray"
+                                <input name="email" type="email" class="form-control form-control_gray"
                                     id="customerEmailRegisterInput" placeholder="Email address *" required="">
                                 <label for="customerEmailRegisterInput">Email address *</label>
                             </div>
@@ -117,7 +156,7 @@
                             <div class="pb-3"></div>
 
                             <div class="form-floating mb-3">
-                                <input name="register_password" type="password" class="form-control form-control_gray"
+                                <input name="password" type="password" class="form-control form-control_gray"
                                     id="customerPasswodRegisterInput" placeholder="Password *" required="">
                                 <label for="customerPasswodRegisterInput">Password *</label>
                             </div>
@@ -129,6 +168,40 @@
                             </div>
 
                             <button class="btn btn-primary w-100 text-uppercase" type="submit">Register</button>
+
+                            <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+                            <!-- Google Login Button -->
+                            <div id="g_id_onload" data-client_id="560213457682-udbg5k8su2oi3okvt2hlm42kl353jv9g.apps.googleusercontent.com"
+                                data-callback="handleCredentialResponse" data-auto_prompt="false">
+                            </div>
+
+                            <div class="g_id_signin" data-type="standard"></div>
+
+                            <script>
+                                function handleCredentialResponse(response) {
+                                    console.log("Google Token:", response.credential);
+                            
+                                    // Send token to backend
+                                    fetch("/api/auth/google/", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ access_token: response.credential }),
+                                    })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.session_id) {
+                                                localStorage.setItem("session_id", data.session_id);
+                                                localStorage.setItem("user", JSON.stringify(data.user));
+                                                window.location.href = "/"; // Redirect after login
+                                            } else {
+                                                alert("Google login failed!");
+                                            }
+                                        })
+                                        .catch(error => console.error("Error:", error));
+                                }
+                            </script>
+
                         </form>
                     </div>
                 </div>
@@ -206,15 +279,19 @@
                 <div class="footer-column footer-menu mb-4 mb-lg-0">
                     <h6 class="sub-menu__title text-uppercase">Company</h6>
                     <ul class="sub-menu__list list-unstyled">
-                        <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">About Us</a>
+                        <li class="sub-menu__item"><a href="{% static './about.html' %}"
+                                class="menu-link menu-link_us-s">About Us</a>
                         </li>
-                        <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Careers</a>
+                        <li class="sub-menu__item"><a href="{% static './about.html' %}"
+                                class="menu-link menu-link_us-s">Careers</a>
                         </li>
                         <li class="sub-menu__item"><a href="{% static './about.html' %}"
                                 class="menu-link menu-link_us-s">Affiliates</a></li>
-                        <li class="sub-menu__item"><a href="{% static './blog_list1.html' %}" class="menu-link menu-link_us-s">Blog</a>
+                        <li class="sub-menu__item"><a href="{% static './blog_list1.html' %}"
+                                class="menu-link menu-link_us-s">Blog</a>
                         </li>
-                        <li class="sub-menu__item"><a href="{% static './contact.html' %}" class="menu-link menu-link_us-s">Contact
+                        <li class="sub-menu__item"><a href="{% static './contact.html' %}"
+                                class="menu-link menu-link_us-s">Contact
                                 Us</a></li>
                     </ul>
                 </div><!-- /.footer-column -->
@@ -222,14 +299,18 @@
                 <div class="footer-column footer-menu mb-4 mb-lg-0">
                     <h6 class="sub-menu__title text-uppercase">Shop</h6>
                     <ul class="sub-menu__list list-unstyled">
-                        <li class="sub-menu__item"><a href="{% static './shop2.html' %}" class="menu-link menu-link_us-s">New
+                        <li class="sub-menu__item"><a href="{% static './shop2.html' %}"
+                                class="menu-link menu-link_us-s">New
                                 Arrivals</a></li>
                         <li class="sub-menu__item"><a href="{% static './shop3.html' %}"
                                 class="menu-link menu-link_us-s">Accessories</a></li>
-                        <li class="sub-menu__item"><a href="{% static './shop4.html' %}" class="menu-link menu-link_us-s">Men</a></li>
-                        <li class="sub-menu__item"><a href="{% static './shop5.html' %}" class="menu-link menu-link_us-s">Women</a>
+                        <li class="sub-menu__item"><a href="{% static './shop4.html' %}"
+                                class="menu-link menu-link_us-s">Men</a></li>
+                        <li class="sub-menu__item"><a href="{% static './shop5.html' %}"
+                                class="menu-link menu-link_us-s">Women</a>
                         </li>
-                        <li class="sub-menu__item"><a href="{% static './shop1.html' %}" class="menu-link menu-link_us-s">Shop All</a>
+                        <li class="sub-menu__item"><a href="{% static './shop1.html' %}"
+                                class="menu-link menu-link_us-s">Shop All</a>
                         </li>
                     </ul>
                 </div><!-- /.footer-column -->
@@ -237,17 +318,22 @@
                 <div class="footer-column footer-menu mb-4 mb-lg-0">
                     <h6 class="sub-menu__title text-uppercase">Help</h6>
                     <ul class="sub-menu__list list-unstyled">
-                        <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Customer
+                        <li class="sub-menu__item"><a href="{% static './about.html' %}"
+                                class="menu-link menu-link_us-s">Customer
                                 Service</a></li>
                         <li class="sub-menu__item"><a href="{% static './account_dashboard.html' %}"
                                 class="menu-link menu-link_us-s">My Account</a></li>
-                        <li class="sub-menu__item"><a href="{% static './store_location.html' %}" class="menu-link menu-link_us-s">Find
+                        <li class="sub-menu__item"><a href="{% static './store_location.html' %}"
+                                class="menu-link menu-link_us-s">Find
                                 a Store</a></li>
-                        <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Legal &
+                        <li class="sub-menu__item"><a href="{% static './about.html' %}"
+                                class="menu-link menu-link_us-s">Legal &
                                 Privacy</a></li>
-                        <li class="sub-menu__item"><a href="{% static './contact.html' %}" class="menu-link menu-link_us-s">Contact</a>
+                        <li class="sub-menu__item"><a href="{% static './contact.html' %}"
+                                class="menu-link menu-link_us-s">Contact</a>
                         </li>
-                        <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Gift Card</a>
+                        <li class="sub-menu__item"><a href="{% static './about.html' %}"
+                                class="menu-link menu-link_us-s">Gift Card</a>
                         </li>
                     </ul>
                 </div><!-- /.footer-column -->
@@ -265,7 +351,8 @@
                     <div class="mt-4 pt-3">
                         <strong class="fw-medium">Secure payments</strong>
                         <p class="mt-2">
-                            <img loading="lazy" src="{% static 'images/payment-options.png' %}" alt="Acceptable payment gateways">
+                            <img loading="lazy" src="{% static 'images/payment-options.png' %}"
+                                alt="Acceptable payment gateways">
                         </p>
                     </div>
                 </div><!-- /.footer-column -->
@@ -354,11 +441,13 @@
             <div class="cart-drawer-item d-flex position-relative">
                 <div class="position-relative">
                     <a href="{% static './product1_simple.html' %}">
-                        <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-1.jpg' %}" alt="">
+                        <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-1.jpg' %}"
+                            alt="">
                     </a>
                 </div>
                 <div class="cart-drawer-item__info flex-grow-1">
-                    <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Zessi Dresses</a>
+                    <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Zessi
+                            Dresses</a>
                     </h6>
                     <p class="cart-drawer-item__option text-secondary">Color: Yellow</p>
                     <p class="cart-drawer-item__option text-secondary">Size: L</p>
@@ -381,11 +470,13 @@
             <div class="cart-drawer-item d-flex position-relative">
                 <div class="position-relative">
                     <a href="{% static './product1_simple.html' %}">
-                        <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-2.jpg' %}" alt="">
+                        <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-2.jpg' %}"
+                            alt="">
                     </a>
                 </div>
                 <div class="cart-drawer-item__info flex-grow-1">
-                    <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Kirby T-Shirt</a>
+                    <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Kirby
+                            T-Shirt</a>
                     </h6>
                     <p class="cart-drawer-item__option text-secondary">Color: Black</p>
                     <p class="cart-drawer-item__option text-secondary">Size: XS</p>
@@ -408,11 +499,13 @@
             <div class="cart-drawer-item d-flex position-relative">
                 <div class="position-relative">
                     <a href="{% static './product1_simple.html' %}">
-                        <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-3.jpg' %}" alt="">
+                        <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-3.jpg' %}"
+                            alt="">
                     </a>
                 </div>
                 <div class="cart-drawer-item__info flex-grow-1">
-                    <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Cableknit Shawl</a>
+                    <h6 class="cart-drawer-item__title fw-normal"><a
+                            href="{% static './product1_simple.html' %}">Cableknit Shawl</a>
                     </h6>
                     <p class="cart-drawer-item__option text-secondary">Color: Green</p>
                     <p class="cart-drawer-item__option text-secondary">Size: L</p>
@@ -592,7 +685,8 @@
                                                         <a href="#" class="menu-link menu-link_us-s">Bags</a>
                                                     </li>
                                                     <li class="sub-menu__item">
-                                                        <a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Gift
+                                                        <a href="{% static './about.html' %}"
+                                                            class="menu-link menu-link_us-s">Gift
                                                             Card</a>
                                                     </li>
                                                 </ul><!-- /.sub-menu -->
@@ -635,7 +729,8 @@
                                                             Hoodies</a>
                                                     </li>
                                                     <li class="sub-menu__item">
-                                                        <a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Gift
+                                                        <a href="{% static './about.html' %}"
+                                                            class="menu-link menu-link_us-s">Gift
                                                             Card</a>
                                                     </li>
                                                     <li class="sub-menu__item">
@@ -665,7 +760,8 @@
                                                 aria-labelledby="tab-item-3-tab">
                                                 <ul class="sub-menu list-unstyled">
                                                     <li class="sub-menu__item">
-                                                        <a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Gift
+                                                        <a href="{% static './about.html' %}"
+                                                            class="menu-link menu-link_us-s">Gift
                                                             Card</a>
                                                     </li>
                                                     <li class="sub-menu__item">

@@ -88,6 +88,14 @@
 
 
 <body>
+  {% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
   <div class="custom-cursor">
     <svg viewBox="0 0 120 120" class="circle-svg">
       <path id="circlePath" d="M 60,60 m -50,0 a 50,50 0 1,1 100,0 a 50,50 0 1,1 -100,0"></path>
@@ -371,7 +379,7 @@
 
       <div class="logo">
         <a href="{% static './index.html' %}">
-          <img src="{% static 'images/logo.png' %}" alt="Uomo" class="logo__image d-block">
+          <img src="{% static 'images/Shopniq_logo.png' %}" alt="Uomo" class="logo__image d-block">
         </a>
       </div><!-- /.logo -->
 
