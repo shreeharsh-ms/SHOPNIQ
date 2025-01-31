@@ -26,20 +26,20 @@ from SHOPNIQ import settings
 
 ist = pytz.timezone('Asia/Kolkata')
 
-# MongoDB setup
-client = pymongo.MongoClient("mongodb+srv://shree:Y2qK9yW21YLMQCUT@cluster0.4evpu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
-db = client["shopniq_db"]
-login_sessions = db["login_sessions"]
+# # MongoDB setup
+# client = pymongo.MongoClient("mongodb+srv://shree:Y2qK9yW21YLMQCUT@cluster0.4evpu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+# db = client["shopniq_db"]
+# login_sessions = db["login_sessions"]
 
-try:
-    # Test MongoDB connection
-    products_collection = db["products"]
+# try:
+#     # Test MongoDB connection
+#     products_collection = db["products"]
     
-    # Try to fetch one product
-    test_product = products_collection.find_one()
-    print("Test MongoDB Connection:", test_product)
-except Exception as e:
-    print("MongoDB Connection Error:", str(e))
+#     # Try to fetch one product
+#     test_product = products_collection.find_one()
+#     print("Test MongoDB Connection:", test_product)
+# except Exception as e:
+#     print("MongoDB Connection Error:", str(e))
 
 
 @csrf_exempt
@@ -174,40 +174,40 @@ def register_page(request):
 
 
 def index(request):
-    print("Index view called!")  # Debug print 1
-    try:
-        # Fetch all active products and sort by date
-        print("Attempting to fetch products...")  # Debug print 2
-        products = list(products_collection.find())
-        print("Raw products from DB:", products)  # Debug print 3
+    # print("Index view called!")  # Debug print 1
+    # try:
+    #     # Fetch all active products and sort by date
+    #     print("Attempting to fetch products...")  # Debug print 2
+    #     products = list(products_collection.find())
+    #     print("Raw products from DB:", products)  # Debug print 3
 
-        # Process each product
-        processed_products = []
-        for product in products:
-            processed_product = {
-                "id": str(product["_id"]),
-                "name": product.get("name", ""),
-                "category": product.get("category", ""),
-                "price": product.get("price", 0),
-                "discounted_price": product.get("discounted_price", 0),
-                "image_url": product.get("image_url", ""),
-                "image_url_alt": product.get("image_url_alt", ""),
-                "description": product.get("description", ""),
-                "status": product.get("status", "active"),
-                "created_at": product.get("created_at", ""),
-                "updated_at": product.get("updated_at", "")
-            }
-            processed_products.append(processed_product)
+    #     # Process each product
+    #     processed_products = []
+    #     for product in products:
+    #         processed_product = {
+    #             "id": str(product["_id"]),
+    #             "name": product.get("name", ""),
+    #             "category": product.get("category", ""),
+    #             "price": product.get("price", 0),
+    #             "discounted_price": product.get("discounted_price", 0),
+    #             "image_url": product.get("image_url", ""),
+    #             "image_url_alt": product.get("image_url_alt", ""),
+    #             "description": product.get("description", ""),
+    #             "status": product.get("status", "active"),
+    #             "created_at": product.get("created_at", ""),
+    #             "updated_at": product.get("updated_at", "")
+    #         }
+    #         processed_products.append(processed_product)
 
-        context = {
-            "products": processed_products,
-            "categories": list(products_collection.distinct("category"))
-        }
-        print("\n\n\n\n\n\n\n\nFinal context:", context)  # Debug print 4
+    #     context = {
+    #         "products": processed_products,
+    #         "categories": list(products_collection.distinct("category"))
+    #     }
+    #     print("\n\n\n\n\n\n\n\nFinal context:", context)  # Debug print 4
         
-        return render(request, "Home/index.html", context)
-    except Exception as e:
-        print(f"Error in index view: {str(e)}")  # Debug print 5
+    #     return render(request, "Home/index.html", context)
+    # except Exception as e:
+    #     print(f"Error in index view: {str(e)}")  # Debug print 5
         return render(request, "Home/index.html", {"message": "Unable to fetch products"})
 
 
