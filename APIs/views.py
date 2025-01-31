@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from APIs.mongodb import MongoDBUser  # Import MongoDB Helper
+# from APIs.mongodb import MongoDBUser  # Import MongoDB Helper
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
@@ -112,7 +112,7 @@ def logout_user(request):
 
 ist = pytz.timezone('Asia/Kolkata')
 
-users_collection = settings.MONGO_DB["users"]
+# users_collection = settings.MONGO_DB["users"]
 # @api_view(['POST'])
 # @psa('social:complete')
 # def google_auth(request):
@@ -259,7 +259,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
 # MongoDB products collection
-products_collection = settings.MONGO_DB["products"]
+# products_collection = settings.MONGO_DB["products"]
 
 # API to add a new product to MongoDB
 @api_view(['POST'])
@@ -478,20 +478,20 @@ def get_unavailable_products(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 #########################################################################################################################################
-def get_product_by_id(product_id):
-    products_collection = settings.MONGO_DB["products"]
-    product = products_collection.find_one({"_id": ObjectId(product_id)})
+# def get_product_by_id(product_id):
+#     products_collection = settings.MONGO_DB["products"]
+#     product = products_collection.find_one({"_id": ObjectId(product_id)})
 
-    if product:
-        return {
-            "name": product["name"],
-            "description": product["description"],
-            "original_price": product["original_price"],
-            "discounted_price": product["discounted_price"],
-            "discount": product["discount"],
-            "image_url": product["image_url"],
-        }
-    return None
+#     if product:
+#         return {
+#             "name": product["name"],
+#             "description": product["description"],
+#             "original_price": product["original_price"],
+#             "discounted_price": product["discounted_price"],
+#             "discount": product["discount"],
+#             "image_url": product["image_url"],
+#         }
+#     return None
 
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
@@ -501,7 +501,7 @@ import json
 from bson import ObjectId
 
 # MongoDB collections
-cart_collection = settings.MONGO_DB["cart"]
+# cart_collection = settings.MONGO_DB["cart"]
 
 @api_view(['POST'])
 def add_to_cart(request):
@@ -555,7 +555,7 @@ def update_cart_total_price(cart):
     cart_collection.update_one({"_id": cart["_id"]}, {"$set": {"total_price": total_price}})
 
 # Place Order API
-orders_collection = settings.MONGO_DB["orders"]
+# orders_collection = settings.MONGO_DB["orders"]
 
 @api_view(['POST'])
 def place_order(request):
