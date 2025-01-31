@@ -3,9 +3,10 @@
     "builds": [
         {
             "src": "SHOPNIQ/wsgi.py",
-            "use": "@vercel/python",
+            "use": "@vercel/python-server",
             "config": {
-                "maxLambdaSize": "150mb"
+                "maxLambdaSize": "150mb",
+                "maxDuration": 120
             }
         }
     ],
