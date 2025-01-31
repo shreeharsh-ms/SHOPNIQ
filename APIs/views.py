@@ -13,6 +13,13 @@ import pytz
 from bson.objectid import ObjectId
 from django.conf import settings
 from django.http import Http404
+from social_django.utils import psa
+from django.contrib.auth import login
+from datetime import datetime
+import pytz
+from django.http import JsonResponse
+import requests
+from SHOPNIQ import settings
 
 # Y2qK9yW21YLMQCUT
 # daredevilgamerdream
@@ -103,46 +110,38 @@ def logout_user(request):
         # If there's an error (e.g., MongoDB connection issue)
         return Response({"error": str(e)}, status=500)
 
-from social_django.utils import psa
-from django.contrib.auth import login
-from datetime import datetime
-import pytz
-from django.http import JsonResponse
-import requests
-from SHOPNIQ import settings
-
 ist = pytz.timezone('Asia/Kolkata')
 
 users_collection = settings.MONGO_DB["users"]
-@api_view(['POST'])
-@psa('social:complete')
-def google_auth(request):
-    import json
-    body = json.loads(request.body.decode('utf-8'))
-    access_token = body.get("access_token")
+# @api_view(['POST'])
+# @psa('social:complete')
+# def google_auth(request):
+#     import json
+#     body = json.loads(request.body.decode('utf-8'))
+#     access_token = body.get("access_token")
 
-    if not access_token:
-        return JsonResponse({"error": "Missing access token"}, status=400)
+#     if not access_token:
+#         return JsonResponse({"error": "Missing access token"}, status=400)
 
-    google_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={access_token}"
-    response = requests.get(google_url)
+#     google_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={access_token}"
+#     response = requests.get(google_url)
     
-    if response.status_code != 200:
-        return JsonResponse({"error": "Invalid token"}, status=400)
+#     if response.status_code != 200:
+#         return JsonResponse({"error": "Invalid token"}, status=400)
     
-    user_info = response.json()
-    email = user_info["email"]
-    username = user_info["name"]
+#     user_info = response.json()
+#     email = user_info["email"]
+#     username = user_info["name"]
 
-    session_data = {
-        "email": email,
-        "username": username,
-        "login_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "logout_time": None
-    }
+#     session_data = {
+#         "email": email,
+#         "username": username,
+#         "login_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+#         "logout_time": None
+#     }
 
-    session_id = login_sessions.insert_one(session_data).inserted_id
-    return JsonResponse({"session_id": str(session_id), "user": session_data})
+#     session_id = login_sessions.insert_one(session_data).inserted_id
+#     return JsonResponse({"session_id": str(session_id), "user": session_data})
 
 @api_view(['GET'])
 def get_user_login_sessions(request, user_id):
