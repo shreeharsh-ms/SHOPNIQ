@@ -139,5 +139,7 @@ DEBUG = True
 # MongoDB Connection using PyMongo
 import pymongo
 
-MONGO_CLIENT = pymongo.MongoClient("mongodb://localhost:27017/")
+MONGO_URI= "mongodb+srv://shree:Y2qK9yW21YLMQCUT@cluster0.4evpu.mongodb.net/?retryWrites=true&w=majority"
+
+MONGO_CLIENT = pymongo.MongoClient(MONGO_URI)
 MONGO_DB = MONGO_CLIENT["shopniq_db"]

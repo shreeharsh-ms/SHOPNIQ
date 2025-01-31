@@ -14,10 +14,13 @@ from bson.objectid import ObjectId
 from django.conf import settings
 from django.http import Http404
 
+# Y2qK9yW21YLMQCUT
+# daredevilgamerdream
+
 ist = pytz.timezone('Asia/Kolkata')
 
 # MongoDB setup
-client = pymongo.MongoClient("mongodb://localhost:27017/")
+client = pymongo.MongoClient("mongodb+srv://shree:Y2qK9yW21YLMQCUT@cluster0.4evpu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 db = client["shopniq_db"]
 login_sessions = db["login_sessions"]
 
