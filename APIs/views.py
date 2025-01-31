@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-# from APIs.mongodb import MongoDBUser  # Import MongoDB Helper
+from APIs.mongodb import MongoDBUser  # Import MongoDB Helper
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
@@ -13,33 +13,27 @@ import pytz
 from bson.objectid import ObjectId
 from django.conf import settings
 from django.http import Http404
-from social_django.utils import psa
-from django.contrib.auth import login
-from datetime import datetime
-import pytz
-from django.http import JsonResponse
-import requests
-from SHOPNIQ import settings
 
 # Y2qK9yW21YLMQCUT
 # daredevilgamerdream
 
 ist = pytz.timezone('Asia/Kolkata')
 
-# # MongoDB setup
-# client = pymongo.MongoClient("mongodb+srv://shree:Y2qK9yW21YLMQCUT@cluster0.4evpu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
-# db = client["shopniq_db"]
-# login_sessions = db["login_sessions"]
+# MongoDB setup
+client = pymongo.MongoClient("mongodb+srv://shree:Y2qK9yW21YLMQCUT@cluster0.4evpu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 
-# try:
-#     # Test MongoDB connection
-#     products_collection = db["products"]
+db = client["shopniq_db"]
+login_sessions = db["login_sessions"]
+
+try:
+    # Test MongoDB connection
+    products_collection = db["products"]
     
-#     # Try to fetch one product
-#     test_product = products_collection.find_one()
-#     print("Test MongoDB Connection:", test_product)
-# except Exception as e:
-#     print("MongoDB Connection Error:", str(e))
+    # Try to fetch one product
+    test_product = products_collection.find_one()
+    print("Test MongoDB Connection:", test_product)
+except Exception as e:
+    print("MongoDB Connection Error:", str(e))
 
 
 @csrf_exempt
@@ -110,38 +104,46 @@ def logout_user(request):
         # If there's an error (e.g., MongoDB connection issue)
         return Response({"error": str(e)}, status=500)
 
+from social_django.utils import psa
+from django.contrib.auth import login
+from datetime import datetime
+import pytz
+from django.http import JsonResponse
+import requests
+from SHOPNIQ import settings
+
 ist = pytz.timezone('Asia/Kolkata')
 
-# users_collection = settings.MONGO_DB["users"]
-# @api_view(['POST'])
-# @psa('social:complete')
-# def google_auth(request):
-#     import json
-#     body = json.loads(request.body.decode('utf-8'))
-#     access_token = body.get("access_token")
+users_collection = settings.MONGO_DB["users"]
+@api_view(['POST'])
+@psa('social:complete')
+def google_auth(request):
+    import json
+    body = json.loads(request.body.decode('utf-8'))
+    access_token = body.get("access_token")
 
-#     if not access_token:
-#         return JsonResponse({"error": "Missing access token"}, status=400)
+    if not access_token:
+        return JsonResponse({"error": "Missing access token"}, status=400)
 
-#     google_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={access_token}"
-#     response = requests.get(google_url)
+    google_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={access_token}"
+    response = requests.get(google_url)
     
-#     if response.status_code != 200:
-#         return JsonResponse({"error": "Invalid token"}, status=400)
+    if response.status_code != 200:
+        return JsonResponse({"error": "Invalid token"}, status=400)
     
-#     user_info = response.json()
-#     email = user_info["email"]
-#     username = user_info["name"]
+    user_info = response.json()
+    email = user_info["email"]
+    username = user_info["name"]
 
-#     session_data = {
-#         "email": email,
-#         "username": username,
-#         "login_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-#         "logout_time": None
-#     }
+    session_data = {
+        "email": email,
+        "username": username,
+        "login_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "logout_time": None
+    }
 
-#     session_id = login_sessions.insert_one(session_data).inserted_id
-#     return JsonResponse({"session_id": str(session_id), "user": session_data})
+    session_id = login_sessions.insert_one(session_data).inserted_id
+    return JsonResponse({"session_id": str(session_id), "user": session_data})
 
 @api_view(['GET'])
 def get_user_login_sessions(request, user_id):
@@ -174,40 +176,40 @@ def register_page(request):
 
 
 def index(request):
-    # print("Index view called!")  # Debug print 1
-    # try:
-    #     # Fetch all active products and sort by date
-    #     print("Attempting to fetch products...")  # Debug print 2
-    #     products = list(products_collection.find())
-    #     print("Raw products from DB:", products)  # Debug print 3
+    print("Index view called!")  # Debug print 1
+    try:
+        # Fetch all active products and sort by date
+        print("Attempting to fetch products...")  # Debug print 2
+        products = list(products_collection.find())
+        print("Raw products from DB:", products)  # Debug print 3
 
-    #     # Process each product
-    #     processed_products = []
-    #     for product in products:
-    #         processed_product = {
-    #             "id": str(product["_id"]),
-    #             "name": product.get("name", ""),
-    #             "category": product.get("category", ""),
-    #             "price": product.get("price", 0),
-    #             "discounted_price": product.get("discounted_price", 0),
-    #             "image_url": product.get("image_url", ""),
-    #             "image_url_alt": product.get("image_url_alt", ""),
-    #             "description": product.get("description", ""),
-    #             "status": product.get("status", "active"),
-    #             "created_at": product.get("created_at", ""),
-    #             "updated_at": product.get("updated_at", "")
-    #         }
-    #         processed_products.append(processed_product)
+        # Process each product
+        processed_products = []
+        for product in products:
+            processed_product = {
+                "id": str(product["_id"]),
+                "name": product.get("name", ""),
+                "category": product.get("category", ""),
+                "price": product.get("price", 0),
+                "discounted_price": product.get("discounted_price", 0),
+                "image_url": product.get("image_url", ""),
+                "image_url_alt": product.get("image_url_alt", ""),
+                "description": product.get("description", ""),
+                "status": product.get("status", "active"),
+                "created_at": product.get("created_at", ""),
+                "updated_at": product.get("updated_at", "")
+            }
+            processed_products.append(processed_product)
 
-    #     context = {
-    #         "products": processed_products,
-    #         "categories": list(products_collection.distinct("category"))
-    #     }
-    #     print("\n\n\n\n\n\n\n\nFinal context:", context)  # Debug print 4
+        context = {
+            "products": processed_products,
+            "categories": list(products_collection.distinct("category"))
+        }
+        print("\n\n\n\n\n\n\n\nFinal context:", context)  # Debug print 4
         
-    #     return render(request, "Home/index.html", context)
-    # except Exception as e:
-    #     print(f"Error in index view: {str(e)}")  # Debug print 5
+        return render(request, "Home/index.html", context)
+    except Exception as e:
+        print(f"Error in index view: {str(e)}")  # Debug print 5
         return render(request, "Home/index.html", {"message": "Unable to fetch products"})
 
 
@@ -259,7 +261,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
 # MongoDB products collection
-# products_collection = settings.MONGO_DB["products"]
+products_collection = settings.MONGO_DB["products"]
 
 # API to add a new product to MongoDB
 @api_view(['POST'])
@@ -478,20 +480,20 @@ def get_unavailable_products(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 #########################################################################################################################################
-# def get_product_by_id(product_id):
-#     products_collection = settings.MONGO_DB["products"]
-#     product = products_collection.find_one({"_id": ObjectId(product_id)})
+def get_product_by_id(product_id):
+    products_collection = settings.MONGO_DB["products"]
+    product = products_collection.find_one({"_id": ObjectId(product_id)})
 
-#     if product:
-#         return {
-#             "name": product["name"],
-#             "description": product["description"],
-#             "original_price": product["original_price"],
-#             "discounted_price": product["discounted_price"],
-#             "discount": product["discount"],
-#             "image_url": product["image_url"],
-#         }
-#     return None
+    if product:
+        return {
+            "name": product["name"],
+            "description": product["description"],
+            "original_price": product["original_price"],
+            "discounted_price": product["discounted_price"],
+            "discount": product["discount"],
+            "image_url": product["image_url"],
+        }
+    return None
 
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
@@ -501,7 +503,7 @@ import json
 from bson import ObjectId
 
 # MongoDB collections
-# cart_collection = settings.MONGO_DB["cart"]
+cart_collection = settings.MONGO_DB["cart"]
 
 @api_view(['POST'])
 def add_to_cart(request):
@@ -555,7 +557,7 @@ def update_cart_total_price(cart):
     cart_collection.update_one({"_id": cart["_id"]}, {"$set": {"total_price": total_price}})
 
 # Place Order API
-# orders_collection = settings.MONGO_DB["orders"]
+orders_collection = settings.MONGO_DB["orders"]
 
 @api_view(['POST'])
 def place_order(request):
