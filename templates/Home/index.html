@@ -13,7 +13,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/ScrollToPlugin.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  sc
+  <script src="{% static 'js/cart.js' %}"></script>
+
+  
 
 
   <!-- Fonts -->
@@ -383,7 +385,7 @@
       </a>
 
       <div class="logo">
-        <a href="{% static './index.html' %}">
+        <a href="{% url 'index' %}">
           <img src="{% static 'images/Shopniq_logo.png' %}" alt="Uomo" class="logo__image d-block">
         </a>
       </div><!-- /.logo -->
@@ -426,6 +428,7 @@
                   class="ms-auto" width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
                   <use href="#icon_next_sm"></use>
                 </svg></a>
+
             </li>
             <li class="navigation__item">
               <a href="{% url 'item_sort' %}" class="navigation__link js-nav-right d-flex align-items-center">Shop<svg
@@ -536,10 +539,11 @@
     <div class="container" style="min-width: 95%;">
       <div class="header-desk header-desk_type_1">
         <div class="logo">
-          <a href="{% static './index.html' %}">
+          <a href="{% url 'index' %}">
             <img src="{% static 'images/logo.png' %}" alt="Uomo" class="logo__image d-block">
           </a>
         </div><!-- /.logo -->
+
 
         <nav class="navigation">
           <ul class="navigation__list list-unstyled d-flex">
@@ -547,6 +551,7 @@
               <a href="{% url 'index' %}" class="navigation__link">Home</a>
             </li>
             <li class="navigation__item">
+
               <a href="{% url 'item_sort' %}" class="navigation__link">Shop</a>
             </li>
             <li class="navigation__item">
@@ -803,10 +808,21 @@
                                              alt="{{ product.name }}" class="pc__img pc__img-second">
                                     {% endif %}
                                 </a>
-                                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside"
-                                        data-aside="cartDrawer" data-product-id="{{ product.id }}" title="Add To Cart">
-                                    Add To Cart
+                                {% if product.stock > 0 %}
+                                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside btn-primary"
+                                        data-aside="cartDrawer" 
+                                        data-product-id="{{ product.id }}" 
+                                        title="Add To Cart"
+                                        type="submit">
+                                    Add To Cart 
                                 </button>
+                              {% else %}
+                                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium btn-secondary"
+                                        disabled
+                                        title="Out of Stock">
+                                    Out of Stock
+                                </button>
+                              {% endif %}
                             </div>
 
                             <div class="pc__info position-relative">
@@ -814,8 +830,9 @@
                                 <h6 class="pc__title"><a href="#">{{ product.name }}</a></h6>
                                 <div class="product-card__price d-flex">
                                     {% if product.discounted_price < product.price %}
-                                        <span class="money price price_old">${{ product.price }}</span>
-                                        <span class="money price price_discount">${{ product.discounted_price }}</span>
+                                    <span class="money price price-sale">${{ product.discounted_price }}</span>
+                                    <!-- <span class="money price price_discount">${{ product.discounted_price }}</span> -->
+                                        <span class="money price price-old">${{ product.price }}</span>
                                     {% else %}
                                         <span class="money price">${{ product.price }}</span>
                                     {% endif %}
@@ -1222,93 +1239,11 @@
                 </div>
               </div>
             </div>
-
-            <div class="col-6 col-md-4 col-lg-3">
-              <div class="product-card mb-3 mb-md-4 mb-xxl-5">
-                <div class="pc__img-wrapper">
-                  <a href="{% static './product1_simple.html' %}">
-                    <img loading="lazy" src="{% static 'images/product_1.jpg' %}" width="330" height="400"
-                      alt="Cropped Faux leather Jacket" class="pc__img">
-                    <img loading="lazy" src="{% static 'images/product_1-1.jpg' %}" width="330" height="400"
-                      alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
-                  </a>
-                  <button
-                    class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside"
-                    data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
-                </div>
-
-                <div class="pc__info position-relative">
-                  <p class="pc__category">Dresses</p>
-                  <h6 class="pc__title"><a href="{% static './product1_simple.html' %}">Cropped Faux Leather Jacket</a>
-                  </h6>
-                  <div class="product-card__price d-flex">
-                    <span class="money price">$29</span>
-                  </div>
-                  <div class="product-card__review d-flex align-items-center">
-                    <div class="reviews-group d-flex">
-                      <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
-                        <use href="#icon_star"></use>
-                      </svg>
-                      <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
-                        <use href="#icon_star"></use>
-                      </svg>
-                      <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
-                        <use href="#icon_star"></use>
-                      </svg>
-                      <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
-                        <use href="#icon_star"></use>
-                      </svg>
-                      <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
-                        <use href="#icon_star"></use>
-                      </svg>
-                    </div>
-                    <span class="reviews-note text-lowercase text-secondary ms-1">8k+ reviews</span>
-                  </div>
-
-                  <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist"
-                    title="Add To Wishlist">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <use href="#icon_heart"></use>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-6 col-md-4 col-lg-3">
-              <div class="product-card mb-3 mb-md-4 mb-xxl-5">
-                <div class="pc__img-wrapper">
-                  <a href="{% static './product1_simple.html' %}">
-                    <img loading="lazy" src="{% static 'images/product_2.jpg' %}" width="330" height="400"
-                      alt="Cropped Faux leather Jacket" class="pc__img">
-                    <img loading="lazy" src="{% static 'images/product_2-1.jpg' %}" width="330" height="400"
-                      alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
-                  </a>
-                  <button
-                    class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside"
-                    data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
-                </div>
-
-                <div class="pc__info position-relative">
-                  <p class="pc__category">Dresses</p>
-                  <h6 class="pc__title"><a href="{% static './product1_simple.html' %}">Calvin Shorts</a></h6>
-                  <div class="product-card__price d-flex">
-                    <span class="money price">$62</span>
-                  </div>
-
-                  <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist"
-                    title="Add To Wishlist">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <use href="#icon_heart"></use>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
           </div><!-- /.row -->
           <div class="text-center mt-2">
-            <a class="btn-link btn-link_lg default-underline default-underline text-uppercase fw-medium" href="#">See
-              All Products</a>
+            <a class="btn-link btn-link_lg default-underline text-uppercase fw-medium"
+              href="{% static './shop1.html' %}">Discover
+              More</a>
           </div>
         </div><!-- /.tab-pane fade show-->
 
@@ -2186,10 +2121,11 @@
       <div class="row row-cols-lg-5 row-cols-2">
         <div class="footer-column footer-store-info col-12 mb-4 mb-lg-0">
           <div class="logo">
-            <a href="{% static './index.html' %}">
+            <a href="{% url 'index' %}">
               <img src="{% static 'images/logo.png' %}" alt="Uomo" class="logo__image d-block">
             </a>
           </div><!-- /.logo -->
+
           <p class="footer-address">1418 River Drive, Suite 35 Cottonhall, CA 9622 United States</p>
 
           <p class="m-0">
@@ -2470,98 +2406,68 @@
   <!-- Cart Drawer -->
   <div class="aside aside_right overflow-hidden cart-drawer" id="cartDrawer">
     <div class="aside-header d-flex align-items-center">
-      <h3 class="text-uppercase fs-6 mb-0">SHOPPING BAG ( <span class="cart-amount js-cart-items-count">1</span> ) </h3>
+      <h3 class="text-uppercase fs-6 mb-0">SHOPPING BAG ( <span class="cart-amount js-cart-items-count">{{ cart_items_count|default:0 }}</span> ) </h3>
       <button class="btn-close-lg js-close-aside btn-close-aside ms-auto"></button>
     </div><!-- /.aside-header -->
 
     <div class="aside-content cart-drawer-items-list">
-      <div class="cart-drawer-item d-flex position-relative">
-        <div class="position-relative">
-          <a href="{% static './product1_simple.html' %}">
-            <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-1.jpg' %}" alt="">
-          </a>
-        </div>
-        <div class="cart-drawer-item__info flex-grow-1">
-          <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Zessi
-              Dresses</a></h6>
-          <p class="cart-drawer-item__option text-secondary">Color: Yellow</p>
-          <p class="cart-drawer-item__option text-secondary">Size: L</p>
-          <div class="d-flex align-items-center justify-content-between mt-1">
-            <div class="qty-control position-relative">
-              <input type="number" name="quantity" value="1" min="1" class="qty-control__number border-0 text-center">
-              <div class="qty-control__reduce text-start">-</div>
-              <div class="qty-control__increase text-end">+</div>
-            </div><!-- .qty-control -->
-            <span class="cart-drawer-item__price money price">$99</span>
+      {% if cart_items %}
+        {% for item in cart_items %}
+          <div class="cart-drawer-item d-flex position-relative">
+            <div class="position-relative">
+              <a href="{% url 'product_detail' item.product.id %}">
+                <img loading="lazy" class="cart-drawer-item__img" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+              </a>
+            </div>
+            <div class="cart-drawer-item__info flex-grow-1">
+              <h6 class="cart-drawer-item__title fw-normal">
+                <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+              </h6>
+              {% if item.color %}
+                <p class="cart-drawer-item__option text-secondary">Color: {{ item.color }}</p>
+              {% endif %}
+              {% if item.size %}
+                <p class="cart-drawer-item__option text-secondary">Size: {{ item.size }}</p>
+              {% endif %}
+              <div class="d-flex align-items-center justify-content-between mt-1">
+                <div class="qty-control position-relative">
+                  <input type="number" 
+                         name="quantity" 
+                         value="{{ item.quantity }}" 
+                         min="1" 
+                         data-item-id="{{ item.id }}"
+                         class="qty-control__number border-0 text-center">
+                  <div class="qty-control__reduce text-start">-</div>
+                  <div class="qty-control__increase text-end">+</div>
+                </div>
+                <span class="cart-drawer-item__price money price">${{ item.get_total_price }}</span>
+              </div>
+            </div>
+
+            <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove" 
+                    data-item-id="{{ item.id }}"></button>
           </div>
+
+          {% if not forloop.last %}
+            <hr class="cart-drawer-divider">
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        <div class="text-center py-4">
+          <p>Your cart is empty</p>
         </div>
-
-        <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove"></button>
-      </div><!-- /.cart-drawer-item d-flex -->
-
-      <hr class="cart-drawer-divider">
-
-      <div class="cart-drawer-item d-flex position-relative">
-        <div class="position-relative">
-          <a href="{% static './product1_simple.html' %}">
-            <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-2.jpg' %}" alt="">
-          </a>
-        </div>
-        <div class="cart-drawer-item__info flex-grow-1">
-          <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Kirby
-              T-Shirt</a></h6>
-          <p class="cart-drawer-item__option text-secondary">Color: Black</p>
-          <p class="cart-drawer-item__option text-secondary">Size: XS</p>
-          <div class="d-flex align-items-center justify-content-between mt-1">
-            <div class="qty-control position-relative">
-              <input type="number" name="quantity" value="4" min="1" class="qty-control__number border-0 text-center">
-              <div class="qty-control__reduce text-start">-</div>
-              <div class="qty-control__increase text-end">+</div>
-            </div><!-- .qty-control -->
-            <span class="cart-drawer-item__price money price">$89</span>
-          </div>
-        </div>
-
-        <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove"></button>
-      </div><!-- /.cart-drawer-item d-flex -->
-
-      <hr class="cart-drawer-divider">
-
-      <div class="cart-drawer-item d-flex position-relative">
-        <div class="position-relative">
-          <a href="{% static './product1_simple.html' %}">
-            <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-3.jpg' %}" alt="">
-          </a>
-        </div>
-        <div class="cart-drawer-item__info flex-grow-1">
-          <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Cableknit
-              Shawl</a></h6>
-          <p class="cart-drawer-item__option text-secondary">Color: Green</p>
-          <p class="cart-drawer-item__option text-secondary">Size: L</p>
-          <div class="d-flex align-items-center justify-content-between mt-1">
-            <div class="qty-control position-relative">
-              <input type="number" name="quantity" value="3" min="1" class="qty-control__number border-0 text-center">
-              <div class="qty-control__reduce text-start">-</div>
-              <div class="qty-control__increase text-end">+</div>
-            </div><!-- .qty-control -->
-            <span class="cart-drawer-item__price money price">$129</span>
-          </div>
-        </div>
-
-        <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove"></button>
-      </div><!-- /.cart-drawer-item d-flex -->
-
-    </div><!-- /.aside-content -->
+      {% endif %}
+    </div>
 
     <div class="cart-drawer-actions position-absolute start-0 bottom-0 w-100">
       <hr class="cart-drawer-divider">
       <div class="d-flex justify-content-between">
         <h6 class="fs-base fw-medium">SUBTOTAL:</h6>
-        <span class="cart-subtotal fw-medium">$176.00</span>
-      </div><!-- /.d-flex justify-content-between -->
-      <a href="{% static './shop_cart.html' %}" class="btn btn-light mt-3 d-block">View Cart</a>
-      <a href="{% static './shop_checkout.html' %}" class="btn btn-primary mt-3 d-block">Checkout</a>
-    </div><!-- /.aside-content -->
+        <span class="cart-subtotal fw-medium">${{ cart_total|default:"0.00" }}</span>
+      </div>
+      <a href="{% url 'cart' %}" class="btn btn-light mt-3 d-block">View Cart</a>
+      <a href="{% url 'checkout' %}" class="btn btn-primary mt-3 d-block {% if not cart_items %}disabled{% endif %}">Checkout</a>
+    </div>
   </div><!-- /.aside -->
 
   <!-- Sitemap -->
@@ -3002,7 +2908,81 @@
   <!-- Footer Scripts -->
   <script src="{% static 'js/theme.js' %}"></script>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle quantity changes
+        document.querySelectorAll('.qty-control__number').forEach(input => {
+            input.addEventListener('change', async function() {
+                const itemId = this.dataset.itemId;
+                const quantity = this.value;
+                
+                try {
+                    const response = await fetch('/api/cart/update-quantity/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({
+                            item_id: itemId,
+                            quantity: quantity
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        // Refresh cart display
+                        location.reload();
+                    }
+                } catch (error) {
+                    console.error('Error updating quantity:', error);
+                }
+            });
+        });
 
+        // Handle remove item
+        document.querySelectorAll('.js-cart-item-remove').forEach(button => {
+            button.addEventListener('click', async function() {
+                const itemId = this.dataset.itemId;
+                
+                try {
+                    const response = await fetch('/api/cart/remove-item/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({
+                            item_id: itemId
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        // Refresh cart display
+                        location.reload();
+                    }
+                } catch (error) {
+                    console.error('Error removing item:', error);
+                }
+            });
+        });
+    });
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+  </script>
 
 </body>
 

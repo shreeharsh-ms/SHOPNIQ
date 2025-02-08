@@ -34,3 +34,5 @@ class MongoDBUser:
             {"_id": ObjectId(user_id)},
             {"$push": {"orders": order_id}}
         )
+
+contact_messages = MONGO_DB["contact_messages"]

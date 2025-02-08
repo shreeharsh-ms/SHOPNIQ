@@ -45,21 +45,25 @@
     <section class="shop-checkout container">
       <h2 class="page-title">Cart</h2>
       <div class="checkout-steps">
-        <a href="{% static './shop_cart.html' %}" class="checkout-steps__item active">
+        <a href="{% url 'cart' %}" class="checkout-steps__item {% if request.resolver_match.url_name == 'cart' %}active{% endif %}">
           <span class="checkout-steps__item-number">01</span>
           <span class="checkout-steps__item-title">
             <span>Shopping Bag</span>
             <em>Manage Your Items List</em>
           </span>
         </a>
-        <a href="{% static './shop_checkout.html' %}" class="checkout-steps__item">
+        <a href="{% if cart_items %}{% url 'checkout' %}{% else %}#{% endif %}" 
+           class="checkout-steps__item {% if request.resolver_match.url_name == 'checkout' %}active{% endif %}"
+           {% if not cart_items %}onclick="return false;"{% endif %}>
           <span class="checkout-steps__item-number">02</span>
           <span class="checkout-steps__item-title">
             <span>Shipping and Checkout</span>
             <em>Checkout Your Items List</em>
           </span>
         </a>
-        <a href="{% static './shop_order_complete.html' %}" class="checkout-steps__item">
+        <a href="{% if order_complete %}{% url 'order_complete' %}{% else %}#{% endif %}" 
+           class="checkout-steps__item {% if request.resolver_match.url_name == 'order_complete' %}active{% endif %}"
+           {% if not order_complete %}onclick="return false;"{% endif %}>
           <span class="checkout-steps__item-number">03</span>
           <span class="checkout-steps__item-title">
             <span>Confirmation</span>
@@ -81,123 +85,59 @@
               </tr>
             </thead>
             <tbody>
+              {% for item in cart_items %}
               <tr>
                 <td>
                   <div class="shopping-cart__product-item">
-                    <a href="{% static './product1_simple.html' %}">
-                      <img loading="lazy" src="{% static 'images/cart-item-1.jpg' %}" width="120" height="120" alt="">
+                    <a href="{% url 'product_detail' product_id=item.product.id %}">
+                      <img loading="lazy" src="{{ item.product.image.url }}" width="120" height="120" alt="{{ item.product.name }}">
                     </a>
                   </div>
                 </td>
                 <td>
                   <div class="shopping-cart__product-item__detail">
-                    <h4><a href="{% static './product1_simple.html' %}">Zessi Dresses</a></h4>
+                    <h4><a href="{% url 'product_detail' product_id=item.product.id %}">{{ item.product.name }}</a></h4>
                     <ul class="shopping-cart__product-item__options">
-                      <li>Color: Yellow</li>
-                      <li>Size: L</li>
+                      {% if item.color %}<li>Color: {{ item.color }}</li>{% endif %}
+                      {% if item.size %}<li>Size: {{ item.size }}</li>{% endif %}
                     </ul>
                   </div>
                 </td>
                 <td>
-                  <span class="shopping-cart__product-price">$99</span>
+                  <span class="shopping-cart__product-price">${{ item.product.price }}</span>
                 </td>
                 <td>
                   <div class="qty-control position-relative">
-                    <input type="number" name="quantity" value="3" min="1" class="qty-control__number text-center">
+                    <input type="number" 
+                           name="quantity" 
+                           value="{{ item.quantity }}" 
+                           min="1" 
+                           class="qty-control__number text-center"
+                           data-product-id="{{ item.product.id }}">
                     <div class="qty-control__reduce">-</div>
                     <div class="qty-control__increase">+</div>
-                  </div><!-- .qty-control -->
+                  </div>
                 </td>
                 <td>
-                  <span class="shopping-cart__subtotal">$297</span>
+                  <span class="shopping-cart__subtotal">${{ item.total_price }}</span>
                 </td>
                 <td>
-                  <a href="#" class="remove-cart">
+                  <a href="#" class="remove-cart" data-product-id="{{ item.product.id }}">
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="#767676" xmlns="http://www.w3.org/2000/svg">
                       <path d="M0.259435 8.85506L9.11449 0L10 0.885506L1.14494 9.74056L0.259435 8.85506Z"></path>
                       <path d="M0.885506 0.0889838L9.74057 8.94404L8.85506 9.82955L0 0.97449L0.885506 0.0889838Z"></path>
-                    </svg>                  
+                    </svg>
                   </a>
                 </td>
               </tr>
+              {% empty %}
               <tr>
-                <td>
-                  <div class="shopping-cart__product-item">
-                    <a href="{% static './product1_simple.html' %}">
-                      <img loading="lazy" src="{% static 'images/cart-item-2.jpg' %}" width="120" height="120" alt="">
-                    </a>
-                  </div>
-                </td>
-                <td>
-                  <div class="shopping-cart__product-item__detail">
-                    <h4><a href="{% static './product1_simple.html' %}">Kirby T-Shirt</a></h4>
-                    <ul class="shopping-cart__product-item__options">
-                      <li>Color: Yellow</li>
-                      <li>Size: L</li>
-                    </ul>
-                  </div>
-                </td>
-                <td>
-                  <span class="shopping-cart__product-price">$99</span>
-                </td>
-                <td>
-                  <div class="qty-control position-relative">
-                    <input type="number" name="quantity" value="3" min="1" class="qty-control__number text-center">
-                    <div class="qty-control__reduce">-</div>
-                    <div class="qty-control__increase">+</div>
-                  </div><!-- .qty-control -->
-                </td>
-                <td>
-                  <span class="shopping-cart__subtotal">$297</span>
-                </td>
-                <td>
-                  <a href="#" class="remove-cart">
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="#767676" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M0.259435 8.85506L9.11449 0L10 0.885506L1.14494 9.74056L0.259435 8.85506Z"></path>
-                      <path d="M0.885506 0.0889838L9.74057 8.94404L8.85506 9.82955L0 0.97449L0.885506 0.0889838Z"></path>
-                    </svg>                  
-                  </a>
+                <td colspan="6" class="text-center py-4">
+                  <p>Your cart is empty</p>
+                  <a href="{% url 'index' %}" class="btn btn-primary mt-3">Continue Shopping</a>
                 </td>
               </tr>
-              <tr>
-                <td>
-                  <div class="shopping-cart__product-item">
-                    <a href="{% static './product1_simple.html' %}">
-                      <img loading="lazy" src="{% static 'images/cart-item-3.jpg' %}" width="120" height="120" alt="">
-                    </a>
-                  </div>
-                </td>
-                <td>
-                  <div class="shopping-cart__product-item__detail">
-                    <h4><a href="{% static './product1_simple.html' %}">Cobleknit Shawl</a></h4>
-                    <ul class="shopping-cart__product-item__options">
-                      <li>Color: Yellow</li>
-                      <li>Size: L</li>
-                    </ul>
-                  </div>
-                </td>
-                <td>
-                  <span class="shopping-cart__product-price">$99</span>
-                </td>
-                <td>
-                  <div class="qty-control position-relative">
-                    <input type="number" name="quantity" value="3" min="1" class="qty-control__number text-center">
-                    <div class="qty-control__reduce">-</div>
-                    <div class="qty-control__increase">+</div>
-                  </div><!-- .qty-control -->
-                </td>
-                <td>
-                  <span class="shopping-cart__subtotal">$297</span>
-                </td>
-                <td>
-                  <a href="#" class="remove-cart">
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="#767676" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M0.259435 8.85506L9.11449 0L10 0.885506L1.14494 9.74056L0.259435 8.85506Z"></path>
-                      <path d="M0.885506 0.0889838L9.74057 8.94404L8.85506 9.82955L0 0.97449L0.885506 0.0889838Z"></path>
-                    </svg>                  
-                  </a>
-                </td>
-              </tr>
+              {% endfor %}
             </tbody>
           </table>
           <div class="cart-table-footer">
@@ -216,39 +156,36 @@
                 <tbody>
                   <tr>
                     <th>Subtotal</th>
-                    <td>$1300</td>
+                    <td>${{ cart_total }}</td>
                   </tr>
                   <tr>
                     <th>Shipping</th>
                     <td>
                       <div class="form-check">
-                        <input class="form-check-input form-check-input_fill" type="checkbox" value="" id="free_shipping">
+                        <input class="form-check-input form-check-input_fill" type="radio" name="shipping" id="free_shipping" value="0" checked>
                         <label class="form-check-label" for="free_shipping">Free shipping</label>
                       </div>
                       <div class="form-check">
-                        <input class="form-check-input form-check-input_fill" type="checkbox" value="" id="flat_rate">
+                        <input class="form-check-input form-check-input_fill" type="radio" name="shipping" id="flat_rate" value="49">
                         <label class="form-check-label" for="flat_rate">Flat rate: $49</label>
                       </div>
                       <div class="form-check">
-                        <input class="form-check-input form-check-input_fill" type="checkbox" value="" id="local_pickup">
+                        <input class="form-check-input form-check-input_fill" type="radio" name="shipping" id="local_pickup" value="8">
                         <label class="form-check-label" for="local_pickup">Local pickup: $8</label>
-                      </div>
-                      <div>Shipping to AL.</div>
-                      <div>
-                        <a href="#" class="menu-link menu-link_us-s">CHANGE ADDRESS</a>
                       </div>
                     </td>
                   </tr>
                   <tr>
-                    <th>VAT</th>
-                    <td>$19</td>
-                  </tr>
-                  <tr>
                     <th>Total</th>
-                    <td>$1319</td>
+                    <td class="cart-total">${{ cart_total }}</td>
                   </tr>
                 </tbody>
               </table>
+              {% if cart_items %}
+              <div class="mt-4">
+                <a href="{% url 'checkout' %}" class="btn btn-primary w-100">Proceed to Checkout</a>
+              </div>
+              {% endif %}
             </div>
             <div class="mobile_fixed-btn_wrapper">
               <div class="button-wrapper container">
@@ -903,7 +840,232 @@
 
   <!-- Footer Scripts -->
   <script src="{% static 'js/theme.js' %}"></script>
+  <script src="{% static 'js/cart.js' %}"></script>
 
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+      // Remove any existing event listeners
+      document.querySelectorAll('.qty-control').forEach(control => {
+          const oldControl = control.cloneNode(true);
+          control.parentNode.replaceChild(oldControl, control);
+      });
 
+      // Quantity controls
+      document.querySelectorAll('.qty-control').forEach(control => {
+          const input = control.querySelector('.qty-control__number');
+          const productId = input.dataset.productId;
+          const reduceBtn = control.querySelector('.qty-control__reduce');
+          const increaseBtn = control.querySelector('.qty-control__increase');
+          
+          // Single event listener for reduce button
+          reduceBtn.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const currentValue = parseInt(input.value);
+              if (currentValue > 1) {
+                  const newQuantity = currentValue - 1;
+                  input.value = newQuantity;
+                  updateCartQuantity(productId, newQuantity, control);
+              }
+          };
+          
+          // Single event listener for increase button
+          increaseBtn.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const currentValue = parseInt(input.value);
+              const newQuantity = currentValue + 1;
+              input.value = newQuantity;
+              updateCartQuantity(productId, newQuantity, control);
+          };
+          
+          // Single event listener for manual input
+          input.onchange = (e) => {
+              e.preventDefault();
+              let value = parseInt(input.value) || 1;
+              if (value < 1) value = 1;
+              input.value = value;
+              updateCartQuantity(productId, value, control);
+          };
+      });
+      
+      // Remove item buttons
+      document.querySelectorAll('.remove-cart').forEach(button => {
+          button.addEventListener('click', function(e) {
+              e.preventDefault();
+              const productId = this.dataset.productId;
+              const row = this.closest('tr');
+              removeFromCart(productId, row);
+          });
+      });
+      
+      // Update shipping total when shipping method changes
+      document.querySelectorAll('input[name="shipping"]').forEach(radio => {
+          radio.addEventListener('change', updateTotal);
+      });
+      
+      function updateCartQuantity(productId, quantity, control) {
+          const row = control.closest('tr');
+          const subtotalCell = row.querySelector('.shopping-cart__subtotal');
+          const originalQuantity = parseInt(control.querySelector('.qty-control__number').value);
+
+          fetch('/cart/update-quantity/', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': getCookie('csrftoken')
+              },
+              body: JSON.stringify({
+                  item_id: productId.toString(),
+                  quantity: quantity
+              })
+          })
+          .then(response => {
+              if (!response.ok) {
+                  return response.json().then(data => {
+                      throw new Error(data.error || 'Error updating cart');
+                  });
+              }
+              return response.json();
+          })
+          .then(data => {
+              if (data.error) {
+                  // Revert the quantity if there's an error
+                  control.querySelector('.qty-control__number').value = originalQuantity;
+                  throw new Error(data.error);
+              }
+              
+              // Update the subtotal for this item
+              subtotalCell.textContent = `$${data.item_total}`;
+              
+              // Update cart total
+              document.querySelector('.cart-total').textContent = `$${data.cart_total}`;
+              
+              // Update cart count in header if it exists
+              const cartCount = document.querySelector('.header-cart__quantity');
+              if (cartCount) {
+                  cartCount.textContent = data.cart_items_count;
+              }
+              
+              // Update shipping calculation
+              updateTotal();
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              alert(error.message || 'Error updating cart');
+          });
+      }
+      
+      function removeFromCart(productId, row) {
+          if (!confirm('Are you sure you want to remove this item?')) return;
+          
+          fetch('/cart/remove-item/', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': getCookie('csrftoken')
+              },
+              body: JSON.stringify({
+                  item_id: productId.toString()
+              })
+          })
+          .then(response => {
+              if (!response.ok) {
+                  return response.json().then(data => {
+                      throw new Error(data.error || 'Error removing item from cart');
+                  });
+              }
+              return response.json();
+          })
+          .then(data => {
+              if (data.error) {
+                  throw new Error(data.error);
+              }
+              
+              // Remove the row from the table
+              row.remove();
+              
+              // Update cart total
+              document.querySelector('.cart-total').textContent = `$${data.cart_total}`;
+              
+              // Update cart count in header if it exists
+              const cartCount = document.querySelector('.header-cart__quantity');
+              if (cartCount) {
+                  cartCount.textContent = data.cart_items_count;
+              }
+              
+              // If cart is empty, show empty cart message
+              if (data.cart_items_count === 0) {
+                  const tbody = document.querySelector('tbody');
+                  tbody.innerHTML = `
+                      <tr>
+                          <td colspan="6" class="text-center py-4">
+                              <p>Your cart is empty</p>
+                              <a href="{% url 'index' %}" class="btn btn-primary mt-3">Continue Shopping</a>
+                          </td>
+                      </tr>
+                  `;
+              }
+              
+              // Update shipping calculation
+              updateTotal();
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              alert(error.message || 'Error removing item from cart');
+          });
+      }
+      
+      function updateTotal() {
+          const subtotal = parseFloat(document.querySelector('.cart-total').textContent.replace('$', ''));
+          const shipping = parseFloat(document.querySelector('input[name="shipping"]:checked').value);
+          const total = subtotal + shipping;
+          document.querySelector('.cart-total').textContent = `$${total.toFixed(2)}`;
+      }
+      
+      function getCookie(name) {
+          let cookieValue = null;
+          if (document.cookie && document.cookie !== '') {
+              const cookies = document.cookie.split(';');
+              for (let i = 0; i < cookies.length; i++) {
+                  const cookie = cookies[i].trim();
+                  if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                      cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                      break;
+                  }
+              }
+          }
+          return cookieValue;
+      }
+
+      // Add tooltips for disabled steps
+      const disabledSteps = document.querySelectorAll('.checkout-steps__item[onclick="return false;"]');
+      disabledSteps.forEach(step => {
+          step.addEventListener('click', function(e) {
+              e.preventDefault();
+              if (!document.querySelector('.cart-items')) {
+                  showNotification('Please add items to your cart first', 'warning');
+              } else if (!document.querySelector('.order-complete')) {
+                  showNotification('Please complete checkout first', 'warning');
+              }
+          });
+      });
+
+      function showNotification(message, type = 'warning') {
+          const notificationDiv = document.createElement('div');
+          notificationDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+          notificationDiv.style.zIndex = '1050';
+          notificationDiv.innerHTML = `
+              ${message}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          `;
+          document.body.appendChild(notificationDiv);
+          
+          setTimeout(() => {
+              notificationDiv.remove();
+          }, 3000);
+      }
+  });
+  </script>
 
 </body></html>

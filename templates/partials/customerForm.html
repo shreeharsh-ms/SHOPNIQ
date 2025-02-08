@@ -1,79 +1,206 @@
 {% load static %}
  
- <!-- Customer Login Form -->
-  <div class="aside aside_right overflow-hidden customer-forms" id="customerForms">
-    <div class="customer-forms__wrapper d-flex position-relative">
-      <div class="customer__login">
-        <div class="aside-header d-flex align-items-center">
-          <h3 class="text-uppercase fs-6 mb-0">Login</h3>
-          <button class="btn-close-lg js-close-aside ms-auto"></button>
-        </div><!-- /.aside-header -->
+<!-- Customer Login Form -->
+<div class="aside aside_right overflow-hidden customer-forms" id="customerForms">
+  <div class="customer-forms__wrapper d-flex position-relative">
+    <div class="customer__login">
+      <div class="aside-header d-flex align-items-center">
+        <h3 class="text-uppercase fs-6 mb-0">Login</h3>
+        <button class="btn-close-lg js-close-aside ms-auto"></button>
+      </div>
 
-        <form action="./login_register.html" method="POST" class="aside-content">
-          <div class="form-floating mb-3">
-            <input name="email" type="email" class="form-control form-control_gray" id="customerNameEmailInput" placeholder="name@example.com">
-            <label for="customerNameEmailInput">Username or email address *</label>
+      <form id="loginSidebarForm" class="aside-content">
+        {% csrf_token %}
+        <div class="form-floating mb-3">
+          <input name="email" type="email" class="form-control form-control_gray" id="customerEmailInput" placeholder="name@example.com" required>
+          <label for="customerEmailInput">Email address *</label>
+        </div>
+
+        <div class="pb-3"></div>
+
+        <div class="form-label-fixed mb-3">
+          <label for="customerPasswordInput" class="form-label">Password *</label>
+          <input name="password" id="customerPasswordInput" class="form-control form-control_gray" type="password" placeholder="********" required>
+        </div>
+
+        <div class="d-flex align-items-center mb-3 pb-2">
+          <div class="form-check mb-0">
+            <input name="remember" class="form-check-input form-check-input_fill" type="checkbox" id="rememberMe">
+            <label class="form-check-label text-secondary" for="rememberMe">Remember me</label>
           </div>
+          <a href="{% url 'password_reset_request' %}" class="btn-text ms-auto">Lost password?</a>
+        </div>
 
-          <div class="pb-3"></div>
+        <button class="btn btn-primary w-100 text-uppercase" type="submit">Log In</button>
+        
+        <div id="loginMessage" class="alert mt-3" style="display: none;"></div>
 
-          <div class="form-label-fixed mb-3">
-            <label for="customerPasswordInput" class="form-label">Password *</label>
-            <input name="password" id="customerPasswordInput" class="form-control form-control_gray" type="password" placeholder="********">
-          </div>
+        <div class="customer-option mt-4 text-center">
+          <span class="text-secondary">No account yet?</span>
+          <a href="#" class="btn-text js-show-register">Create Account</a>
+        </div>
+      </form>
+    </div>
 
-          <div class="d-flex align-items-center mb-3 pb-2">
-            <div class="form-check mb-0">
-              <input name="remember" class="form-check-input form-check-input_fill" type="checkbox" value="" id="flexCheckDefault">
-              <label class="form-check-label text-secondary" for="flexCheckDefault">Remember me</label>
-            </div>
-            <a href="{% static './reset_password.html' %}" class="btn-text ms-auto">Lost password?</a>
-          </div>
+    <div class="customer__register">
+      <div class="aside-header d-flex align-items-center">
+        <h3 class="text-uppercase fs-6 mb-0">Create an account</h3>
+        <button class="btn-close-lg js-close-aside btn-close-aside ms-auto"></button>
+      </div>
 
-          <button class="btn btn-primary w-100 text-uppercase" type="submit">Log In</button>
+      <form id="registerSidebarForm" class="aside-content">
+        {% csrf_token %}
+        <div class="form-floating mb-4">
+          <input name="username" type="text" class="form-control form-control_gray" id="registerUsernameInput" placeholder="Username" required>
+          <label for="registerUsernameInput">Username</label>
+        </div>
 
-          <div class="customer-option mt-4 text-center">
-            <span class="text-secondary">No account yet?</span>
-            <a href="{% url 'register_page' %}" class="btn-text js-show-register">Create Account</a>
-          </div>
-        </form>
-      </div><!-- /.customer__login -->
+        <div class="pb-1"></div>
 
-      <div class="customer__register">
-        <div class="aside-header d-flex align-items-center">
-          <h3 class="text-uppercase fs-6 mb-0">Create an account</h3>
-          <button class="btn-close-lg js-close-aside btn-close-aside ms-auto"></button>
-        </div><!-- /.aside-header -->
+        <div class="form-floating mb-4">
+          <input name="email" type="email" class="form-control form-control_gray" id="registerEmailInput" placeholder="user@company.com" required>
+          <label for="registerEmailInput">Email address *</label>
+        </div>
 
-        <form action="./login_register.html" method="POST" class="aside-content">
-          <div class="form-floating mb-4">
-            <input name="username" type="text" class="form-control form-control_gray" id="registerUserNameInput" placeholder="Username">
-            <label for="registerUserNameInput">Username</label>
-          </div>
+        <div class="pb-1"></div>
 
-          <div class="pb-1"></div>
+        <div class="form-label-fixed mb-4">
+          <label for="registerPasswordInput" class="form-label">Password *</label>
+          <input name="password" id="registerPasswordInput" class="form-control form-control_gray" type="password" placeholder="*******" required>
+        </div>
 
-          <div class="form-floating mb-4">
-            <input name="email" type="email" class="form-control form-control_gray" id="registerUserEmailInput" placeholder="user@company.com">
-            <label for="registerUserEmailInput">Email address *</label>
-          </div>
+        <p class="text-secondary mb-4">Your personal data will be used to support your experience throughout this website, to manage access to your account, and for other purposes described in our privacy policy.</p>
 
-          <div class="pb-1"></div>
+        <button class="btn btn-primary w-100 text-uppercase" type="submit">Register</button>
+        
+        <div id="registerMessage" class="alert mt-3" style="display: none;"></div>
 
-          <div class="form-label-fixed mb-4">
-            <label for="registerPasswordInput" class="form-label">Password *</label>
-            <input name="password" id="registerPasswordInput" class="form-control form-control_gray" type="password" placeholder="*******">
-          </div>
+        <div class="customer-option mt-4 text-center">
+          <span class="text-secondary">Already have account?</span>
+          <a href="#" class="btn-text js-show-login">Login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
-          <p class="text-secondary mb-4">Your personal data will be used to support your experience throughout this website, to manage access to your account, and for other purposes described in our privacy policy.</p>
-
-          <button class="btn btn-primary w-100 text-uppercase" type="submit">Register</button>
-
-          <div class="customer-option mt-4 text-center">
-            <span class="text-secondary">Already have account?</span>
-            <a href="#" class="btn-text js-show-login">Login</a>
-          </div>
-        </form>
-      </div><!-- /.customer__register -->
-    </div><!-- /.customer-forms__wrapper -->
-  </div><!-- /.aside aside_right -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginSidebarForm');
+    const registerForm = document.getElementById('registerSidebarForm');
+    
+    // Login Form Handler
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('customerEmailInput').value;
+        const password = document.getElementById('customerPasswordInput').value;
+        const messageDiv = document.getElementById('loginMessage');
+        
+        fetch('/api/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                messageDiv.className = 'alert alert-success mt-3';
+                messageDiv.textContent = 'Login successful! Redirecting...';
+                messageDiv.style.display = 'block';
+                
+                // Store token
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                }
+                
+                // Close sidebar
+                document.querySelector('.js-close-aside').click();
+                
+                // Reload page after short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                messageDiv.className = 'alert alert-danger mt-3';
+                messageDiv.textContent = data.message || 'Login failed. Please try again.';
+                messageDiv.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            messageDiv.className = 'alert alert-danger mt-3';
+            messageDiv.textContent = 'An error occurred. Please try again.';
+            messageDiv.style.display = 'block';
+            console.error('Error:', error);
+        });
+    });
+    
+    // Register Form Handler
+    registerForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('registerUsernameInput').value;
+        const email = document.getElementById('registerEmailInput').value;
+        const password = document.getElementById('registerPasswordInput').value;
+        const messageDiv = document.getElementById('registerMessage');
+        
+        fetch('/api/register/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                username: username,
+                email: email,
+                password: password
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                messageDiv.className = 'alert alert-success mt-3';
+                messageDiv.textContent = 'Registration successful! Please login.';
+                messageDiv.style.display = 'block';
+                
+                // Switch to login form after short delay
+                setTimeout(() => {
+                    document.querySelector('.js-show-login').click();
+                }, 1500);
+            } else {
+                messageDiv.className = 'alert alert-danger mt-3';
+                messageDiv.textContent = data.message || 'Registration failed. Please try again.';
+                messageDiv.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            messageDiv.className = 'alert alert-danger mt-3';
+            messageDiv.textContent = 'An error occurred. Please try again.';
+            messageDiv.style.display = 'block';
+            console.error('Error:', error);
+        });
+    });
+    
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>

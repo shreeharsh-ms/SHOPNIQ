@@ -68,21 +68,33 @@
           </div>
         </div>
         <div class="contact-us__form">
-          <form name="contact-us-form" class="needs-validation" novalidate="">
+          <form name="contact-us-form" class="needs-validation" method="POST" action="{% url 'contact_submit' %}" novalidate>
+            {% csrf_token %}
             <h3 class="mb-5">Get In Touch</h3>
+            
+            {% if messages %}
+            <div class="messages mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
             <div class="form-floating my-4">
-              <input type="text" class="form-control" id="contact_us_name" placeholder="Name *" required="">
-              <label for="contact_us_name">Name *</label>
+                <input type="text" class="form-control" id="contact_us_name" name="name" placeholder="Name *" required>
+                <label for="contact_us_name">Name *</label>
             </div>
             <div class="form-floating my-4">
-              <input type="email" class="form-control" id="contact_us_email" placeholder="Email address *" required="">
-              <label for="contact_us_name">Email address *</label>
+                <input type="email" class="form-control" id="contact_us_email" name="email" placeholder="Email address *" required>
+                <label for="contact_us_email">Email address *</label>
             </div>
             <div class="my-4">
-              <textarea class="form-control form-control_gray" placeholder="Your Message" cols="30" rows="8" required=""></textarea>
+                <textarea class="form-control form-control_gray" name="message" placeholder="Your Message" cols="30" rows="8" required></textarea>
             </div>
             <div class="my-4">
-              <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="submit" class="btn btn-primary">Submit</button>
             </div>
           </form>
         </div>
@@ -747,5 +759,21 @@
   <!-- Footer Scripts -->
   <script src="{% static 'js/theme.js' %}"></script>
 
+  <script>
+  // Form validation
+  (function () {
+      'use strict'
+      var forms = document.querySelectorAll('.needs-validation')
+      Array.prototype.slice.call(forms).forEach(function (form) {
+          form.addEventListener('submit', function (event) {
+              if (!form.checkValidity()) {
+                  event.preventDefault()
+                  event.stopPropagation()
+              }
+              form.classList.add('was-validated')
+          }, false)
+      })
+  })()
+  </script>
 
 </body></html>

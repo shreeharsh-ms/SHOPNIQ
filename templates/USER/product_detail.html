@@ -127,7 +127,13 @@
                 <div class="qty-control__increase">+</div>
               </div><!-- .qty-control -->
               {% if product.stock > 0 %}
-                <button type="submit" class="btn btn-primary btn-addtocart js-open-aside" data-aside="cartDrawer">Add to Cart</button>
+                <button type="button" 
+                        class="btn btn-primary btn-addtocart js-add-cart js-open-aside" 
+                        data-aside="cartDrawer"
+                        data-product-id="{{ product.id }}"
+                        title="Add To Cart">
+                  Add to Cart
+                </button>
               {% else %}
                 <button type="button" class="btn btn-secondary" disabled>Out of Stock</button>
               {% endif %}
@@ -420,7 +426,23 @@
                   <img loading="lazy" src="{% static 'images/product_3.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img">
                   <img loading="lazy" src="{% static 'images/product_3-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
                 </a>
-                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside" data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
+                <!-- Add this temporarily for debugging -->
+                <!-- Stock value: {{ product.stock }} -->
+
+                {% if product.stock > 0 %}
+                    <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside btn-primary"
+                            data-aside="cartDrawer" 
+                            data-product-id="{{ product.id }}" 
+                            title="Add To Cart">
+                        Add To Cart
+                    </button>
+                {% else %}
+                    <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium btn-secondary"
+                            disabled
+                            title="Out of Stock">
+                        Out of Stock
+                    </button>
+                {% endif %}
               </div>
 
               <div class="pc__info position-relative">
@@ -996,97 +1018,57 @@
   <!-- Cart Drawer -->
   <div class="aside aside_right overflow-hidden cart-drawer" id="cartDrawer">
     <div class="aside-header d-flex align-items-center">
-      <h3 class="text-uppercase fs-6 mb-0">SHOPPING BAG ( <span class="cart-amount js-cart-items-count">1</span> ) </h3>
+      <h3 class="text-uppercase fs-6 mb-0">SHOPPING BAG ( <span class="cart-amount js-cart-items-count">{{ cart_items_count|default:0 }}</span> ) </h3>
       <button class="btn-close-lg js-close-aside btn-close-aside ms-auto"></button>
-    </div><!-- /.aside-header -->
+    </div>
 
     <div class="aside-content cart-drawer-items-list">
+      {% for item in cart_items %}
       <div class="cart-drawer-item d-flex position-relative">
         <div class="position-relative">
-          <a href="{% static './product1_simple.html' %}">
-            <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-1.jpg' %}" alt="">
+          <a href="{% url 'product_detail' item.product.id %}">
+            <img loading="lazy" class="cart-drawer-item__img" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
           </a>
         </div>
         <div class="cart-drawer-item__info flex-grow-1">
-          <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Zessi Dresses</a></h6>
-          <p class="cart-drawer-item__option text-secondary">Color: Yellow</p>
-          <p class="cart-drawer-item__option text-secondary">Size: L</p>
+          <h6 class="cart-drawer-item__title fw-normal">
+            <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+          </h6>
+          {% if item.color %}<p class="cart-drawer-item__option text-secondary">Color: {{ item.color }}</p>{% endif %}
+          {% if item.size %}<p class="cart-drawer-item__option text-secondary">Size: {{ item.size }}</p>{% endif %}
           <div class="d-flex align-items-center justify-content-between mt-1">
             <div class="qty-control position-relative">
-              <input type="number" name="quantity" value="1" min="1" class="qty-control__number border-0 text-center">
+              <input type="number" name="quantity" value="{{ item.quantity }}" min="1" 
+                     class="qty-control__number border-0 text-center"
+                     data-product-id="{{ item.product.id }}">
               <div class="qty-control__reduce text-start">-</div>
               <div class="qty-control__increase text-end">+</div>
-            </div><!-- .qty-control -->
-            <span class="cart-drawer-item__price money price">$99</span>
+            </div>
+            <span class="cart-drawer-item__price money price">${{ item.get_total_price }}</span>
           </div>
         </div>
+        <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove" 
+                data-product-id="{{ item.product.id }}"></button>
+      </div>
+      {% if not forloop.last %}<hr class="cart-drawer-divider">{% endif %}
+      {% empty %}
+      <div class="text-center py-4">
+        <p>Your cart is empty</p>
+      </div>
+      {% endfor %}
+    </div>
 
-        <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove"></button>
-      </div><!-- /.cart-drawer-item d-flex -->
-
-      <hr class="cart-drawer-divider">
-
-      <div class="cart-drawer-item d-flex position-relative">
-        <div class="position-relative">
-          <a href="{% static './product1_simple.html' %}">
-            <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-2.jpg' %}" alt="">
-          </a>
-        </div>
-        <div class="cart-drawer-item__info flex-grow-1">
-          <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Kirby T-Shirt</a></h6>
-          <p class="cart-drawer-item__option text-secondary">Color: Black</p>
-          <p class="cart-drawer-item__option text-secondary">Size: XS</p>
-          <div class="d-flex align-items-center justify-content-between mt-1">
-            <div class="qty-control position-relative">
-              <input type="number" name="quantity" value="4" min="1" class="qty-control__number border-0 text-center">
-              <div class="qty-control__reduce text-start">-</div>
-              <div class="qty-control__increase text-end">+</div>
-            </div><!-- .qty-control -->
-            <span class="cart-drawer-item__price money price">$89</span>
-          </div>
-        </div>
-
-        <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove"></button>
-      </div><!-- /.cart-drawer-item d-flex -->
-
-      <hr class="cart-drawer-divider">
-
-      <div class="cart-drawer-item d-flex position-relative">
-        <div class="position-relative">
-          <a href="{% static './product1_simple.html' %}">
-            <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-3.jpg' %}" alt="">
-          </a>
-        </div>
-        <div class="cart-drawer-item__info flex-grow-1">
-          <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Cableknit Shawl</a></h6>
-          <p class="cart-drawer-item__option text-secondary">Color: Green</p>
-          <p class="cart-drawer-item__option text-secondary">Size: L</p>
-          <div class="d-flex align-items-center justify-content-between mt-1">
-            <div class="qty-control position-relative">
-              <input type="number" name="quantity" value="3" min="1" class="qty-control__number border-0 text-center">
-              <div class="qty-control__reduce text-start">-</div>
-              <div class="qty-control__increase text-end">+</div>
-            </div><!-- .qty-control -->
-            <span class="cart-drawer-item__price money price">$129</span>
-          </div>
-        </div>
-
-        <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove"></button>
-      </div><!-- /.cart-drawer-item d-flex -->
-
-    </div><!-- /.aside-content -->
-
-    <div class="cart-drawer-actions position-absolute start-0 bottom-0 w-100">
-      <hr class="cart-drawer-divider">
-      <div class="d-flex justify-content-between">
-        <h6 class="fs-base fw-medium">SUBTOTAL:</h6>
-        <span class="cart-subtotal fw-medium">$176.00</span>
-      </div><!-- /.d-flex justify-content-between -->
-      <a href="{% static './shop_cart.html' %}" class="btn btn-light mt-3 d-block">View Cart</a>
-      <a href="{% static './shop_checkout.html' %}" class="btn btn-primary mt-3 d-block">Checkout</a>
-    </div><!-- /.aside-content -->
-  </div><!-- /.aside -->
-
+    {% if cart_items %}
+    <div class="aside-footer">
+      <div class="cart-drawer-subtotal d-flex align-items-center justify-content-between">
+        <span>Subtotal:</span>
+        <span class="cart-drawer-subtotal__price money">$<span class="js-cart-subtotal">{{ cart_total }}</span></span>
+      </div>
+      <a href="{% url 'cart' %}" class="btn btn-primary w-100 mt-3">View Cart</a>
+      <a href="{% url 'checkout' %}" class="btn btn-dark w-100 mt-2">Checkout</a>
+    </div>
+    {% endif %}
+  </div>
 
   <!-- Sitemap -->
   <div class="modal fade" id="siteMap" tabindex="-1">
@@ -1356,7 +1338,54 @@
   <!-- Footer Scripts -->
   <script src="{% static 'js/theme.js' %}"></script>
 
+  <!-- Add this at the end of your body tag, before closing -->
+  <script src="{% static 'js/cart.js' %}"></script>
 
+  <!-- <script>
+  document.addEventListener('DOMContentLoaded', function() {
+      const qtyInput = document.querySelector('.qty-control__number');
+      const reduceBtn = document.querySelector('.qty-control__reduce');
+      const increaseBtn = document.querySelector('.qty-control__increase');
+      const maxStock = {{ product.stock }};  // Get max stock from Django template
 
-</body></html>
+      // Ensure the initial value is set correctly
+      qtyInput.value = Math.max(1, Math.min(maxStock, parseInt(qtyInput.value) || 1));
+
+      // Function to update quantity
+      function updateQuantity(amount) {
+          let currentValue = parseInt(qtyInput.value);
+          let newValue = currentValue + amount;
+          if (newValue < 1) {
+              newValue = 1;
+          } else if (newValue > maxStock) {
+              newValue = maxStock;
+          }
+          qtyInput.value = newValue;
+          console.log('Updated quantity:', qtyInput.value); // Debug log
+      }
+
+      // Reduce quantity
+      reduceBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          updateQuantity(-1);
+      });
+
+      // Increase quantity
+      increaseBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          updateQuantity(1);
+      });
+
+      // Validate manual input
+      qtyInput.addEventListener('change', function() {
+          let value = parseInt(this.value);
+          if (isNaN(value) || value < 1) {
+              this.value = 1;
+          } else if (value > maxStock) {
+              this.value = maxStock;
+          }
+      });
+  });
+  </script> -->
+
 </body></html>

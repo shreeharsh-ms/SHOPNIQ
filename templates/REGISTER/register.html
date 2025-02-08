@@ -63,145 +63,61 @@
             <div class="tab-content pt-2" id="login_register_tab_content">
                 <div class="tab-pane fade show active" id="tab-item-login" role="tabpanel" aria-labelledby="login-tab">
                     <div class="login-form">
-                        <form name="login-form" class="needs-validation" novalidate="" action="/api/login/"
-                            method="POST">
+                        <form name="login-form" class="needs-validation" novalidate id="loginForm">
+                            {% csrf_token %}
                             <div class="form-floating mb-3">
-                                <input name="login_email" type="email" class="form-control form-control_gray"
-                                    id="customerNameEmailInput1" placeholder="Email address *" required="">
-                                <label for="customerNameEmailInput1">Email address *</label>
+                                <input name="email" type="email" class="form-control form-control_gray"
+                                    id="loginEmail" placeholder="Email address *" required>
+                                <label for="loginEmail">Email address *</label>
                             </div>
 
-                            <div class="pb-3"></div>
-
                             <div class="form-floating mb-3">
-                                <input name="login_password" type="password" class="form-control form-control_gray"
-                                    id="customerPasswodInput" placeholder="Password *" required="">
-                                <label for="customerPasswodInput">Password *</label>
+                                <input name="password" type="password" class="form-control form-control_gray"
+                                    id="loginPassword" placeholder="Password *" required>
+                                <label for="loginPassword">Password *</label>
                             </div>
 
                             <div class="d-flex align-items-center mb-3 pb-2">
                                 <div class="form-check mb-0">
                                     <input name="remember" class="form-check-input form-check-input_fill"
-                                        type="checkbox" value="" id="flexCheckDefault1">
-                                    <label class="form-check-label text-secondary" for="flexCheckDefault1">Remember
-                                        me</label>
+                                        type="checkbox" id="rememberMe">
+                                    <label class="form-check-label text-secondary" for="rememberMe">
+                                        Remember me
+                                    </label>
                                 </div>
-                                <a href="{% static './reset_password.html' %}" class="btn-text ms-auto">Lost
-                                    password?</a>
                             </div>
 
                             <button class="btn btn-primary w-100 text-uppercase" type="submit">Log In</button>
-
-                            <!-- Google API -->
-                            <script src="https://accounts.google.com/gsi/client" async defer></script>
-
-                            <!-- Google Login Button -->
-                            <div id="g_id_onload" data-client_id="560213457682-udbg5k8su2oi3okvt2hlm42kl353jv9g.apps.googleusercontent.com"
-                                 data-callback="handleCredentialResponse" data-auto_prompt="false">
-                            </div>
                             
-                            <div class="g_id_signin" data-type="standard"></div>
-                            
-                            <script>
-                                function handleCredentialResponse(response) {
-                                    console.log("Google Token:", response.credential);
-                            
-                                    // Send token to backend
-                                    fetch("/api/auth/google/", {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({ access_token: response.credential }),
-                                    })
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            if (data.session_id) {
-                                                localStorage.setItem("session_id", data.session_id);
-                                                localStorage.setItem("user", JSON.stringify(data.user));
-                                                window.location.href = "/"; // Redirect after login
-                                            } else {
-                                                alert("Google login failed!");
-                                            }
-                                        })
-                                        .catch(error => console.error("Error:", error));
-                                }
-                            </script>
-                            
-
-                            <div class="customer-option mt-4 text-center">
-                                <span class="text-secondary">No account yet?</span>
-                                <a href="#register-tab" class="btn-text js-show-register">Create Account</a>
-                            </div>
+                            <div id="loginMessage" class="alert mt-3" style="display: none;"></div>
                         </form>
                     </div>
                 </div>
                 <div class="tab-pane fade" id="tab-item-register" role="tabpanel" aria-labelledby="register-tab">
                     <div class="register-form">
-                        <form name="register-form" class="needs-validation" novalidate="" action="/api/register/"
-                            method="POST">
+                        <form name="register-form" class="needs-validation" novalidate id="registerForm">
                             {% csrf_token %}
                             <div class="form-floating mb-3">
                                 <input name="username" type="text" class="form-control form-control_gray"
-                                    id="customerNameRegisterInput" placeholder="Username" required="">
-                                <label for="customerNameRegisterInput">Username</label>
+                                    id="registerUsername" placeholder="Username" required>
+                                <label for="registerUsername">Username</label>
                             </div>
-
-                            <div class="pb-3"></div>
 
                             <div class="form-floating mb-3">
                                 <input name="email" type="email" class="form-control form-control_gray"
-                                    id="customerEmailRegisterInput" placeholder="Email address *" required="">
-                                <label for="customerEmailRegisterInput">Email address *</label>
+                                    id="registerEmail" placeholder="Email address *" required>
+                                <label for="registerEmail">Email address *</label>
                             </div>
-
-                            <div class="pb-3"></div>
 
                             <div class="form-floating mb-3">
                                 <input name="password" type="password" class="form-control form-control_gray"
-                                    id="customerPasswodRegisterInput" placeholder="Password *" required="">
-                                <label for="customerPasswodRegisterInput">Password *</label>
-                            </div>
-
-                            <div class="d-flex align-items-center mb-3 pb-2">
-                                <p class="m-0">Your personal data will be used to support your experience throughout
-                                    this website, to manage access to your account, and for other purposes described in
-                                    our privacy policy.</p>
+                                    id="registerPassword" placeholder="Password *" required>
+                                <label for="registerPassword">Password *</label>
                             </div>
 
                             <button class="btn btn-primary w-100 text-uppercase" type="submit">Register</button>
-
-                            <script src="https://accounts.google.com/gsi/client" async defer></script>
-
-                            <!-- Google Login Button -->
-                            <div id="g_id_onload" data-client_id="560213457682-udbg5k8su2oi3okvt2hlm42kl353jv9g.apps.googleusercontent.com"
-                                data-callback="handleCredentialResponse" data-auto_prompt="false">
-                            </div>
-
-                            <div class="g_id_signin" data-type="standard"></div>
-
-                            <script>
-                                function handleCredentialResponse(response) {
-                                    console.log("Google Token:", response.credential);
                             
-                                    // Send token to backend
-                                    fetch("/api/auth/google/", {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({ access_token: response.credential }),
-                                    })
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            if (data.session_id) {
-                                                localStorage.setItem("session_id", data.session_id);
-                                                localStorage.setItem("user", JSON.stringify(data.user));
-                                                window.location.href = "/"; // Redirect after login
-                                            } else {
-                                                alert("Google login failed!");
-                                            }
-                                        })
-                                        .catch(error => console.error("Error:", error));
-                                }
-                            </script>
-
+                            <div id="registerMessage" class="alert mt-3" style="display: none;"></div>
                         </form>
                     </div>
                 </div>
@@ -1019,8 +935,126 @@
 
     <!-- Footer Scripts -->
     <script src="{% static 'js/theme.js' %}"></script>
+    <script src="{% static 'js/jwt.js' %}"></script>
+    <script src="{% static 'js/jwt_decode.js' %}"></script>
+    <script src="{% static 'js/jwt_encode.js' %}"></script>
+    <script src="{% static 'js/jwt_verify.js' %}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Login Form Handler
+        const loginForm = document.getElementById('loginForm');
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const messageDiv = document.getElementById('loginMessage');
+            
+            fetch('/api/login/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    messageDiv.className = 'alert alert-success mt-3';
+                    messageDiv.textContent = 'Login successful! Redirecting...';
+                    messageDiv.style.display = 'block';
+                    
+                    // Store token if needed
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
+                    }
+                    
+                    // Redirect after short delay
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    messageDiv.className = 'alert alert-danger mt-3';
+                    messageDiv.textContent = data.message || 'Login failed. Please try again.';
+                    messageDiv.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                messageDiv.className = 'alert alert-danger mt-3';
+                messageDiv.textContent = 'An error occurred. Please try again.';
+                messageDiv.style.display = 'block';
+                console.error('Error:', error);
+            });
+        });
 
+        // Register Form Handler
+        const registerForm = document.getElementById('registerForm');
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const messageDiv = document.getElementById('registerMessage');
+            
+            fetch('/api/register/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    messageDiv.className = 'alert alert-success mt-3';
+                    messageDiv.textContent = 'Registration successful! Please login.';
+                    messageDiv.style.display = 'block';
+                    
+                    // Switch to login tab after short delay
+                    setTimeout(() => {
+                        document.getElementById('login-tab').click();
+                    }, 1500);
+                } else {
+                    messageDiv.className = 'alert alert-danger mt-3';
+                    messageDiv.textContent = data.message || 'Registration failed. Please try again.';
+                    messageDiv.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                messageDiv.className = 'alert alert-danger mt-3';
+                messageDiv.textContent = 'An error occurred. Please try again.';
+                messageDiv.style.display = 'block';
+                console.error('Error:', error);
+            });
+        });
 
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+    </script>
 
 </body>
 
