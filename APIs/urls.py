@@ -10,7 +10,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('api/register/', views.register_user, name='register_user'),
     path('api/login/', views.login_user, name='login_user'),
-    path("api/auth/google/", views.google_auth, name="google_auth"),
+    # path("api/auth/google/", views.google_auth, name="google_auth"),
     
     path('api/logout/', views.logout_user, name='logout_user'),
     path('api/login-sessions/<str:user_id>/', views.get_user_login_sessions, name='login_sessions'),
