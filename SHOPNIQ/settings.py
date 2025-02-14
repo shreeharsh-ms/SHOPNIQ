@@ -14,7 +14,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Enable Whitenoise for serving static files
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add Whitenoise middleware here
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -51,7 +51,8 @@ INSTALLED_APPS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Default Django auth backend
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    'APIs.auth.MongoDBAuthBackend',  # Custom backend for email-based auth
 ]
 
 import os
@@ -73,7 +74,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',  # Allow access to all endpoints by default
     ],
 }
 
@@ -87,7 +88,7 @@ CORS_ALLOW_ALL_ORIGINS = True  # For development only
 CORS_ALLOW_CREDENTIALS = True
 
 SITE_ID = 1
-LOGIN_URL = 'register_user'
+LOGIN_URL = 'login_view'
 LOGIN_REDIRECT_URL = 'index'
 LOGOUT_REDIRECT_URL = 'index'
 ACCOUNT_AUTHENTICATED_REDIRECT_URL = '/'
@@ -152,7 +153,7 @@ DEBUG = True
 # MongoDB Connection using PyMongo
 import pymongo
 
-MONGO_URI= "mongodb+srv://shree:Y2qK9yW21YLMQCUT@cluster0.4evpu.mongodb.net/?retryWrites=true&w=majority"
+MONGO_URI = "mongodb+srv://ramrajurkar2020:ramdb013@cluster0.xwifiky.mongodb.net/"
 
 MONGO_CLIENT = pymongo.MongoClient(MONGO_URI)
 MONGO_DB = MONGO_CLIENT["shopniq_db"]
@@ -183,3 +184,16 @@ from django.core.mail import send_mail
 #     from_email=DEFAULT_FROM_EMAIL,  # Uses the default
 #     recipient_list=['user@example.com']
 # )
+
+SESSION_COOKIE_SECURE = not DEBUG  # Use secure cookies in production
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = False  # Set to False in development
+CSRF_COOKIE_HTTPONLY = False  # Set to False to allow JavaScript access
+CSRF_USE_SESSIONS = False  # Ensure this is False (default)
+
+# Debug CSRF middleware
+import logging
+logger = logging.getLogger('django.security.csrf')
+logger.setLevel(logging.DEBUG)
+
+AUTH_USER_MODEL = 'APIs.CustomUser'

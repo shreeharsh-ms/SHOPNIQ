@@ -10,6 +10,9 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('api/register/', views.register_user, name='register_user'),
     path('api/login/', views.login_user, name='login_user'),
+    path('login/', views.login_view, name='login_view'),
+    path('get-csrf-token/', views.get_csrf_token, name='get_csrf_token'),
+
     # path("api/auth/google/", views.google_auth, name="google_auth"),
     
     path('api/logout/', views.logout_user, name='logout_user'),

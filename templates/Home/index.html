@@ -801,12 +801,11 @@
                             <div class="pc__img-wrapper">
                                 <a href="{% url 'product_detail' product_id=product.id %}">
                                 
-                                    <img loading="lazy" src="{{ product.image_url }}" width="330" height="400" 
+                                    <img loading="lazy" src={{ product.image_url }}" width="330" height="400" 
                                          alt="{{ product.name }}" class="pc__img">
-                                    {% if product.image_url_alt %}
-                                        <img loading="lazy" src="{{ product.image_url_alt }}" width="330" height="400" 
-                                             alt="{{ product.name }}" class="pc__img pc__img-second">
-                                    {% endif %}
+                                     {% if product.image_url_alt %}
+                                         <img loading="lazy" src="{{ product.image_url_alt }}" width="330" height="400" alt="{{ product.name }}" class="pc__img pc__img-second">
+                                     {% endif %}
                                 </a>
                                 {% if product.stock > 0 %}
                                 <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside btn-primary"

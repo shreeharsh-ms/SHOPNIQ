@@ -63,7 +63,7 @@
             <div class="tab-content pt-2" id="login_register_tab_content">
                 <div class="tab-pane fade show active" id="tab-item-login" role="tabpanel" aria-labelledby="login-tab">
                     <div class="login-form">
-                        <form name="login-form" class="needs-validation" novalidate id="loginForm">
+                        <form id="loginForm" method="post" enctype="application/x-www-form-urlencoded">
                             {% csrf_token %}
                             <div class="form-floating mb-3">
                                 <input name="email" type="email" class="form-control form-control_gray"
@@ -80,8 +80,8 @@
                             <div class="d-flex align-items-center mb-3 pb-2">
                                 <div class="form-check mb-0">
                                     <input name="remember" class="form-check-input form-check-input_fill"
-                                        type="checkbox" id="rememberMe">
-                                    <label class="form-check-label text-secondary" for="rememberMe">
+                                        type="checkbox" id="rememberMeLogin">
+                                    <label class="form-check-label text-secondary" for="rememberMeLogin">
                                         Remember me
                                     </label>
                                 </div>
@@ -115,7 +115,7 @@
                                 <label for="registerPassword">Password *</label>
                             </div>
 
-                            <button class="btn btn-primary w-100 text-uppercase" type="submit">Register</button>
+                            <button type="submit" id="registerSubmitButton" class="btn btn-primary w-100 text-uppercase">Register</button>
                             
                             <div id="registerMessage" class="alert mt-3" style="display: none;"></div>
                         </form>
@@ -953,10 +953,9 @@
             fetch('/api/login/', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify({
+                body: new URLSearchParams({
                     email: email,
                     password: password
                 })
@@ -991,6 +990,22 @@
             });
         });
 
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
         // Register Form Handler
         const registerForm = document.getElementById('registerForm');
         registerForm.addEventListener('submit', function(e) {
@@ -1000,12 +1015,29 @@
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
             const messageDiv = document.getElementById('registerMessage');
-            
+            const submitButton = document.getElementById('registerSubmitButton');
+
+            // Debug CSRF token
+            const csrfToken = getCookie('csrftoken');
+            console.log('CSRF Token (Cookies):', csrfToken);
+
+            // Client-side validation for email
+            if (!email.includes('@')) {
+                messageDiv.className = 'alert alert-danger mt-3';
+                messageDiv.textContent = 'Please enter a valid email address.';
+                messageDiv.style.display = 'block';
+                return;
+            }
+
+            // Disable submit button during request
+            submitButton.disabled = true;
+            submitButton.textContent = 'Registering...';
+
             fetch('/api/register/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'X-CSRFToken': csrfToken
                 },
                 body: JSON.stringify({
                     username: username,
@@ -1026,7 +1058,7 @@
                     }, 1500);
                 } else {
                     messageDiv.className = 'alert alert-danger mt-3';
-                    messageDiv.textContent = data.message || 'Registration failed. Please try again.';
+                    messageDiv.textContent = data.error || 'Registration failed. Please try again.';
                     messageDiv.style.display = 'block';
                 }
             })
@@ -1035,24 +1067,12 @@
                 messageDiv.textContent = 'An error occurred. Please try again.';
                 messageDiv.style.display = 'block';
                 console.error('Error:', error);
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Register';
             });
         });
-
-        // Helper function to get CSRF token
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
     });
     </script>
 

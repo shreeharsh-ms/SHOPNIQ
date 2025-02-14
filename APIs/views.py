@@ -15,7 +15,7 @@ from django.conf import settings
 from django.http import Http404
 from APIs.mongodb import contact_messages
 from django.contrib.auth.decorators import login_required  # Add this import
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout as auth_logout
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -28,6 +28,9 @@ from django.utils.encoding import force_bytes
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.contrib.auth.tokens import default_token_generator
+from django.middleware.csrf import get_token
+from django.http import JsonResponse
+# from .mongodb import cart_collection, products_collection  # Ensure these are defined
 
 
 # Y2qK9yW21YLMQCUT
@@ -36,14 +39,21 @@ from django.contrib.auth.tokens import default_token_generator
 ist = pytz.timezone('Asia/Kolkata')
 
 # MongoDB setup
-client = pymongo.MongoClient("mongodb+srv://shree:Y2qK9yW21YLMQCUT@cluster0.4evpu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+# client = pymongo.MongoClient(
+#     settings.MO,
+#     connectTimeoutMS=30000,  # Increase the connection timeout
+#     socketTimeoutMS=30000    # Increase the socket timeout
+# )
 
-db = client["shopniq_db"]
-login_sessions = db["login_sessions"]
+
+products_collection = settings.MONGO_DB['products']
+cart_collection_collection = settings.MONGO_DB['cart']
+
+login_sessions = settings.MONGO_DB["login_sessions"]
 
 try:
     # Test MongoDB connection
-    products_collection = db["products"]
+    products_collection = settings.MONGO_DB["products"]
     
     # Try to fetch one product
     test_product = products_collection.find_one()
@@ -51,90 +61,43 @@ try:
 except Exception as e:
     print("MongoDB Connection Error:", str(e))
 
+def login_view(request):
+    return render(request, 'REGISTER/register.html')
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 def login_user(request):
     if request.method == 'GET':
-        # Render the login page
-        return render(request, 'REGISTER/register.html')
+        # Generate CSRF token for the login form
+        csrf_token = get_token(request)
+        return JsonResponse({'csrf_token': csrf_token})
         
     elif request.method == 'POST':
-        try:
-            data = request.data
-            email = data.get('email')
-            password = data.get('password')
-            
-            print(f"Login attempt for email: {email}")  # Debug print
-            
-            if not email or not password:
-                return JsonResponse({
-                    "success": False,
-                    "message": "Email and password are required"
-                }, status=400)
-                
-            # Find user in MongoDB
-            user = users_collection.find_one({"email": email})
-            if not user:
-                return JsonResponse({
-                    "success": False,
-                    "message": "Invalid email or password"
-                }, status=401)
-                
-            # Verify password
-            django_user = authenticate(request, username=email, password=password)
-            if not django_user:
-                return JsonResponse({
-                    "success": False,
-                    "message": "Invalid email or password"
-                }, status=401)
-                
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        # Authenticate the user
+        django_user = authenticate(request, email=email, password=password)
+        if django_user is not None:
             # Log the user in
             login(request, django_user)
-            
-            # Store MongoDB user ID in session
-            request.session['user_id'] = str(user['_id'])
-            
-            # Generate JWT token
-            token = jwt.encode({
-                'user_id': str(user['_id']),
-                'email': user['email'],
-                'exp': datetime.now(ist) + timedelta(days=1)
-            }, 'your-secret-key', algorithm='HS256')
-            
-            # Update last login
-            users_collection.update_one(
-                {"_id": user['_id']},
-                {
-                    "$set": {
-                        "last_login": datetime.now(ist),
-                        "last_token": token
-                    }
-                }
-            )
-            
+
+            # Store user_id in session
+            print("Storing user_id in session:", str(django_user.id))  # Debug print
+            request.session['user_id'] = str(django_user.id)
             return JsonResponse({
                 "success": True,
-                "message": "Login successful",
-                "token": token,
-                "user": {
-                    "id": str(user['_id']),
-                    "email": user['email'],
-                    "name": user.get('name', ''),
-                    "phone": user.get('phone', ''),
-                    "address": user.get('address', '')
-                }
-            })
-            
-        except Exception as e:
-            print(f"Login error: {str(e)}")
-            import traceback
-            print(f"Traceback: {traceback.format_exc()}")
+                "message": "Login successful"
+            }, status=200)
+        else:
             return JsonResponse({
                 "success": False,
-                "message": "An error occurred during login"
-            }, status=500)
-
+                "message": "Invalid email or password"
+            }, status=401)
+    return JsonResponse({
+        "success": False,
+        "message": "Invalid request method"
+    }, status=400)
 
 def get_client_ip(request):
     """Extract the client IP address from the request"""
@@ -147,34 +110,23 @@ def get_client_ip(request):
 
 @api_view(['POST'])  # Typically, logout is a POST request
 def logout_user(request):
-    # Get the session_id from the request data (can also be from URL or headers if needed)
-    session_id = request.data.get("session_id")  # Ensure the key matches what you send from the frontend
-    print(session_id)
-    # Check if session_id is provided
-    if not session_id:
-        return Response({"error": "Session ID required"}, status=400)
-
     try:
-        # Update logout time in MongoDB using the session_id
-        result = login_sessions.update_one(
-            {"_id": ObjectId(session_id)},
-            {"$set": {"logout_time": datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S")}}  # Set the logout time
-        )
-
-        if result.modified_count == 0:
-            return Response({"error": "Invalid session ID or session already logged out"}, status=400)
-
-        # Optionally, you can also delete the session or perform other actions (e.g., cleanup)
-
-        # Send a success message back to the client
-        messages.success(request, "Logout successful!")
-        return Response({"message": "Logout successful!"}, status=200)
-        # messages.success(request, "Logout successful!")
-        # return redirect('register_page')  # Ensure 'index' URL pattern exists or change accordingly
-
+        # Clear session and cookies
+        auth_logout(request)
+        
+        response = JsonResponse({
+            "success": True,
+            "message": "Logout successful"
+        })
+        response.delete_cookie('sessionid')
+        response.delete_cookie('token')
+        return response
+        
     except Exception as e:
-        # If there's an error (e.g., MongoDB connection issue)
-        return Response({"error": str(e)}, status=500)
+        return JsonResponse({
+            "success": False,
+            "message": str(e)
+        }, status=500)
 
 from social_django.utils import psa
 from django.contrib.auth import login
@@ -229,17 +181,35 @@ def get_user_login_sessions(request, user_id):
 @api_view(['POST'])
 def register_user(request):
     data = request.data
+    print("data: ",data)
 
-    if MongoDBUser.get_user_by_email(data.get("email")):
-        return Response({"error": "User already exists"}, status=400)
+    try:
+        # Check if email is provided
+        if not data.get("email"):
+            return JsonResponse({"error": "Email is required"}, status=400)
+        
+        # Check if user already exists
+        if MongoDBUser.get_user_by_email(data.get("email")):
+            return JsonResponse({"error": "User already exists"}, status=400)
 
-    # Create new user
-    user = MongoDBUser.create_user(data.get("username"), data.get("email"), data.get("password"))
-
-    messages.success(request, "Registration successful! Please log in.")
-    
-    # Redirect to login page or send an appropriate response
-    return redirect('login_user')  # Adjust the URL pattern accordingly
+        # Create new user
+        user = MongoDBUser.create_user(
+            username=data.get("username"),
+            email=data.get("email"),
+            password=data.get("password")
+        )
+        
+        return JsonResponse({
+            "success": True,
+            "message": "Registration successful! Please log in."
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "message": str(e)
+        }, status=500)
+        
 
 
 
@@ -304,7 +274,10 @@ def index(request):
                                 
                                 if product:
                                     quantity = item["quantity"]
-                                    price = float(product["discounted_price"])
+                                    # price = float(product["discounted_price"])
+                                    # cart_total += item_total
+                                    # print(cart_total)
+                                    price = float(product.get("discounted_price") or product.get("price", 0))
                                     item_total = price * quantity
                                     cart_total += item_total
                                     
@@ -469,7 +442,7 @@ def contact_submit(request):
             }
             
             # Insert into MongoDB
-            result = db.contact_messages.insert_one(contact_data)
+            result = settings.MONGO_DB.contact_messages.insert_one(contact_data)
             
             if result.inserted_id:
                 messages.success(request, 'Thank you for your message! We will get back to you soon.')
@@ -1608,3 +1581,6 @@ def password_reset_request(request):
                 'success': False,
                 'message': 'An error occurred. Please try again later.'
             }, status=500)
+
+def get_csrf_token(request):
+    return JsonResponse({'csrf_token': get_token(request)})
