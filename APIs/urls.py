@@ -81,6 +81,14 @@ urlpatterns = [
              template_name='USER/password_reset_complete.html'
          ),
          name='password_reset_complete'),
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('customer-chat/', views.customer_chat, name='customer_chat'),
+    path('customer-details/', views.customer_details, name='customer_details'),
+    path('customers-list/', views.customers_list, name='customers_list'),
+    path('customer-stats/', views.customer_stats, name='customer_stats'),
+    path('login-dashboard/', views.login_dashboard, name='login_dashboard'),
+    path('orders-detail/', views.orders_detail, name='orders_detail'),
+    path('orders-list/', views.orders_list, name='orders_list'),
 
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) \

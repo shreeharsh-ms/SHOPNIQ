@@ -1584,3 +1584,29 @@ def password_reset_request(request):
 
 def get_csrf_token(request):
     return JsonResponse({'csrf_token': get_token(request)})
+
+
+
+def admin_dashboard(request):
+    return render(request, 'Admin/admin-Dashboard.html')
+
+def customer_chat(request):
+    return render(request, 'Admin/CustomerChat.html')
+
+def customer_details(request):
+    return render(request, 'Admin/CustomerDetails.html')
+
+def customers_list(request):
+    return render(request, 'Admin/CustomersList.html')
+
+def customer_stats(request):
+    return render(request, 'Admin/CustomerStats.html')
+
+def login_dashboard(request):
+    return render(request, 'Admin/LoginDashoard.html')
+
+def orders_detail(request):
+    return render(request, 'Admin/OrdersDetail.html')
+
+def orders_list(request):
+    return render(request, 'Admin/OrdersList.html')

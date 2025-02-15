@@ -15,7 +15,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="{% static 'js/cart.js' %}"></script>
 
-  
+
 
 
   <!-- Fonts -->
@@ -795,55 +795,40 @@
           aria-labelledby="collections-tab-1-trigger">
           <div class="row">
             {% if products %}
-                {% for product in products %}
-                    <div class="col-6 col-md-4 col-lg-3">
-                        <div class="product-card mb-3 mb-md-4 mb-xxl-5">
-                            <div class="pc__img-wrapper">
-                                <a href="{% url 'product_detail' product_id=product.id %}">
-                                
-                                    <img loading="lazy" src={{ product.image_url }}" width="330" height="400" 
-                                         alt="{{ product.name }}" class="pc__img">
-                                     {% if product.image_url_alt %}
-                                         <img loading="lazy" src="{{ product.image_url_alt }}" width="330" height="400" alt="{{ product.name }}" class="pc__img pc__img-second">
-                                     {% endif %}
-                                </a>
-                                {% if product.stock > 0 %}
-                                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside btn-primary"
-                                        data-aside="cartDrawer" 
-                                        data-product-id="{{ product.id }}" 
-                                        title="Add To Cart"
-                                        type="submit">
-                                    Add To Cart 
-                                </button>
-                              {% else %}
-                                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium btn-secondary"
-                                        disabled
-                                        title="Out of Stock">
-                                    Out of Stock
-                                </button>
-                              {% endif %}
-                            </div>
+            {% for product in products %}
+            {% load static %} <!-- Ensure static is loaded at the top -->
 
-                            <div class="pc__info position-relative">
-                                <p class="pc__category">{{ product.category }}</p>
-                                <h6 class="pc__title"><a href="#">{{ product.name }}</a></h6>
-                                <div class="product-card__price d-flex">
-                                    {% if product.discounted_price < product.price %}
-                                    <span class="money price price-sale">${{ product.discounted_price }}</span>
-                                    <!-- <span class="money price price_discount">${{ product.discounted_price }}</span> -->
-                                        <span class="money price price-old">${{ product.price }}</span>
-                                    {% else %}
-                                        <span class="money price">${{ product.price }}</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <div class="col-12 text-center">
-                    <p>No products available at the moment.</p>
+            <div class="col-6 col-md-4 col-lg-3">
+              <div class="product-card mb-3 mb-md-4 mb-xxl-5">
+                <div class="pc__img-wrapper">
+                  <a href="{% url 'product_detail' product_id=product.id %}">
+                    <img loading="lazy" src="{% static 'images/product_3.jpg' %}" width="330" height="400"
+                      alt="Cotton T-Shirt" class="pc__img">
+
+                    <img loading="lazy" src="{% static 'images/product_3-1.jpg' %}" width="330" height="400"
+                      alt="Cotton T-Shirt" class="pc__img pc__img-second">
+                  </a>
                 </div>
+
+                <div class="pc__info position-relative">
+                  <p class="pc__category">{{ product.category }}</p>
+                  <h6 class="pc__title">
+                    <a href="{% url 'product_detail' product_id=product.id %}">{{ product.name }}</a>
+                  </h6>
+                  <div class="product-card__price d-flex">
+                    <span class="money price price-sale">${{ product.discounted_price }}</span>
+                    <span class="money price price-old">${{ product.original_price }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+            {% endfor %}
+            {% else %}
+            <div class="col-12 text-center">
+              <p>No products available at the moment.</p>
+            </div>
             {% endif %}
           </div>
         </div>
@@ -2405,56 +2390,54 @@
   <!-- Cart Drawer -->
   <div class="aside aside_right overflow-hidden cart-drawer" id="cartDrawer">
     <div class="aside-header d-flex align-items-center">
-      <h3 class="text-uppercase fs-6 mb-0">SHOPPING BAG ( <span class="cart-amount js-cart-items-count">{{ cart_items_count|default:0 }}</span> ) </h3>
+      <h3 class="text-uppercase fs-6 mb-0">SHOPPING BAG ( <span class="cart-amount js-cart-items-count">{{
+          cart_items_count|default:0 }}</span> ) </h3>
       <button class="btn-close-lg js-close-aside btn-close-aside ms-auto"></button>
     </div><!-- /.aside-header -->
 
     <div class="aside-content cart-drawer-items-list">
       {% if cart_items %}
-        {% for item in cart_items %}
-          <div class="cart-drawer-item d-flex position-relative">
-            <div class="position-relative">
-              <a href="{% url 'product_detail' item.product.id %}">
-                <img loading="lazy" class="cart-drawer-item__img" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
-              </a>
-            </div>
-            <div class="cart-drawer-item__info flex-grow-1">
-              <h6 class="cart-drawer-item__title fw-normal">
-                <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
-              </h6>
-              {% if item.color %}
-                <p class="cart-drawer-item__option text-secondary">Color: {{ item.color }}</p>
-              {% endif %}
-              {% if item.size %}
-                <p class="cart-drawer-item__option text-secondary">Size: {{ item.size }}</p>
-              {% endif %}
-              <div class="d-flex align-items-center justify-content-between mt-1">
-                <div class="qty-control position-relative">
-                  <input type="number" 
-                         name="quantity" 
-                         value="{{ item.quantity }}" 
-                         min="1" 
-                         data-item-id="{{ item.id }}"
-                         class="qty-control__number border-0 text-center">
-                  <div class="qty-control__reduce text-start">-</div>
-                  <div class="qty-control__increase text-end">+</div>
-                </div>
-                <span class="cart-drawer-item__price money price">${{ item.get_total_price }}</span>
-              </div>
-            </div>
-
-            <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove" 
-                    data-item-id="{{ item.id }}"></button>
-          </div>
-
-          {% if not forloop.last %}
-            <hr class="cart-drawer-divider">
-          {% endif %}
-        {% endfor %}
-      {% else %}
-        <div class="text-center py-4">
-          <p>Your cart is empty</p>
+      {% for item in cart_items %}
+      <div class="cart-drawer-item d-flex position-relative">
+        <div class="position-relative">
+          <a href="{% url 'product_detail' item.product.id %}">
+            <img loading="lazy" class="cart-drawer-item__img" src="{{ item.product.image.url }}"
+              alt="{{ item.product.name }}">
+          </a>
         </div>
+        <div class="cart-drawer-item__info flex-grow-1">
+          <h6 class="cart-drawer-item__title fw-normal">
+            <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+          </h6>
+          {% if item.color %}
+          <p class="cart-drawer-item__option text-secondary">Color: {{ item.color }}</p>
+          {% endif %}
+          {% if item.size %}
+          <p class="cart-drawer-item__option text-secondary">Size: {{ item.size }}</p>
+          {% endif %}
+          <div class="d-flex align-items-center justify-content-between mt-1">
+            <div class="qty-control position-relative">
+              <input type="number" name="quantity" value="{{ item.quantity }}" min="1" data-item-id="{{ item.id }}"
+                class="qty-control__number border-0 text-center">
+              <div class="qty-control__reduce text-start">-</div>
+              <div class="qty-control__increase text-end">+</div>
+            </div>
+            <span class="cart-drawer-item__price money price">${{ item.get_total_price }}</span>
+          </div>
+        </div>
+
+        <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove"
+          data-item-id="{{ item.id }}"></button>
+      </div>
+
+      {% if not forloop.last %}
+      <hr class="cart-drawer-divider">
+      {% endif %}
+      {% endfor %}
+      {% else %}
+      <div class="text-center py-4">
+        <p>Your cart is empty</p>
+      </div>
       {% endif %}
     </div>
 
@@ -2465,7 +2448,8 @@
         <span class="cart-subtotal fw-medium">${{ cart_total|default:"0.00" }}</span>
       </div>
       <a href="{% url 'cart' %}" class="btn btn-light mt-3 d-block">View Cart</a>
-      <a href="{% url 'checkout' %}" class="btn btn-primary mt-3 d-block {% if not cart_items %}disabled{% endif %}">Checkout</a>
+      <a href="{% url 'checkout' %}"
+        class="btn btn-primary mt-3 d-block {% if not cart_items %}disabled{% endif %}">Checkout</a>
     </div>
   </div><!-- /.aside -->
 
@@ -2908,78 +2892,78 @@
   <script src="{% static 'js/theme.js' %}"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Handle quantity changes
-        document.querySelectorAll('.qty-control__number').forEach(input => {
-            input.addEventListener('change', async function() {
-                const itemId = this.dataset.itemId;
-                const quantity = this.value;
-                
-                try {
-                    const response = await fetch('/api/cart/update-quantity/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        },
-                        body: JSON.stringify({
-                            item_id: itemId,
-                            quantity: quantity
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        // Refresh cart display
-                        location.reload();
-                    }
-                } catch (error) {
-                    console.error('Error updating quantity:', error);
-                }
-            });
-        });
+    document.addEventListener('DOMContentLoaded', function () {
+      // Handle quantity changes
+      document.querySelectorAll('.qty-control__number').forEach(input => {
+        input.addEventListener('change', async function () {
+          const itemId = this.dataset.itemId;
+          const quantity = this.value;
 
-        // Handle remove item
-        document.querySelectorAll('.js-cart-item-remove').forEach(button => {
-            button.addEventListener('click', async function() {
-                const itemId = this.dataset.itemId;
-                
-                try {
-                    const response = await fetch('/api/cart/remove-item/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        },
-                        body: JSON.stringify({
-                            item_id: itemId
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        // Refresh cart display
-                        location.reload();
-                    }
-                } catch (error) {
-                    console.error('Error removing item:', error);
-                }
+          try {
+            const response = await fetch('/api/cart/update-quantity/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+              },
+              body: JSON.stringify({
+                item_id: itemId,
+                quantity: quantity
+              })
             });
+
+            if (response.ok) {
+              // Refresh cart display
+              location.reload();
+            }
+          } catch (error) {
+            console.error('Error updating quantity:', error);
+          }
         });
+      });
+
+      // Handle remove item
+      document.querySelectorAll('.js-cart-item-remove').forEach(button => {
+        button.addEventListener('click', async function () {
+          const itemId = this.dataset.itemId;
+
+          try {
+            const response = await fetch('/api/cart/remove-item/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+              },
+              body: JSON.stringify({
+                item_id: itemId
+              })
+            });
+
+            if (response.ok) {
+              // Refresh cart display
+              location.reload();
+            }
+          } catch (error) {
+            console.error('Error removing item:', error);
+          }
+        });
+      });
     });
 
     // Helper function to get CSRF token
     function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
         }
-        return cookieValue;
+      }
+      return cookieValue;
     }
   </script>
 
