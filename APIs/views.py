@@ -1610,3 +1610,7 @@ def orders_detail(request):
 
 def orders_list(request):
     return render(request, 'Admin/OrdersList.html')
+
+
+def add_product(request):
+    return render(request, 'Admin/add-product.html')

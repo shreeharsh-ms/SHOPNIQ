@@ -1,0 +1,1168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-startbar="light" data-bs-theme="light">
+
+<head>
+
+
+    <meta charset="utf-8">
+    <title>Rizz | Rizz - Admin & Dashboard Template</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta content="Premium Multipurpose Admin & Dashboard Template" name="description">
+    <meta content="" name="author">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="images/favicon.ico">
+
+
+    <!-- App css -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'css/icons.min.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'css/app.min.css' %}" rel="stylesheet" type="text/css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #06d6a0;
+            --danger-color: #ef476f;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            background: #fff;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        h2 {
+            color: var(--dark-color);
+            margin-bottom: 2.5rem;
+            font-size: 2.2rem;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 0.9rem;
+        }
+
+        label.required::after {
+            content: '*';
+            color: var(--danger-color);
+            margin-left: 4px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.8rem 1.2rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #fff;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+            outline: none;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .file-upload-wrapper {
+            position: relative;
+            margin: 2rem 0;
+        }
+
+        .file-upload {
+            border: 2px dashed #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary-color);
+            background: rgba(67, 97, 238, 0.05);
+        }
+
+        .file-upload.dragover {
+            border-color: var(--success-color);
+            background: rgba(6, 214, 160, 0.05);
+        }
+
+        .file-upload input {
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .upload-prompt {
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-prompt i {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .selected-files {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        .price-calculator {
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .price-display {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .price-item {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            background: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .price-item label {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        .price-item span {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn i {
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: var(--dark-color);
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .switch-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #cbd5e1;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background: var(--primary-color);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+
+        .image-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .preview-item {
+            position: relative;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: var(--danger-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .preview-item:hover .remove-image {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+
+            .row {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+                width: 100%;
+            }
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .input-error {
+            border-color: var(--danger-color) !important;
+        }
+
+        .input-success {
+            border-color: var(--success-color) !important;
+        }
+
+        .side-by-side {
+            width: 48%;
+        }
+
+        :root {
+            --primary-color: #4A90E2;
+            --secondary-color: #3F51B5;
+            --bg-light: rgba(255, 255, 255, 0.7);
+            --bg-dark: rgba(245, 245, 245, 0.6);
+            --text-color: #333;
+            --border-radius: 12px;
+            --shadow-light: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            background: rgb(250, 250, 250);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .toggle-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        /* Multi-Select Styling */
+        .multi-select {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: var(--bg-light);
+            padding: 10px;
+            min-height: 40px;
+        }
+
+        .option {
+            padding: 8px 14px;
+            background: #eee;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .option:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Selected Option with Check Icon */
+        .option.selected {
+            background: var(--secondary-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        .option.selected::after {
+            content: "✔";
+            position: absolute;
+            right: 8px;
+            font-size: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Selected Items Display */
+        .selected-items {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Input Fields & Button */
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            background: #fff;
+            margin-top: 8px;
+        }
+
+        .add-btn {
+            margin-top: 8px;
+            background-color: rgb(158, 208, 249);
+            color: white;
+            border: none;
+            padding: 18px 14px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease-in-out;
+            width: 100%;
+        }
+
+        .add-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .switchButtons {
+            width: 50%;
+        }
+    </style>
+
+</head>
+
+
+<!-- Top Bar Start -->
+
+<body>
+    <!-- Top Bar Start -->
+    <div class="topbar d-print-none" style="height: 100%;
+    overflow-y: scroll;">
+        <div class="container">
+            <h2>Add New Product</h2>
+            <form id="product-form">
+                <div class="row">
+                    <div class="form-group">
+                        <label class="required">Product Name</label>
+                        <input type="text" placeholder="Enter product name" id="product-name" required>
+                        <span class="error-message">Product name is required</span>
+                    </div>
+                    <div class="form-group">
+                        <label>SKU Code</label>
+                        <input type="text" placeholder="Enter SKU code" id="sku-code">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label class="required">Category</label>
+                        <select id="category" required>
+                            <option value="">Select Category</option>
+                            <option>Apparel</option>
+                            <option>Footwear</option>
+                            <option>Accessories</option>
+                            <option>Equipment</option>
+                        </select>
+                        <span class="error-message">Please select a category</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Subcategory</label>
+                        <select id="subcategory">
+                            <option value="">Select Subcategory</option>
+                            <option>T-Shirts</option>
+                            <option>Hoodies</option>
+                            <option>Shoes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label class="required">Price</label>
+                        <input type="number" step="0.01" placeholder="Enter price" id="price" required>
+                        <span class="error-message">Valid price is required</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Discount (%)</label>
+                        <input type="number" step="0.1" placeholder="Enter discount" id="discount">
+                    </div>
+                    <div class="form-group">
+                        <label>Stock Quantity</label>
+                        <input type="number" placeholder="Enter quantity" id="quantity">
+                    </div>
+                </div>
+
+                <div class="price-calculator">
+                    <div class="price-display">
+                        <div class="price-item" style="
+                        background: #fdf0d9;
+                    ">
+                            <label>Original Price</label>
+                            <span id="original-price">$0.00</span>
+                        </div>
+                        <div class="price-item" style="
+                        background: #d1dffa;
+                    ">
+                            <label>Discount Amount</label>
+                            <span id="discount-amount">$0.00</span>
+                        </div>
+                        <div class="price-item" style="background: #c2fae3;">
+                            <label>Final Price</label>
+                            <span id="final-price">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+                <style>
+                    .form-group {
+                        display: flex;
+                        flex-direction: column;
+                        position: relative;
+                    }
+
+                    .toggle-container {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        margin-bottom: 5px;
+                    }
+
+                    .switch {
+                        position: relative;
+                        display: inline-block;
+                        width: 40px;
+                        height: 20px;
+                    }
+
+                    .switch input {
+                        opacity: 0;
+                        width: 0;
+                        height: 0;
+                    }
+
+                    .slider {
+                        position: absolute;
+                        cursor: pointer;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background-color: #ccc;
+                        transition: 0.4s;
+                        border-radius: 20px;
+                    }
+
+                    .slider:before {
+                        position: absolute;
+                        content: "";
+                        height: 14px;
+                        width: 14px;
+                        left: 3px;
+                        bottom: 3px;
+                        background-color: white;
+                        transition: 0.4s;
+                        border-radius: 50%;
+                    }
+
+                    input:checked+.slider {
+                        background-color: #4CAF50;
+                    }
+
+                    input:checked+.slider:before {
+                        transform: translateX(20px);
+                    }
+
+                    input[type="number"] {
+                        padding: 8px;
+                        border: 1px solid #ccc;
+                        border-radius: 5px;
+                        font-size: 14px;
+                        background-color: #f5f5f5;
+                        cursor: not-allowed;
+                    }
+
+                    input[type="number"].enabled {
+                        background-color: white;
+                        cursor: text;
+                    }
+
+                    .row_dim {
+                        width: 24%;
+                    }
+                </style>
+
+                <div class="row" style="display: flex; justify-content: space-between;">
+                    <!-- Weight -->
+                    <div class="form-group row_dim">
+                        <div class="toggle-container">
+                            <label>Enable Weight</label>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-weight">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <input type="number" step="0.01" placeholder="Enter weight" id="weight" disabled>
+                    </div>
+
+                    <!-- Length -->
+                    <div class="form-group row_dim">
+                        <div class="toggle-container">
+                            <label>Enable Length</label>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-length">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <input type="number" step="0.1" placeholder="Enter length" id="length" disabled>
+                    </div>
+
+                    <!-- Width -->
+                    <div class="form-group row_dim">
+                        <div class="toggle-container">
+                            <label>Enable Width</label>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-width">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <input type="number" step="0.1" placeholder="Enter width" id="width" disabled>
+                    </div>
+
+                    <!-- Height -->
+                    <div class="form-group row_dim">
+                        <div class="toggle-container">
+                            <label>Enable Height</label>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-height">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <input type="number" step="0.1" placeholder="Enter height" id="height" disabled>
+                    </div>
+                </div>
+
+                <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        function toggleField(toggleId, inputId) {
+                            document.getElementById(toggleId).addEventListener("change", function () {
+                                let inputField = document.getElementById(inputId);
+                                inputField.disabled = !this.checked;
+                                inputField.classList.toggle("enabled", this.checked);
+                            });
+                        }
+
+                        toggleField("toggle-weight", "weight");
+                        toggleField("toggle-length", "length");
+                        toggleField("toggle-width", "width");
+                        toggleField("toggle-height", "height");
+                    });
+                </script>
+
+                <div class="container" style="display: flex; justify-content: space-between; gap: 20px;">
+                    <!-- Size Variants -->
+                    <div class="form-group switchButtons">
+                        <div class="switch-container">
+                            <label for="sizeAvailable" class="toggle-label">Has Size Variants?</label>
+                            <label class="switch">
+                                <input type="checkbox" id="sizeAvailable">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="size-selection hidden">
+                            <label>Select Sizes</label>
+                            <div class="multi-select" id="sizeOptions">
+                                <div class="option" data-value="XS">XS</div>
+                                <div class="option" data-value="S">S</div>
+                                <div class="option" data-value="M">M</div>
+                                <div class="option" data-value="L">L</div>
+                                <div class="option" data-value="XL">XL</div>
+                            </div>
+                            <input type="text" id="customSizeInput" placeholder="Add Custom Size">
+                            <button class="add-btn" onclick="addCustomSize()">Add</button>
+                            <input type="hidden" name="selectedSizes" id="selectedSizesInput">
+                        </div>
+                    </div>
+
+                    <!-- Color Variants -->
+                    <div class="form-group switchButtons">
+                        <div class="switch-container">
+                            <label for="colorAvailable" class="toggle-label">Has Color Variants?</label>
+                            <label class="switch">
+                                <input type="checkbox" id="colorAvailable">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="color-selection hidden">
+                            <label>Select Colors</label>
+                            <div class="multi-select" id="colorOptions">
+                                <div class="option" data-value="Black">Black</div>
+                                <div class="option" data-value="White">White</div>
+                                <div class="option" data-value="Red">Red</div>
+                                <div class="option" data-value="Blue">Blue</div>
+                                <div class="option" data-value="Green">Green</div>
+                            </div>
+                            <input type="text" id="customColorInput" placeholder="Add Custom Color">
+                            <button class="add-btn" onclick="addCustomColor()">Add</button>
+                            <input type="hidden" name="selectedColors" id="selectedColorsInput">
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        document.getElementById("sizeAvailable").addEventListener("change", function () {
+                            document.querySelector(".size-selection").classList.toggle("hidden", !this.checked);
+                        });
+
+                        document.getElementById("colorAvailable").addEventListener("change", function () {
+                            document.querySelector(".color-selection").classList.toggle("hidden", !this.checked);
+                        });
+                    });
+
+                    function toggleSelection(event) {
+                        event.target.classList.toggle("selected");
+                        updateFormFields();
+                    }
+
+                    document.querySelectorAll(".multi-select .option").forEach(option => {
+                        option.addEventListener("click", toggleSelection);
+                    });
+
+                    function updateFormFields() {
+                        let selectedSizes = Array.from(document.querySelectorAll("#sizeOptions .option.selected"))
+                            .map(opt => opt.dataset.value).join(",");
+                        let selectedColors = Array.from(document.querySelectorAll("#colorOptions .option.selected"))
+                            .map(opt => opt.dataset.value).join(",");
+
+                        document.getElementById("selectedSizesInput").value = selectedSizes;
+                        document.getElementById("selectedColorsInput").value = selectedColors;
+                    }
+
+                    function addCustomSize() {
+                        let input = document.getElementById("customSizeInput");
+                        let value = input.value.trim();
+                        if (value) {
+                            let newOption = document.createElement("div");
+                            newOption.classList.add("option");
+                            newOption.dataset.value = value;
+                            newOption.textContent = value;
+                            newOption.addEventListener("click", toggleSelection);
+                            document.getElementById("sizeOptions").appendChild(newOption);
+                            input.value = "";
+                            updateFormFields();
+                        }
+                    }
+
+                    function addCustomColor() {
+                        let input = document.getElementById("customColorInput");
+                        let value = input.value.trim();
+                        if (value) {
+                            let newOption = document.createElement("div");
+                            newOption.classList.add("option");
+                            newOption.dataset.value = value;
+                            newOption.textContent = value;
+                            newOption.addEventListener("click", toggleSelection);
+                            document.getElementById("colorOptions").appendChild(newOption);
+                            input.value = "";
+                            updateFormFields();
+                        }
+                    }
+                </script>
+
+                <div class="form-group">
+                    <label class="required">Product Description</label>
+                    <textarea rows="4" placeholder="Enter detailed product description" id="description"
+                        required></textarea>
+                    <span class="error-message">Description is required</span>
+                </div>
+                <div class="container"
+                    style="display: flex; justify-content: space-between; gap: 20px; padding: 10px; box-shadow: none;">
+                    <!-- Tag Selection -->
+                    <div class="form-group" style="width: 100%;">
+                        <label>Select Tags</label>
+                        <div class="multi-select" id="tagOptions">
+                            <div class="option" data-value="New">New</div>
+                            <div class="option" data-value="Trending">Trending</div>
+                            <div class="option" data-value="Best Seller">Best Seller</div>
+                            <div class="option" data-value="Limited Edition">Limited Edition</div>
+                            <div class="option" data-value="Exclusive">Exclusive</div>
+                        </div>
+                        <input type="text" id="customTagInput" placeholder="Add Custom Tag">
+                        <button class="add-btn" onclick="addCustomTag()">Add</button>
+                        <input type="hidden" name="selectedTags" id="selectedTagsInput">
+                    </div>
+                </div>
+
+                <script>
+                    function toggleSelection(event) {
+                        event.target.classList.toggle("selected");
+                        updateFormFields();
+                    }
+
+                    document.querySelectorAll(".multi-select .option").forEach(option => {
+                        option.addEventListener("click", toggleSelection);
+                    });
+
+                    function updateFormFields() {
+                        let selectedTags = Array.from(document.querySelectorAll("#tagOptions .option.selected"))
+                            .map(opt => opt.dataset.value).join(",");
+                        document.getElementById("selectedTagsInput").value = selectedTags;
+                    }
+
+                    function addCustomTag() {
+                        let input = document.getElementById("customTagInput");
+                        let value = input.value.trim();
+                        if (value) {
+                            let newOption = document.createElement("div");
+                            newOption.classList.add("option");
+                            newOption.dataset.value = value;
+                            newOption.textContent = value;
+                            newOption.addEventListener("click", toggleSelection);
+                            document.getElementById("tagOptions").appendChild(newOption);
+                            input.value = "";
+                            updateFormFields();
+                        }
+                    }
+                </script>
+
+
+
+                <div class="file-upload-wrapper">
+                    <div class="file-upload" id="drop-zone">
+                        <div class="upload-prompt">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & Drop files here<br>or <b>Browse</b></p>
+                        </div>
+                        <input type="file" id="file-input" multiple accept="image/*">
+                    </div>
+                    <div class="image-preview" id="image-preview"></div>
+                </div>
+
+                <style>
+                    .file-upload-wrapper {
+                        margin: auto;
+                        text-align: center;
+                    }
+
+                    .file-upload {
+                        border: 2px dashed #6c757d;
+                        padding: 20px;
+                        border-radius: 12px;
+                        transition: 0.3s ease-in-out;
+                        cursor: pointer;
+                        background: #f8f9fa;
+                    }
+
+                    .file-upload:hover {
+                        border-color: #007bff;
+                        background: #eef3ff;
+                    }
+
+                    /* Image Preview Grid */
+                    .image-preview {
+                        display: grid;
+                        gap: 15px;
+                        margin-top: 20px;
+                        padding: 10px;
+                        justify-content: center;
+                    }
+
+                    /* Individual Image Container */
+                    .image-container {
+                        position: relative;
+                        width: 120px;
+                        height: 120px;
+                        overflow: hidden;
+                        border-radius: 12px;
+                        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+                        transition: 0.3s ease-in-out;
+                        background: #fff;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+
+                    /* Image inside container */
+                    .image-container img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        border-radius: 12px;
+                        transition: transform 0.3s ease-in-out;
+                    }
+
+                    .image-container img:hover {
+                        transform: scale(1.05);
+                    }
+
+                    /* Cover Image Selection */
+                    .cover-selected {
+                        border: 3px solid #28a745;
+                        box-shadow: 0px 4px 15px rgba(40, 167, 69, 0.5);
+                    }
+
+                    /* Delete Button */
+                    .delete-btn {
+                        position: absolute;
+                        top: 5px;
+                        right: 5px;
+                        background: rgba(255, 0, 0, 0.85);
+                        color: white;
+                        border: none;
+                        cursor: pointer;
+                        font-size: 14px;
+                        border-radius: 50%;
+                        width: 26px;
+                        height: 26px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: 0.3s;
+                        box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+                    }
+
+                    .delete-btn:hover {
+                        background: red;
+                        transform: scale(1.1);
+                    }
+                </style>
+                <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        const fileInput = document.getElementById("file-input");
+                        const imagePreview = document.getElementById("image-preview");
+                        let coverImage = null;
+
+                        fileInput.addEventListener("change", function () {
+                            Array.from(this.files).forEach((file, index) => {
+                                const reader = new FileReader();
+                                reader.onload = function (e) {
+                                    const imageContainer = document.createElement("div");
+                                    imageContainer.classList.add("image-container");
+
+                                    const img = document.createElement("img");
+                                    img.src = e.target.result;
+                                    img.setAttribute("data-index", index);
+
+                                    if (index === 0) {
+                                        img.classList.add("cover-selected");
+                                        coverImage = img;
+                                    }
+
+                                    img.addEventListener("click", function () {
+                                        if (coverImage) {
+                                            coverImage.classList.remove("cover-selected");
+                                        }
+                                        coverImage = img;
+                                        img.classList.add("cover-selected");
+                                    });
+
+                                    const deleteBtn = document.createElement("button");
+                                    deleteBtn.innerHTML = "&times;";
+                                    deleteBtn.classList.add("delete-btn");
+                                    deleteBtn.addEventListener("click", function () {
+                                        imageContainer.remove();
+                                    });
+
+                                    imageContainer.appendChild(img);
+                                    imageContainer.appendChild(deleteBtn);
+                                    imagePreview.appendChild(imageContainer);
+                                };
+                                reader.readAsDataURL(file);
+                            });
+                        });
+                    });
+                </script>
+
+
+                <div class="row">
+                    <div class="form-group">
+                        <label>Publish Date</label>
+                        <input type="datetime-local" id="publish-date">
+                    </div>
+                    <div class="form-group switch-group">
+                        <label>Product Status</label>
+                        <label class="switch">
+                            <input type="checkbox" id="status">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="status-text">Draft</span>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Reset Form
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Product
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+    <!-- Top Bar End -->
+
+    <!-- leftbar-tab-menu -->
+    {% include 'partials/adminSideBar.html' %}
+    <!--end startbar-->
+
+
+    <div class="startbar-overlay d-print-none"></div>
+    <!-- end leftbar-tab-menu-->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("product-form");
+            const productName = document.getElementById("product-name");
+            const category = document.getElementById("category");
+            const price = document.getElementById("price");
+            const discount = document.getElementById("discount");
+            const quantity = document.getElementById("quantity");
+            const description = document.getElementById("description");
+            const fileInput = document.getElementById("file-input");
+            const fileList = document.getElementById("file-list");
+            const imagePreview = document.getElementById("image-preview");
+            const publishDate = document.getElementById("publish-date");
+            const statusToggle = document.getElementById("status");
+            const statusText = document.getElementById("status-text");
+
+            // Price Calculation Elements
+            const originalPrice = document.getElementById("original-price");
+            const discountAmount = document.getElementById("discount-amount");
+            const finalPrice = document.getElementById("final-price");
+
+            // Real-time Price Calculation
+            function updatePrice() {
+                let priceValue = parseFloat(price.value) || 0;
+                let discountValue = parseFloat(discount.value) || 0;
+                let discountCalc = (priceValue * discountValue) / 100;
+                let finalCalc = priceValue - discountCalc;
+
+                originalPrice.textContent = `$${priceValue.toFixed(2)}`;
+                discountAmount.textContent = `$${discountCalc.toFixed(2)}`;
+                finalPrice.textContent = `$${finalCalc.toFixed(2)}`;
+            }
+
+            price.addEventListener("input", updatePrice);
+            discount.addEventListener("input", updatePrice);
+
+            // Form Validation
+            form.addEventListener("submit", function (e) {
+                let valid = true;
+
+                [productName, category, price, description].forEach(field => {
+                    if (!field.value.trim()) {
+                        valid = false;
+                        field.nextElementSibling.style.display = "inline";
+                    } else {
+                        field.nextElementSibling.style.display = "none";
+                    }
+                });
+
+                if (!valid) {
+                    e.preventDefault();
+                }
+            });
+
+            // File Upload & Preview
+            fileInput.addEventListener("change", function () {
+                fileList.innerHTML = "";
+                imagePreview.innerHTML = "";
+
+                Array.from(this.files).forEach(file => {
+                    let listItem = document.createElement("div");
+                    listItem.textContent = file.name;
+                    fileList.appendChild(listItem);
+
+                    let reader = new FileReader();
+                    reader.onload = function (e) {
+                        let img = document.createElement("img");
+                        img.src = e.target.result;
+                        img.style.width = "100px";
+                        img.style.margin = "5px";
+                        imagePreview.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            // Status Toggle
+            statusToggle.addEventListener("change", function () {
+                statusText.textContent = this.checked ? "Published" : "Draft";
+            });
+
+            // Reset Form
+            form.addEventListener("reset", function () {
+                fileList.innerHTML = "";
+                imagePreview.innerHTML = "";
+                statusText.textContent = "Draft";
+                originalPrice.textContent = "$0.00";
+                discountAmount.textContent = "$0.00";
+                finalPrice.textContent = "$0.00";
+            });
+        });
+
+    </script>
+
+    <!-- Javascript  -->
+    <!-- vendor js -->
+
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/simplebar.min.js' %}"></script>
+    <script src="{% static 'js/apexcharts.min.js' %}"></script>
+    <script src="{% static 'js/ecommerce-index.init.js' %}"></script>
+    <script src="{% static 'js/app.js' %}"></script>
+
+
+</body><!--end body-->
+
+</html>
