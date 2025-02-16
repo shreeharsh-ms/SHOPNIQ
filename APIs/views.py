@@ -1614,3 +1614,6 @@ def orders_list(request):
 
 def add_product(request):
     return render(request, 'Admin/add-product.html')
+
+def editBanners(request):
+    return render(request, 'Admin/editBanners.html')
