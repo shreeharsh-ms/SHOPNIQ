@@ -81,14 +81,6 @@
       z-index: 1000;
     }
   </style>
-  <script>
-    setTimeout(function () {
-      const loader = document.getElementById("loader");
-      loader.style.opacity = "0"; // Fade out the loader
-      setTimeout(() => loader.style.display = "none", 500); // Fully hide the loader after fading out
-    }, 6500);
-  </script>
-
 </head>
 
 
@@ -113,28 +105,90 @@
     <span class="center-text">CLICK</span>
   </div>
 
-  <div style="display:flex" class="load-wrapper" id="loader">
-    <div style="width:0vw" class="load-bar"></div>
-    <div style="width:20vw;height:29vw" class="load-content">
-      <div class="load-img-w">
-        <div class="load-img is-1"></div>
-        <div class="load-img is-2"></div>
-        <div class="load-img is-3"></div>
-        <div class="load-img is-4"></div>
-        <div class="load-img is-5"></div>
-        <div class="load-img is-6"></div>
-        <div class="load-img is-7"></div>
-        <div class="load-img is-8"></div>
-        <div class="load-img is-9"></div>
-        <div class="load-img is-10"></div>
-      </div>
-      <div class="load-frame"></div><img src="{% static 'images/629d1811f665fd677cf641a6_logo-placeholder.svg' %}"
-        loading="lazy"
-        style="-webkit-transform:translate3d(null, 0vw, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-moz-transform:translate3d(null, 0vw, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);-ms-transform:translate3d(null, 0vw, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0);transform:translate3d(null, 0vw, 0) scale3d(1, 1, 1) rotateX(0) rotateY(0) rotateZ(0) skew(0, 0)"
-        alt="" class="load-logo">
-      <div class="load-title">Free cloneable</div>
-    </div>
+<div class="load-wrapper" id="loader">
+  <div class="video-container">
+    <video id="loader-video" autoplay muted>
+      <source src="{% static 'video/VN20250209_194857.mp4' %}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
   </div>
+</div>
+
+<style>
+/* Ensure the loader covers the entire viewport */
+.load-wrapper {
+  position: fixed; /* Cover the whole screen */
+  top: 0;
+  left: 0;
+  width: 100vw; /* Full viewport width */
+  height: 100vh; /* Full viewport height */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white; /* Set background to white */
+  z-index: 9999; /* Keep it on top */
+  transition: opacity 1s ease-out, filter 1s ease-out; /* Smooth fade-out and blur transition */
+  filter: blur(0); /* Initial blur is 0 */
+}
+
+/* Container for the video */
+.video-container {
+  background: white; /* White background for contrast */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80vw; /* Adjust width */
+  height: 80vh; /* Adjust height */
+  max-width: 1000px; /* Prevent it from getting too big */
+  max-height: 600px; /* Prevent it from getting too big */
+  border-radius: 10px; /* Optional: Rounded corners */
+  overflow: hidden; /* Ensures video stays inside */
+}
+
+/* Ensure the video fits inside the container */
+#loader-video {
+  width: 100%; /* Fit within container */
+  height: 100%; /* Fit within container */
+  object-fit: contain; /* Ensures full video is shown without cropping */
+}
+
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const video = document.getElementById("loader-video");
+  const loader = document.getElementById("loader");
+
+  function checkVisibility() {
+    const rect = video.getBoundingClientRect();
+    const isFullyVisible = rect.top >= 0 && rect.left >= 0 && rect.bottom <= window.innerHeight && rect.right <= window.innerWidth;
+
+    if (!isFullyVisible) {
+      loader.style.display = "none"; // Hide if video goes offscreen
+    } else {
+      loader.style.display = "flex"; // Show if fully visible
+    }
+  }
+
+  // Hide loader with smooth fade-out and blur when video ends
+  video.onended = function () {
+    loader.style.filter = "blur(10px)"; // Apply blur effect
+    loader.style.opacity = "0"; // Fade out
+    setTimeout(() => loader.style.display = "none", 1000); // Hide after transition
+  };
+
+  // Check visibility on resize and scroll
+  window.addEventListener("resize", checkVisibility);
+  window.addEventListener("scroll", checkVisibility);
+
+  // Initial check on load
+  checkVisibility();
+});
+
+</script>
+
+
+
 
   <script>
 
@@ -386,7 +440,7 @@
 
       <div class="logo">
         <a href="{% url 'index' %}">
-          <img src="{% static 'images/Shopniq_logo.png' %}" alt="Uomo" class="logo__image d-block">
+          <img src="{% static 'images/logo.png' %}" alt="Uomo" class="logo__image d-block">
         </a>
       </div><!-- /.logo -->
 

@@ -49,31 +49,7 @@ db = settings.MONGO_DB
 products_collection = settings.MONGO_DB['products']
 cart_collection_collection = settings.MONGO_DB['cart']
 
-print("\n" + "=" * 50)
-print(f"📂 DATABASE: {db.name}")
-print("=" * 50)
 
-# Iterate through all collections in the database
-for collection_name in db.list_collection_names():
-    print("\n" + "-" * 50)
-    print(f"📁 COLLECTION: {collection_name}")
-    print("-" * 50)
-
-    # Fetch all documents from the collection
-    documents = list(db[collection_name].find())  # Convert cursor to list for counting
-    if not documents:
-        print("⚠️  No documents found in this collection.")
-    else:
-        for i, document in enumerate(documents, 1):
-            print(f"\n📄 DOCUMENT {i}:\n" + "-" * 30)
-            print(document)
-            print("-" * 30)
-
-    print("-" * 50 + "\n")
-
-print("=" * 50)
-print("✅ DATABASE DUMP COMPLETED")
-print("=" * 50 + "\n")
 login_sessions = settings.MONGO_DB["login_sessions"]
 
 try:
@@ -1630,15 +1606,15 @@ def orders_detail(request):
 def orders_list(request):
     return render(request, 'Admin/OrdersList.html')
 
-<<<<<<< HEAD
 @login_required
 def test_view(request):
     return JsonResponse({"message": "You are logged in!"})
-=======
 
 def add_product(request):
     return render(request, 'Admin/add-product.html')
 
 def editBanners(request):
     return render(request, 'Admin/editBanners.html')
->>>>>>> 0218c74ed5381428a93a5ff5e2c7914e48a097c1
+
+def productsList(request):
+    return render(request, 'Admin/productsList.html')
