@@ -64,69 +64,77 @@ except Exception as e:
 def login_view(request):
     return render(request, 'REGISTER/register.html')
 
-@api_view(['GET', 'POST'])
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth import authenticate, login, logout as auth_logout
+from django.middleware.csrf import get_token
+from .permissions import IsAdmin, IsManager
+from .mongodb import MongoDBUser
+import bcrypt
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Anyone can register
+def register_user(request):
+    data = request.data
+
+    # Default role = user
+    role = data.get("role", "user")  # Allow setting role only if needed
+
+    if MongoDBUser.get_user_by_email(data.get("email")):
+        return Response({"error": "User already exists"}, status=400)
+
+    user_id = MongoDBUser.create_user(
+        username=data.get("username"),
+        email=data.get("email"),
+        password=data.get("password"),
+        role=role
+    )
+
+    return Response({
+        "success": True,
+        "message": "Registration successful!"
+    }, status=201)
+
+@api_view(['POST'])
 @permission_classes([AllowAny])
 def login_user(request):
-    if request.method == 'GET':
-        # Generate CSRF token for the login form
-        csrf_token = get_token(request)
-        return JsonResponse({'csrf_token': csrf_token})
-        
-    elif request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+    email = request.data.get("email")
+    password = request.data.get("password")
 
-        # Authenticate the user
-        django_user = authenticate(request, email=email, password=password)
-        if django_user is not None:
-            # Log the user in
-            login(request, django_user)
+    user = authenticate(request, email=email, password=password)
 
-            # Store user_id in session
-            print("Storing user_id in session:", str(django_user.id))  # Debug print
-            request.session['user_id'] = str(django_user.id)
-            return JsonResponse({
-                "success": True,
-                "message": "Login successful"
-            }, status=200)
-        else:
-            return JsonResponse({
-                "success": False,
-                "message": "Invalid email or password"
-            }, status=401)
+    if user is not None:
+        request.session['user_id'] = user.id  # ✅ Store user ID in session
+        request.session['role'] = user.role   # ✅ Store user role in session
+        return JsonResponse({
+            "success": True,
+            "message": "Login successful",
+            "role": user.role
+        }, status=200)
+
     return JsonResponse({
         "success": False,
-        "message": "Invalid request method"
-    }, status=400)
+        "message": "Invalid email or password"
+    }, status=401)
 
-def get_client_ip(request):
-    """Extract the client IP address from the request"""
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(",")[0]
-    else:
-        ip = request.META.get("REMOTE_ADDR")
-    return ip
 
-@api_view(['POST'])  # Typically, logout is a POST request
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])  # Only logged-in users can access
 def logout_user(request):
-    try:
-        # Clear session and cookies
-        auth_logout(request)
-        
-        response = JsonResponse({
-            "success": True,
-            "message": "Logout successful"
-        })
-        response.delete_cookie('sessionid')
-        response.delete_cookie('token')
-        return response
-        
-    except Exception as e:
-        return JsonResponse({
-            "success": False,
-            "message": str(e)
-        }, status=500)
+    auth_logout(request)
+    request.session.flush()
+    return Response({"success": True, "message": "Logout successful"}, status=200)
+
+@api_view(['GET'])
+@permission_classes([IsAdmin])  # Only admins can access this
+def admin_dashboard(request):
+    return Response({"message": "Welcome, Admin!"})
+
+@api_view(['GET'])
+@permission_classes([IsManager])  # Only managers can access this
+def manager_dashboard(request):
+    return Response({"message": "Welcome, Manager!"})
 
 from social_django.utils import psa
 from django.contrib.auth import login
@@ -177,41 +185,6 @@ def get_user_login_sessions(request, user_id):
     return Response({"login_sessions": sessions}, status=200)
 
 # API to register a new user in MongoDB
-@csrf_exempt
-@api_view(['POST'])
-def register_user(request):
-    data = request.data
-    print("data: ",data)
-
-    try:
-        # Check if email is provided
-        if not data.get("email"):
-            return JsonResponse({"error": "Email is required"}, status=400)
-        
-        # Check if user already exists
-        if MongoDBUser.get_user_by_email(data.get("email")):
-            return JsonResponse({"error": "User already exists"}, status=400)
-
-        # Create new user
-        user = MongoDBUser.create_user(
-            username=data.get("username"),
-            email=data.get("email"),
-            password=data.get("password")
-        )
-        
-        return JsonResponse({
-            "success": True,
-            "message": "Registration successful! Please log in."
-        })
-        
-    except Exception as e:
-        return JsonResponse({
-            "success": False,
-            "message": str(e)
-        }, status=500)
-        
-
-
 
 def register_page(request):
     return render(request, 'REGISTER/register.html')
@@ -219,17 +192,25 @@ def register_page(request):
 
 def index(request):
     print("Index view called!")
+    
     try:
-        # Debug authentication information
-        print("Authentication Debug:")
+        print("\n🔹 Debugging Authentication 🔹")
         print("Is user authenticated?", request.user.is_authenticated)
         print("User:", request.user)
-        print("User ID:", getattr(request.user, 'id', None))
-        print("Session:", request.session.items())
-
+        print("User ID from request:", getattr(request.user, "id", "No ID"))
+        print("Session Data:", request.session.items())
+        
+        if request.user.is_authenticated:
+            print("Welcome, authenticated user! user:", str(request.user))
+            # return JsonResponse({"message": "Welcome, authenticated user!", "user": str(request.user)}, status=200)
+        else:
+            # return JsonResponse({"error": "User is not authenticated"}, status=401)
+            print("user not found")
         # Fetch all active products and sort by date
         print("Attempting to fetch products...")
         products = list(products_collection.find())
+
+        current_user = request.user
 
         # Process each product
         processed_products = []
@@ -310,6 +291,7 @@ def index(request):
 
         # Combine all context data
         context = {
+            'user': current_user,
             "products": processed_products,
             "categories": list(products_collection.distinct("category")),
             "cart_items": cart_items,
@@ -709,13 +691,25 @@ from datetime import datetime
 from django.conf import settings
 import json
 from bson import ObjectId
+from .permissions import IsMongoAuthenticated 
 
 # MongoDB collections
 cart_collection = settings.MONGO_DB["cart"]
 
+from django.shortcuts import redirect
+from rest_framework.decorators import api_view, permission_classes
+from django.contrib.auth.decorators import login_required
+from .permissions import IsMongoAuthenticated
+
+@login_required  # Ensure the user is logged in before accessing the view
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsMongoAuthenticated])  # Custom permission to check MongoDB authentication
 def add_to_cart(request):
+    print("@@@@@@@@@@@@@@@@@@user@@@@@@@@@@@@@", request.user.is_authenticated)
+    if not request.user.is_authenticated:
+        # If the user is not authenticated, redirect to login page
+        return redirect('login_user')  # Make sure the URL pattern is correct for your login page
+    
     try:
         data = request.data
         product_id = data.get('product_id')
@@ -751,7 +745,7 @@ def add_to_cart(request):
             
         # Find user's cart
         cart = cart_collection.find_one({"user_id": ObjectId(user_id)})
-        
+
         if cart:
             # Check if product already exists in cart
             product_exists = False
@@ -787,7 +781,7 @@ def add_to_cart(request):
             # Create new cart
             new_cart = {
                 "user_id": ObjectId(user_id),
-                "products": [{
+                "products": [ {
                     "product_id": product_id,
                     "quantity": quantity
                 }],
@@ -1397,7 +1391,7 @@ def cart(request):
     """Render cart page"""
     try:
         print("Cart view accessed")  # Debug print
-        
+        print(request.user.is_authenticated)
         if not request.user.is_authenticated:
             messages.error(request, "Please login to view your cart")
             return redirect('login_user')
@@ -1610,3 +1604,7 @@ def orders_detail(request):
 
 def orders_list(request):
     return render(request, 'Admin/OrdersList.html')
+
+@login_required
+def test_view(request):
+    return JsonResponse({"message": "You are logged in!"})

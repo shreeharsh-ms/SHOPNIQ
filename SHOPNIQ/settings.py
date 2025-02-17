@@ -19,6 +19,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    "APIs.middleware.MongoDBUserMiddleware", 
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
@@ -47,12 +48,13 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    "rest_framework_simplejwt",
     
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Default backend
     'APIs.auth.MongoDBAuthBackend',  # Custom backend for email-based auth
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
 ]
 
 import os
@@ -69,13 +71,8 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
 
 # REST Framework Auth
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Allow access to all endpoints by default
-    ],
+       "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
+
 }
 
 # JWT Settings
@@ -158,10 +155,10 @@ MONGO_URI = "mongodb+srv://ramrajurkar2020:ramdb013@cluster0.xwifiky.mongodb.net
 MONGO_CLIENT = pymongo.MongoClient(MONGO_URI)
 MONGO_DB = MONGO_CLIENT["shopniq_db"]
 
-# Session settings
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE = 2592000   # 30 Days in seconds after 30 days user will be logged out
-# SESSION_COOKIE_AGE = 10  # 24 hours in seconds
+SESSION_ENGINE = "django.contrib.sessions.backends.db"  # ✅ Ensure database-backed sessions
+SESSION_COOKIE_AGE = 86400  # 1 day
+SESSION_SAVE_EVERY_REQUEST = True  # Save session on every request
+
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
