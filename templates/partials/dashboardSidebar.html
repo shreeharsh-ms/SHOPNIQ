@@ -7,12 +7,52 @@
       <li><a href="{% url 'address' %}" class="menu-link menu-link_us-s">Addresses</a></li>
       <li><a href="{% url 'acc_details' %}" class="menu-link menu-link_us-s">Account Details</a></li>
       <li><a href="{% url 'wishlist' %}" class="menu-link menu-link_us-s">Wishlist</a></li>
-      <li><a href="{% url 'logout_user' %}" class="menu-link menu-link_us-s">Logout</a></li>
+      <li><a href="#" id="logout-button" class="menu-link menu-link_us-s">Logout</a></li>  <!-- Changed to href="#" for triggering the script -->
     </ul>
 </div>
 
 <script>
-  function getCookie(name) {
+  document.addEventListener('DOMContentLoaded', function() {
+    // Find the logout button
+    const logoutButton = document.getElementById('logout-button');
+
+    if (logoutButton) {
+        // Add event listener for the logout button click
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();  // Prevent the default action (which would follow the link)
+
+            console.log('Logout button clicked. Initiating logout process...');
+
+            // Perform the logout process
+            fetch('/api/logout/', {
+                method: 'POST',  // Ensure the method is POST
+                credentials: 'include',  // Include credentials (cookies) if necessary
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),  // If you're using CSRF protection
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Logout failed');
+            })
+            .then(data => {
+                console.log('Logout Successful:', data);
+                // Redirect to the login page or homepage after successful logout
+                window.location.href = '/login/';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Optionally show an error message to the user
+            });
+        });
+    }
+});
+
+// Helper function to get CSRF token
+function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');
@@ -25,30 +65,6 @@
         }
     }
     return cookieValue;
-  }
+}
 
-  // Logout process
-  fetch('/api/logout/', {
-    method: 'POST',  // Ensure the method is POST
-    credentials: 'include',  // Include credentials (cookies) if necessary
-    headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken'),  // If you're using CSRF protection
-    }
-})
-.then(response => {
-    if (response.ok) {
-        return response.json();
-    }
-    throw new Error('Logout failed');
-})
-.then(data => {
-    console.log('Logout Successful:', data);
-    // Redirect to the login page or homepage after successful logout
-    window.location.href = '/login/';
-})
-.catch(error => {
-    console.error('Error:', error);
-    // Optionally show an error message to the user
-});
 </script>

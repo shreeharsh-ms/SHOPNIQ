@@ -24,8 +24,8 @@ class MongoDBUserMiddleware(MiddlewareMixin):
                 print("❌ Middleware: MongoDB User Not Found")
                 request.user = AnonymousUser()
                 # Redirect to login only for restricted pages like add-to-cart
-                if 'add-to-cart' in request.path:
-                    return redirect('login_view')
+                # if 'add-to-cart' in request.path:
+                #     return redirect('login_view')
         else:
             print("❌ Middleware: No user_id found in session, setting AnonymousUser")
             request.user = AnonymousUser()

@@ -128,15 +128,13 @@ from .permissions import IsMongoAuthenticated  # Assuming this is your custom pe
 from django.contrib.auth import logout as auth_logout
 
 @api_view(['POST'])
-# @permission_classes([IsMongoAuthenticated])
+@permission_classes([IsAuthenticated])
 def logout_user(request):
     print("@@@@@@@@@@@User is logged out@@@@@@@@@@@@@")
     auth_logout(request)  # Clears session on the server side
     request.session.flush()  # Clears the session data on the server
     response = Response({"success": True, "message": "Logout successful"}, status=200)
     
-    # Clear session cookies on the client side
-    # response.delete_cookie('sessionid')  # Ensure this is the correct cookie name for your session
 
     return response
 
@@ -413,6 +411,7 @@ def orders(request):
 # def product_item(request):
 #     return render(request, 'USER/product-Item.html')
 
+@login_required
 def wishlist(request):
     return render(request, 'USER/WishList.html')
 
