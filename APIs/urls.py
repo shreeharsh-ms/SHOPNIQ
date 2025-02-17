@@ -91,6 +91,7 @@ urlpatterns = [
     path('orders-list/', views.orders_list, name='orders_list'),
     path('add-product/', views.add_product, name='add-product'),
     path('editBanners/', views.editBanners, name='editBanners'),
+    path('productsList/', views.productsList, name='productsList'),
 
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) \

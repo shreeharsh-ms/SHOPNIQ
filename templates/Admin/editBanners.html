@@ -37,6 +37,17 @@
             opacity: 1;
             visibility: visible;
         }
+        .upload-title{
+          width: 100%;
+          margin: auto;
+          text-align: left;
+          box-sizing: border-box;
+          height: auto;
+          font-size: 50px;
+        }
+        .full_scale{
+          height: 90% !important;
+        }
     </style>
 </head>
 
@@ -60,7 +71,7 @@
             </div>
             <!-- <p class="slideshow_markup font-special text-uppercase position-absolute end-0 bottom-0">Summer</p> -->
             <div class="slideshow-character position-absolute bottom-0 pos_right-center">
-              <img loading="lazy" src="{% static 'images/slideshow-character1.png' %}" width="400" height="733" alt="Woman Fashion 1" class="slideshow-character__img animate animate_fade animate_btt animate_delay-9 h-auto w-auto" style="opacity: 1 !important; visibility: visible !important;">
+              <img loading="lazy" src="{% static 'images/slideshow-character1.png' %}" width="400" height="733" alt="Woman Fashion 1" class="slideshow-character__img animate animate_fade animate_btt animate_delay-9 h-auto w-auto clickable-image" style="opacity: 1 !important; visibility: visible !important;">
               <div class="character_markup">
                 <p class="text-uppercase font-sofia fw-bold animate animate_fade animate_rtl animate_delay-10">Summer</p>
               </div>
@@ -192,8 +203,8 @@
               <div class="product-card mb-3 mb-md-4 mb-xxl-5">
                 <div class="pc__img-wrapper">
                   <a href="./product1_simple.html">
-                    <img loading="lazy" src="{% static 'images/product_1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img">
-                    <img loading="lazy" src="{% static 'images/product_1-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
+                    <img loading="lazy" src="{% static 'images/product_1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img clickable-image">
+                    <img loading="lazy" src="{% static 'images/product_1-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second clickable-image">
                   </a>
                   <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside" data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
                 </div>
@@ -226,8 +237,8 @@
               <div class="product-card mb-3 mb-md-4 mb-xxl-5">
                 <div class="pc__img-wrapper">
                   <a href="./product1_simple.html">
-                    <img loading="lazy" src="{% static 'images/product_2.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img">
-                    <img loading="lazy" src="{% static 'images/product_2-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
+                    <img loading="lazy" src="{% static 'images/product_2.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img clickable-image">
+                    <img loading="lazy" src="{% static 'images/product_2-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second clickable-image">
                   </a>
                   <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside" data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
                 </div>
@@ -250,8 +261,8 @@
               <div class="product-card mb-3 mb-md-4 mb-xxl-5">
                 <div class="pc__img-wrapper">
                   <a href="./product1_simple.html">
-                    <img loading="lazy" src="{% static 'images/product_3.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img">
-                    <img loading="lazy" src="{% static 'images/product_3-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
+                    <img loading="lazy" src="{% static 'images/product_3.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img clickable-image">
+                    <img loading="lazy" src="{% static 'images/product_3-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second clickable-image">
                   </a>
                   <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside" data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
                 </div>
@@ -1037,7 +1048,7 @@
 
 
     <section class="deal-timer position-relative d-flex align-items-end overflow-hidden" style="background-color: #ebebeb;">
-      <div class="background-img" style="background-image: url({% static 'images/deal_timer_bg.jpg' %});"></div>
+      <div class="background-img clickable-image" style="background-image: url({% static 'images/deal_timer_bg.jpg' %});"></div>
 
       <div class="deal-timer-wrapper container position-relative">
         <div class="deal-timer__content pb-2 mb-3 pb-xl-5 mb-xl-3 mb-xxl-5">
@@ -1289,36 +1300,257 @@
 
 
     <div class="mb-4 pb-4 pb-xl-5 mb-xl-5"></div>
-
-
-    <section class="service-promotion container mb-md-4 pb-md-4 mb-xl-5">
-      <div class="row">
-        <div class="col-md-4 text-center mb-5 mb-md-0">
-          <div class="service-promotion__icon mb-4">
-            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_shipping"></use></svg>
-          </div>
-          <h3 class="service-promotion__title h5 text-uppercase">Fast And Free Delivery</h3>
-          <p class="service-promotion__content text-secondary">Free delivery for all orders over $140</p>
-        </div><!-- /.col-md-4 text-center-->
-
-        <div class="col-md-4 text-center mb-5 mb-md-0">
-          <div class="service-promotion__icon mb-4">
-            <svg width="53" height="52" viewBox="0 0 53 52" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_headphone"></use></svg>
-          </div>
-          <h3 class="service-promotion__title h5 text-uppercase">24/7 Customer Support</h3>
-          <p class="service-promotion__content text-secondary">Friendly 24/7 customer support</p>
-        </div><!-- /.col-md-4 text-center-->
-
-        <div class="col-md-4 text-center mb-4 pb-1 mb-md-0">
-          <div class="service-promotion__icon mb-4">
-            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_shield"></use></svg>
-          </div>
-          <h3 class="service-promotion__title h5 text-uppercase">Money Back Guarantee</h3>
-          <p class="service-promotion__content text-secondary">We return money within 30 days</p>
-        </div><!-- /.col-md-4 text-center-->
-      </div><!-- /.row -->
-    </section><!-- /.service-promotion container -->
   </main>
+
+<!-- Popup Overlay -->
+<div class="popup-overlay" id="popupOverlay"></div>
+
+<!-- Popup Modal -->
+<div class="popup" id="popup">
+  <h3 class="upload-title">Upload Image</h3>
+  <div style="display: flex;" class="full_scale">
+      <!-- Left Side - Image Preview -->
+      <div class="preview-container">
+          <img id="previewImage" alt="Image Preview">
+      </div>
+
+      <!-- Right Side - Upload Box -->
+      <div class="upload-container">
+          <!-- Upload Box with Dashed Border -->
+          <label for="imageInput" class="upload-box">
+              <i class="fas fa-cloud-upload-alt upload-icon"></i>
+              <p>Drag & Drop files here<br>or <span class="browse-text">Browse</span></p>
+          </label>
+          
+          <input type="file" id="imageInput" accept="image/*" hidden>
+
+          <button class="close-btn" onclick="closePopup()">Close</button>
+      </div>
+  </div>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let currentImage = null;
+        const popup = document.getElementById("popup");
+        const popupOverlay = document.getElementById("popupOverlay");
+        const imageInput = document.getElementById("imageInput");
+        const previewImage = document.getElementById("previewImage");
+
+        document.querySelectorAll(".clickable-image").forEach(image => {
+            image.addEventListener("click", function () {
+                currentImage = this;
+                previewImage.src = this.src;
+                previewImage.style.display = "block";
+                popup.classList.add("show");
+                popupOverlay.style.display = "block";
+            });
+        });
+
+        function closePopup() {
+            popup.classList.remove("show");
+            popupOverlay.style.display = "none";
+        }
+
+        document.querySelector(".close-btn").addEventListener("click", closePopup);
+        popupOverlay.addEventListener("click", closePopup);
+
+        imageInput.addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (file && currentImage) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    currentImage.src = e.target.result;
+                    previewImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+</script>
+
+<!-- FontAwesome for Icons -->
+<script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f4f6f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+/* Popup Overlay */
+.popup-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    backdrop-filter: blur(5px);
+}
+
+/* Popup Modal */
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    z-index: 1000;
+    width: 50%;
+    height: 50%;
+    max-width: 95%;
+    display: block;
+    flex-direction: row;
+    align-items: center;
+    gap: 25px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+}
+
+.popup.show {
+    opacity: 1;
+    visibility: visible;
+    height: 550px;
+}
+
+/* Left Side - Image Preview */
+.popup .preview-container {
+    height: 100%;
+    flex:1;
+    text-align: center;
+}
+
+.popup img {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    display: none;
+}
+
+/* Right Side - Upload Box */
+.popup .upload-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: end;
+    position: relative;
+}
+
+/* Upload Title Positioned to Top Left */
+.upload-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+/* Upload Button (Icon Only) */
+.upload-btn {
+    width: 70px;
+    height: 70px;
+    background: #004aad;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 5px 15px rgba(0, 74, 173, 0.3);
+    margin-top: 40px;
+}
+
+.upload-btn:hover {
+    background: #003380;
+    transform: scale(1.1);
+}
+
+/* Hide default file input */
+#imageInput {
+    display: none;
+}
+
+/* Close Button */
+.popup .close-btn {
+    margin-top: 20px;
+    background: #004aad;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s;
+    width: 100%;
+}
+
+.popup .close-btn:hover {
+    background: #003380;
+    transform: scale(1.05);
+}
+.upload-box {
+    width: 100%;
+    height: 100%;
+    border: 2px dashed #ccc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.upload-icon {
+    font-size: 30px;
+    color: #007bff;
+}
+
+.browse-text {
+    font-weight: bold;
+    color: #007bff;
+    cursor: pointer;
+}
+
+.upload-box:hover {
+    background-color: #f1f1f1;
+}
+</style>
+
+
+<!-- FontAwesome for icons -->
+<script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+
+
+
     </div>
     <!-- Top Bar End -->
 
