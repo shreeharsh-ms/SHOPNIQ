@@ -7,6 +7,48 @@
       <li><a href="{% url 'address' %}" class="menu-link menu-link_us-s">Addresses</a></li>
       <li><a href="{% url 'acc_details' %}" class="menu-link menu-link_us-s">Account Details</a></li>
       <li><a href="{% url 'wishlist' %}" class="menu-link menu-link_us-s">Wishlist</a></li>
-      <li><a href="{% url 'register_page' %}" class="menu-link menu-link_us-s">Logout</a></li>
+      <li><a href="{% url 'logout_user' %}" class="menu-link menu-link_us-s">Logout</a></li>
     </ul>
 </div>
+
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+  }
+
+  // Logout process
+  fetch('/api/logout/', {
+    method: 'POST',  // Ensure the method is POST
+    credentials: 'include',  // Include credentials (cookies) if necessary
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),  // If you're using CSRF protection
+    }
+})
+.then(response => {
+    if (response.ok) {
+        return response.json();
+    }
+    throw new Error('Logout failed');
+})
+.then(data => {
+    console.log('Logout Successful:', data);
+    // Redirect to the login page or homepage after successful logout
+    window.location.href = '/login/';
+})
+.catch(error => {
+    console.error('Error:', error);
+    // Optionally show an error message to the user
+});
+</script>

@@ -1,13 +1,17 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Add click event listeners to all Add to Cart buttons
+document.addEventListener('DOMContentLoaded', function () {
+    console.log("🛒 Cart Script Loaded");
+
+    // ✅ Attach Add to Cart event listener
     document.querySelectorAll('.js-add-cart').forEach(button => {
-        button.addEventListener('click', function(e) {
+        button.addEventListener('click', function (e) {
             e.preventDefault();
-            
+            console.log("Add to Cart button clicked");
+
             const productId = this.getAttribute('data-product-id');
-            
+            console.log('Product ID:', productId);
+
             // Find the closest quantity input
-            let quantity = 1; // Default quantity
+            let quantity = 1;
             const productContainer = this.closest('.product-single__addtocart, .pc__img-wrapper');
             if (productContainer) {
                 const quantityInput = productContainer.querySelector('.qty-control__number');
@@ -15,14 +19,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     quantity = parseInt(quantityInput.value) || 1;
                 }
             }
-            
-            // Debug logs
-            console.log('Adding to cart:', {
-                productId: productId,
-                quantity: quantity
-            });
 
-            // Make AJAX call to add to cart
+            console.log('🛒 Adding to cart:', { productId, quantity });
+
+            // Make AJAX request to add to cart
             fetch('/add-to-cart/', {
                 method: 'POST',
                 credentials: 'include',
@@ -36,26 +36,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             })
             .then(response => {
+                console.log('Response status:', response.status);
                 if (response.status === 401) {
+                    // Redirect to login page
                     window.location.href = '/login/?next=' + window.location.pathname;
                     return;
                 }
                 return response.json();
             })
             .then(data => {
+                console.log('Response data:', data);
                 if (data) {
                     console.log('Success:', data);
-                    
-                    // Update cart count in header
                     updateCartCount(data.cart_items_count);
-                    
-                    // Update cart drawer content
                     updateCartDrawer(data.cart_items);
-                    
-                    // Show success message
                     showNotification('Product added to cart successfully!');
-                    
-                    // Open cart drawer
                     openCartDrawer();
                 }
             })
@@ -66,43 +61,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Add quantity control functionality
+    // ✅ Quantity Control Handling
     document.querySelectorAll('.qty-control').forEach(control => {
         const input = control.querySelector('.qty-control__number');
         const reduceBtn = control.querySelector('.qty-control__reduce');
         const increaseBtn = control.querySelector('.qty-control__increase');
 
         if (input && reduceBtn && increaseBtn) {
-            // Flag to prevent multiple updates
+            // Prevent multiple updates
             let isUpdating = false;
 
             // Reduce quantity
             reduceBtn.addEventListener('click', () => {
-                if (isUpdating) return; // Prevent multiple clicks
-                isUpdating = true; // Set flag
+                if (isUpdating) return;
+                isUpdating = true;
 
                 let value = parseInt(input.value) || 1;
-                console.log('Reduce button clicked. Current value:', value); // Debug log
                 if (value > 1) {
                     input.value = value - 1;
                 }
 
-                isUpdating = false; // Reset flag
+                isUpdating = false;
             });
 
             // Increase quantity
             increaseBtn.addEventListener('click', () => {
-                if (isUpdating) return; // Prevent multiple clicks
-                isUpdating = true; // Set flag
+                if (isUpdating) return;
+                isUpdating = true;
 
                 let value = parseInt(input.value) || 1;
-                console.log('Increase button clicked. Current value:', value); // Debug log
                 const max = input.getAttribute('max');
                 if (!max || value < parseInt(max)) {
                     input.value = value + 1;
                 }
 
-                isUpdating = false; // Reset flag
+                isUpdating = false;
             });
 
             // Validate manual input
@@ -118,17 +111,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-
-
-    // Helper function to update cart count
+    // ✅ Helper function to update cart count in header
     function updateCartCount(count) {
-        const cartCountElements = document.querySelectorAll('.js-cart-items-count');
-        cartCountElements.forEach(element => {
+        document.querySelectorAll('.js-cart-items-count').forEach(element => {
             element.textContent = count;
         });
     }
 
-    // Helper function to update cart drawer
+    // ✅ Helper function to update cart drawer
     function updateCartDrawer(cartItems) {
         const cartDrawer = document.querySelector('.cart-drawer-items-list');
         if (!cartDrawer) return;
@@ -157,8 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h6 class="cart-drawer-item__title fw-normal">
                             <a href="/product/${item.product.id}">${item.product.name}</a>
                         </h6>
-                        ${item.color ? `<p class="cart-drawer-item__option text-secondary">Color: ${item.color}</p>` : ''}
-                        ${item.size ? `<p class="cart-drawer-item__option text-secondary">Size: ${item.size}</p>` : ''}
                         <div class="d-flex align-items-center justify-content-between mt-1">
                             <div class="qty-control position-relative">
                                 <input type="number" name="quantity" value="${item.quantity}" min="1" 
@@ -176,6 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${index < cartItems.length - 1 ? '<hr class="cart-drawer-divider">' : ''}
             `;
         });
+
         cartDrawer.innerHTML = html;
 
         // Update cart subtotal
@@ -186,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Helper function to open cart drawer
+    // ✅ Helper function to open cart drawer
     function openCartDrawer() {
         const cartDrawer = document.getElementById('cartDrawer');
         if (cartDrawer) {
@@ -195,13 +184,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Helper function to show notifications
+    // ✅ Helper function to show notifications
     function showNotification(message, type = 'success') {
-        // You can implement your preferred notification system here
-        alert(message);
+        if (type === 'error') {
+            alert(`❌ ${message}`);
+        } else {
+            alert(`✅ ${message}`);
+        }
     }
 
-    // Helper function to get CSRF token
+    // ✅ Helper function to get CSRF token
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {

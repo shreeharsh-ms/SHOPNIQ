@@ -30,6 +30,7 @@ from django.urls import reverse
 from django.contrib.auth.tokens import default_token_generator
 from django.middleware.csrf import get_token
 from django.http import JsonResponse
+from .permissions import IsMongoAuthenticated
 # from .mongodb import cart_collection, products_collection  # Ensure these are defined
 
 
@@ -119,12 +120,25 @@ def login_user(request):
     }, status=401)
 
 
+from django.contrib.auth import logout as auth_logout
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from .permissions import IsMongoAuthenticated  # Assuming this is your custom permission
+
+from django.contrib.auth import logout as auth_logout
+
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])  # Only logged-in users can access
+# @permission_classes([IsMongoAuthenticated])
 def logout_user(request):
-    auth_logout(request)
-    request.session.flush()
-    return Response({"success": True, "message": "Logout successful"}, status=200)
+    print("@@@@@@@@@@@User is logged out@@@@@@@@@@@@@")
+    auth_logout(request)  # Clears session on the server side
+    request.session.flush()  # Clears the session data on the server
+    response = Response({"success": True, "message": "Logout successful"}, status=200)
+    
+    # Clear session cookies on the client side
+    # response.delete_cookie('sessionid')  # Ensure this is the correct cookie name for your session
+
+    return response
 
 @api_view(['GET'])
 @permission_classes([IsAdmin])  # Only admins can access this
@@ -696,24 +710,24 @@ from .permissions import IsMongoAuthenticated
 # MongoDB collections
 cart_collection = settings.MONGO_DB["cart"]
 
-from django.shortcuts import redirect
+from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
-from django.contrib.auth.decorators import login_required
-from .permissions import IsMongoAuthenticated
 
-@login_required  # Ensure the user is logged in before accessing the view
+
 @api_view(['POST'])
-@permission_classes([IsMongoAuthenticated])  # Custom permission to check MongoDB authentication
+@permission_classes([IsMongoAuthenticated])  # Use custom MongoDB auth check
 def add_to_cart(request):
-    print("@@@@@@@@@@@@@@@@@@user@@@@@@@@@@@@@", request.user.is_authenticated)
+    print(f"🚀 Before Auth Check: request.user = {request.user}")
+
     if not request.user.is_authenticated:
-        # If the user is not authenticated, redirect to login page
-        return redirect('login_user')  # Make sure the URL pattern is correct for your login page
-    
+        print("❌ Authentication Failed: User is Anonymous")
+        return JsonResponse({"redirect": "/login"}, status=401)
+
+    print("✅ User Authenticated, Proceeding to add to cart")
     try:
         data = request.data
         product_id = data.get('product_id')
-        
+
         # Get quantity with proper error handling
         try:
             quantity = int(data.get('quantity', 1))
@@ -721,28 +735,28 @@ def add_to_cart(request):
                 quantity = 1
         except (TypeError, ValueError):
             quantity = 1
-            
+
         print(f"Adding to cart: Product ID {product_id}, Quantity {quantity}")
-        
+
         if not product_id:
             return JsonResponse({"error": "Product ID is required"}, status=400)
-            
+
         # Verify product exists and has enough stock
         product = products_collection.find_one({"_id": ObjectId(product_id)})
         if not product:
             return JsonResponse({"error": "Product not found"}, status=404)
-            
+
         stock = product.get('stock', 0)
         if stock < quantity:
             return JsonResponse({
                 "error": f"Not enough stock. Only {stock} items available."
             }, status=400)
-            
+
         # Get user's MongoDB ID from session
         user_id = request.session.get('user_id')
         if not user_id:
             return JsonResponse({"error": "User session not found"}, status=401)
-            
+
         # Find user's cart
         cart = cart_collection.find_one({"user_id": ObjectId(user_id)})
 
@@ -760,20 +774,20 @@ def add_to_cart(request):
                     item["quantity"] = new_quantity
                     product_exists = True
                     break
-                    
+
             if not product_exists:
                 products.append({
                     "product_id": product_id,
                     "quantity": quantity
                 })
-                
+
             # Update cart in database
             result = cart_collection.update_one(
                 {"user_id": ObjectId(user_id)},
                 {
                     "$set": {
                         "products": products,
-                        "updated_at": datetime.now(ist)
+                        "updated_at": datetime.now()
                     }
                 }
             )
@@ -781,66 +795,22 @@ def add_to_cart(request):
             # Create new cart
             new_cart = {
                 "user_id": ObjectId(user_id),
-                "products": [ {
+                "products": [{
                     "product_id": product_id,
                     "quantity": quantity
                 }],
-                "created_at": datetime.now(ist),
-                "updated_at": datetime.now(ist)
+                "created_at": datetime.now(),
+                "updated_at": datetime.now()
             }
             result = cart_collection.insert_one(new_cart)
 
-        # Get updated cart data with product details
-        updated_cart = cart_collection.find_one({"user_id": ObjectId(user_id)})
-        cart_items = []
-        cart_total = 0
-        
-        if updated_cart and updated_cart.get("products"):
-            for item in updated_cart["products"]:
-                try:
-                    product = products_collection.find_one({"_id": ObjectId(item["product_id"])})
-                    print(f"Found product: {product}")
-                    
-                    if product:
-                        price = float(product.get("discounted_price") or product.get("price", 0))
-                        item_quantity = item["quantity"]
-                        item_total = price * item_quantity
-                        cart_total += item_total
-                        
-                        cart_items.append({
-                            "product": {
-                                "id": str(product["_id"]),
-                                "name": product["name"],
-                                "image": {
-                                    "url": product["image_url"]
-                                },
-                                "price": price
-                            },
-                            "quantity": item_quantity,
-                            "get_total_price": "{:.2f}".format(item_total)
-                        })
-                except Exception as e:
-                    print(f"Error processing product {item['product_id']}: {str(e)}")
-                    continue
-        
-        print(f"Cart items to return: {cart_items}")  # Debug print
-        
-        response_data = {
+        return JsonResponse({
             "success": True,
-            "message": "Product added to cart successfully",
-            "cart_items": cart_items,
-            "cart_items_count": sum(item["quantity"] for item in updated_cart.get("products", [])) if updated_cart else 0,
-            "cart_total": "{:.2f}".format(cart_total)
-        }
-        
-        print(f"Response data: {response_data}")  # Debug print
-        
-        return JsonResponse(response_data)
-        
+            "message": "Product added to cart successfully"
+        })
+
     except Exception as e:
         print(f"Error adding to cart: {str(e)}")
-        import traceback
-        print(f"Traceback: {traceback.format_exc()}")
         return JsonResponse({"error": str(e)}, status=500)
 
 def update_cart_total_price(cart):
@@ -1605,15 +1575,14 @@ def orders_detail(request):
 def orders_list(request):
     return render(request, 'Admin/OrdersList.html')
 
-<<<<<<< HEAD
+
 @login_required
 def test_view(request):
     return JsonResponse({"message": "You are logged in!"})
-=======
+
 
 def add_product(request):
     return render(request, 'Admin/add-product.html')
 
 def editBanners(request):
     return render(request, 'Admin/editBanners.html')
->>>>>>> 0218c74ed5381428a93a5ff5e2c7914e48a097c1
