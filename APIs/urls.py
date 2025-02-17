@@ -90,6 +90,8 @@ urlpatterns = [
     path('login-dashboard/', views.login_dashboard, name='login_dashboard'),
     path('orders-detail/', views.orders_detail, name='orders_detail'),
     path('orders-list/', views.orders_list, name='orders_list'),
+    path('add-product/', views.add_product, name='add-product'),
+    path('editBanners/', views.editBanners, name='editBanners'),
 
 
 

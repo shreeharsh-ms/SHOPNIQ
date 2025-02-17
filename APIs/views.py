@@ -1605,6 +1605,15 @@ def orders_detail(request):
 def orders_list(request):
     return render(request, 'Admin/OrdersList.html')
 
+<<<<<<< HEAD
 @login_required
 def test_view(request):
     return JsonResponse({"message": "You are logged in!"})
+=======
+
+def add_product(request):
+    return render(request, 'Admin/add-product.html')
+
+def editBanners(request):
+    return render(request, 'Admin/editBanners.html')
+>>>>>>> 0218c74ed5381428a93a5ff5e2c7914e48a097c1
