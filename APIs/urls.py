@@ -37,7 +37,7 @@ urlpatterns = [
 
 
     # Product Management URLs
-    path('api/products/add/', views.add_product, name='add_product'),
+    # path('api/products/add/', views.add_product, name='add_product'),
     path('api/products/all/', views.get_all_products, name='get_all_products'),
     path('api/products/update/<str:product_id>/', views.update_product, name='update_product'),
     path('api/products/delete/<str:product_id>/', views.delete_product, name='delete_product'),

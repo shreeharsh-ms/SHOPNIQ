@@ -16,14 +16,21 @@ class IsManager(BasePermission):
 
 from rest_framework.permissions import BasePermission
 
+from rest_framework.permissions import BasePermission
+
 class IsMongoAuthenticated(BasePermission):
-    """Allow access if request.user is a MongoDB user and authenticated"""
+    """
+    Allows access only to authenticated MongoDB users.
+    """
 
     def has_permission(self, request, view):
-        print(f"🔍 Checking MongoDB authentication for user: {request.user}")
+        user = getattr(request, "_force_auth_user", request.user)  # ✅ Check forced user
 
-        # ✅ Check if user is properly assigned and authenticated
-        if hasattr(request, "user") and request.user is not None:
-            return request.user.is_authenticated
-        
-        return False  # ❌ Reject if user is missing or not authenticated
+        print(f"🔍 Checking MongoDB authentication for user: {user}")
+
+        if user.is_authenticated:
+            print(f"✅ Access Granted for {user}")
+            return True
+
+        print("❌ Unauthorized Access Attempt")
+        return False
