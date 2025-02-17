@@ -532,6 +532,7 @@
         </ul>
       </div>
     </nav><!-- /.navigation -->
+    
   </div><!-- /.header-mobile -->
 
   <!-- Header Type 1 -->
@@ -647,6 +648,8 @@
     </div><!-- /.container -->
   </header>
   <!-- End Header Type 1 -->
+
+  
 
   <main>
     <section id="section1" class="swiper-container js-swiper-slider slideshow full-width_padding" data-settings='{
@@ -793,6 +796,7 @@
       <div class="tab-content pt-2" id="collections-tab-content">
         <div class="tab-pane fade show active" id="collections-tab-1" role="tabpanel"
           aria-labelledby="collections-tab-1-trigger">
+          <p>welcome, {{user}}</p>
           <div class="row">
             {% if products %}
             {% for product in products %}

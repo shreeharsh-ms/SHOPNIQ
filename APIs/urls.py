@@ -3,6 +3,7 @@ from . import views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from django.contrib.auth.decorators import login_required
 
 # app_name = 'APIs'  # Add namespace
 
@@ -92,6 +93,11 @@ urlpatterns = [
     path('add-product/', views.add_product, name='add-product'),
     path('editBanners/', views.editBanners, name='editBanners'),
     path('productsList/', views.productsList, name='productsList'),
+
+
+
+    # TEST
+    path('test-view/', views.test_view, name='test_view'),
 
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) \
