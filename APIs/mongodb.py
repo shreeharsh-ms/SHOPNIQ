@@ -2,6 +2,7 @@ from pymongo import MongoClient
 import bcrypt
 from SHOPNIQ.settings import MONGO_DB
 from bson import ObjectId
+from datetime import datetime
 # client = MongoClient("mongodb://localhost:27017/")
 # db = client["your_database"]
 users_collection = MONGO_DB["users"]
@@ -21,6 +22,31 @@ class MongoDBUser:
 
         result = users_collection.insert_one(user_data)
         return result.inserted_id
+
+    @staticmethod
+    def create_user(username, email, role, password=None,):
+        """ Create a new user in MongoDB. """
+        existing_user = users_collection.find_one({"email": email})
+        
+        if existing_user:
+            return existing_user  # Return existing user
+        
+        # Create new user
+        new_user = {
+            "username": username,
+            "email": email,
+            "password": password if password else None,  # Allow None password for Google OAuth
+            "role": role,
+            "date_of_register": datetime.utcnow(),
+            "last_login": datetime.utcnow(),
+            "session_timing": "120 min",
+            "address": [],
+            "orders": []
+        }
+        
+        inserted = users_collection.insert_one(new_user)
+        new_user["_id"] = inserted.inserted_id
+        return new_user
 
     @staticmethod
     def get_user_by_email(email):

@@ -66,6 +66,109 @@ except Exception as e:
 def login_view(request):
     return render(request, 'REGISTER/register.html')
 
+from django.shortcuts import redirect
+import urllib.parse
+from django.conf import settings
+
+GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
+GOOGLE_REDIRECT_URI = "http://127.0.0.1:8000/api/google/callback/"
+
+def google_login(request, mode):
+    """ Redirect user to Google OAuth for Sign-In or Sign-Up """
+    
+    if mode not in ["signin", "signup"]:
+        return JsonResponse({"error": "Invalid mode"}, status=400)
+
+    google_oauth_url = "https://accounts.google.com/o/oauth2/auth"
+    
+    params = {
+        "client_id": GOOGLE_CLIENT_ID,
+        "redirect_uri": GOOGLE_REDIRECT_URI,  # No query parameters!
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "offline",
+        "prompt": "consent",
+        "state": mode,  # Use state instead of query param
+    }
+
+    return redirect(f"{google_oauth_url}?{urllib.parse.urlencode(params)}")
+
+
+from django.shortcuts import redirect
+from django.http import JsonResponse
+from django.conf import settings
+from .mongodb import MongoDBUser
+from .auth import MongoUser
+import requests
+
+GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET = settings.GOOGLE_CLIENT_SECRET
+REDIRECT_URI = "http://127.0.0.1:8000/api/google/callback/"
+
+def google_callback(request):
+    """Handles Google OAuth Sign-In & Sign-Up"""
+    code = request.GET.get("code")
+    mode = request.GET.get("state")  # Read mode from state parameter
+
+    if not code or mode not in ["signin", "signup"]:
+        return JsonResponse({"error": "Authorization failed"}, status=400)
+
+    # Step 1: Exchange code for access token
+    token_url = "https://oauth2.googleapis.com/token"
+    token_data = {
+        "code": code,
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": GOOGLE_CLIENT_SECRET,
+        "redirect_uri": REDIRECT_URI,
+        "grant_type": "authorization_code",
+    }
+
+    token_response = requests.post(token_url, data=token_data)
+    token_json = token_response.json()
+
+    if "access_token" not in token_json:
+        return JsonResponse({"error": "Failed to authenticate with Google"}, status=400)
+
+    access_token = token_json["access_token"]
+
+    # Step 2: Fetch user info
+    user_info_url = "https://www.googleapis.com/oauth2/v1/userinfo"
+    user_info_response = requests.get(user_info_url, headers={"Authorization": f"Bearer {access_token}"})
+    user_info = user_info_response.json()
+
+    google_email = user_info.get("email")
+    google_name = user_info.get("name")
+
+    if not google_email:
+        return JsonResponse({"error": "Unable to get email from Google"}, status=400)
+
+    # Step 3: Handle Sign-In and Sign-Up
+    user_data = MongoDBUser.get_user_by_email(google_email)
+
+    if mode == "signin":
+        if not user_data:
+            return JsonResponse({"error": "User does not exist. Please sign up first."}, status=403)
+
+        user = MongoUser(user_data)
+        request.session["user_id"] = str(user.id)
+        request.session["role"] = user.role
+        return redirect("/")
+
+    elif mode == "signup":
+        if user_data:
+            return JsonResponse({"error": "User already exists. Please sign in instead."}, status=403)
+
+        new_user = MongoDBUser.create_user(email=google_email, password=None, username=google_name, role="customer")
+
+        user = MongoUser(new_user)
+        request.session["user_id"] = str(user.id)
+        request.session["role"] = user.role
+        return redirect("/")
+
+    return JsonResponse({"error": "Invalid mode"}, status=400)
+
+
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
