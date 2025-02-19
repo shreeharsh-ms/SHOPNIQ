@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from APIs.mongodb import MongoDBUser  # Import MongoDB Helper
+from APIs.mongodb import MongoDBUser, MongoDBReview,MongoDBDescription,MongoDBCategory,MongoDBProduct    # Import MongoDB Helper
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
@@ -48,6 +48,8 @@ ist = pytz.timezone('Asia/Kolkata')
 
 db = settings.MONGO_DB
 products_collection = settings.MONGO_DB['products']
+products_collection = db["products"]
+
 cart_collection_collection = settings.MONGO_DB['cart']
 
 
@@ -80,23 +82,33 @@ import bcrypt
 def register_user(request):
     data = request.data
 
-    # Default role = user
-    role = data.get("role", "user")  # Allow setting role only if needed
+    # Extract the fields from the request data
+    username = data.get("username")
+    email = data.get("email")
+    password = data.get("password")
+    phone_number = data.get("phone_number", None)  # Optional field
+    role = data.get("role", "user")  # Default role = user
+    address = data.get("address", [])  # Default empty list for address
+    orders = data.get("orders", [])  # Default empty list for orders
 
-    if MongoDBUser.get_user_by_email(data.get("email")):
+    # Check if the user already exists
+    if MongoDBUser.get_user_by_email(email):
         return Response({"error": "User already exists"}, status=400)
 
+    # Create the user
     user_id = MongoDBUser.create_user(
-        username=data.get("username"),
-        email=data.get("email"),
-        password=data.get("password"),
-        role=role
+        username=username,
+        email=email,
+        password=password,
+        role=role,
+        phone_number=phone_number
     )
 
     return Response({
         "success": True,
         "message": "Registration successful!"
     }, status=201)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -204,6 +216,8 @@ def register_page(request):
 
 
 def index(request):
+    user_id = request.session.get('user_id')
+    print(f'######################{user_id}')
     print("Index view called!")
     
     try:
@@ -217,7 +231,8 @@ def index(request):
             print("Welcome, authenticated user! user:", str(request.user))
             # return JsonResponse({"message": "Welcome, authenticated user!", "user": str(request.user)}, status=200)
         else:
-            # return JsonResponse({"error": "User is not authenticated"}, status=401)
+            # return JsonResponse({"error": "User is not aut
+            # henticated"}, status=401)
             print("user not found")
         # Fetch all active products and sort by date
         print("Attempting to fetch products...")
@@ -231,18 +246,24 @@ def index(request):
             processed_product = {
                 "id": str(product["_id"]),
                 "name": product.get("name", ""),
-                "category": product.get("category", ""),
+                "category_id": str(product.get("category_id", "")),  # Use ObjectId for category
+                "subcategory": product.get("subcategory", ""),
                 "price": product.get("price", 0),
-                "discounted_price": product.get("discounted_price", 0),
                 "stock": int(product.get("stock", 0)),
-                "image_url": product.get("image_url", ""),
-                "image_url_alt": product.get("image_url_alt", ""),
-                "description": product.get("description", ""),
+                "variants": product.get("variants", {}),  # Dictionary for variants (e.g., color, size)
+                "tags": product.get("tags", []),
+                "description_id": str(product.get("description_id", "")),  # ObjectId for description
+                "reviews": [str(review) for review in product.get("reviewsDictionary", [])],  # Convert ObjectIds to strings
+                "weight": product.get("weight", ""),
+                "dimensions": product.get("dimensions", {}),
+                "images": product.get("imagesDictionary", []),  # List of image dictionaries
+                "banner_img": product.get("banner_img", {}),  # Banner image details
                 "status": product.get("status", "active"),
                 "created_at": product.get("created_at", ""),
                 "updated_at": product.get("updated_at", "")
             }
             processed_products.append(processed_product)
+
 
         # Get cart data for the current user
         cart_items = []
@@ -303,6 +324,7 @@ def index(request):
             print("User is not authenticated")
 
         # Combine all context data
+        print(f'44444444444444444444444444444444444444444444444444 {processed_products}');
         context = {
             'user': current_user,
             "products": processed_products,
@@ -313,6 +335,8 @@ def index(request):
         }
 
         return render(request, "Home/index.html", context)
+    
+
     except Exception as e:
         print(f"Error in index view: {str(e)}")
         print(f"Error type: {type(e)}")
@@ -468,69 +492,106 @@ from django.conf import settings
 products_collection = settings.MONGO_DB["products"]
 
 # API to add a new product to MongoDB
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view
+import json
+from bson.objectid import ObjectId
+import datetime
+
 @api_view(['POST'])
 @csrf_exempt
 def add_product(request):
+    """API endpoint to add a new product using MongoDBProduct class."""
     if request.method == "POST":
         try:
             body = json.loads(request.body.decode('utf-8'))
-            name = body.get("name")
-            description = body.get("description")
-            original_price = body.get("original_price")
-            discounted_price = body.get("discounted_price")
-            discount = body.get("discount")
-            image_url = body.get("image_url")
-            stock = body.get("stock")
-            category = body.get("category")
 
-            if not name or not original_price or not discounted_price:
+            # Extract fields from request body
+            name = body.get("name")
+            category_id = body.get("category_id")
+            subcategory = body.get("subcategory")
+            actual_price = body.get("actual_price")
+            price = body.get("price")
+            stock = body.get("stock")
+            variants = body.get("variants", {})  # Default to empty dict
+            tags = body.get("tags", [])  # Default to empty list
+            weight = body.get("weight", "")
+            dimensions = body.get("dimensions", {})  # Default to empty dict
+            images = body.get("images", [])  # Default to empty list
+            description_id = body.get("description_id")
+            reviews = body.get("reviews", [])  # Default to empty list
+            banner_img = body.get("banner_img", {})
+
+            # Validate required fields
+            if not name or not category_id or not actual_price or not price:
                 return JsonResponse({"error": "Missing required fields"}, status=400)
 
-            # Product data structure
-            product_data = {
-                "name": name,
-                "description": description,
-                "original_price": original_price,
-                "discounted_price": discounted_price,
-                "discount": discount,
-                "image_url": image_url,
-                "stock": stock,
-                "category": category,
-                "created_at": datetime.now(),
-                "updated_at": datetime.now(),
-            }
+            # Call MongoDBProduct method to insert the product
+            product_id = MongoDBProduct.add_product(
+                name=name,
+                category_id=category_id,
+                subcategory=subcategory,
+                actual_price=actual_price,
+                price=price,
+                stock=stock,
+                variants=variants,
+                tags=tags,
+                weight=weight,
+                dimensions=dimensions,
+                images=images,
+                description_id=description_id,
+                reviews=reviews,
+                banner_img=banner_img
+            )
 
-            result = products_collection.insert_one(product_data)
-            return JsonResponse({"message": "Product added successfully", "product_id": str(result.inserted_id)})
+            return JsonResponse({"message": "Product added successfully", "product_id": product_id}, status=201)
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
-# API to fetch all products from MongoDB
+
 @api_view(['GET'])
 def get_product_details(request, product_id):
     try:
+        # Fetch the product from MongoDB using the product_id
         product = products_collection.find_one({"_id": ObjectId(product_id)})
+
         if not product:
             return JsonResponse({"error": "Product not found"}, status=404)
 
+        # Fetch category details using category_id from the categories collection
+        category = categories_collection.find_one({"_id": ObjectId(product["category_id"])})
+        category_name = category["name"] if category else "Unknown Category"
+
+        # Extract product details
         product_data = {
+            "id": str(product["_id"]),  # Convert ObjectId to string for the response
             "name": product["name"],
-            "description": product.get("description"),
-            "original_price": product["original_price"],
-            "discounted_price": product["discounted_price"],
-            "discount": product["discount"],
-            "image_url": product["image_url"],
-            "stock": product["stock"],
-            "category": product["category"],
+            "description": product.get("description", ""),
+            "price": product.get("price", 0.0),
+            "stock": product.get("stock", 0),
+            "category_id": product["category_id"],  # Keep the category_id
+            "subcategory": product.get("subcategory", ""),
+            "variants": product.get("variants", {}),
+            "tags": product.get("tags", []),
+            "weight": product.get("weight", ""),
+            "dimensions": product.get("dimensions", {}),
+            "images": product.get("images", []),
+            "banner_img": product.get("banner_img", {}),
+            "reviews": product.get("reviews", []),
+            "status": product.get("status", ""),
+            "created_at": product.get("created_at", ""),
+            "updated_at": product.get("updated_at", ""),
         }
 
         return JsonResponse({"product": product_data})
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
 
 
 # API to update a product in MongoDB
@@ -970,11 +1031,11 @@ def add_sample_products():
 # Uncomment and run this line to add the sample products
 # product_ids = add_sample_products()
 # print(f"Use these IDs to test: {product_ids}")
-
 def product_detail(request, product_id):
     try:
         product = products_collection.find_one({"_id": ObjectId(product_id)})
-        
+        reviews = MongoDBReview.get_review_by_product_id(product_id)  # Assuming this function returns the review data
+
         if product:
             # Format reviews_count before sending to template
             reviews_count = product.get('reviews_count', 0)
@@ -986,30 +1047,31 @@ def product_detail(request, product_id):
                     formatted_count = str(reviews_count)
             except (ValueError, TypeError):
                 formatted_count = "0"
-            
+
             # Process product data
             processed_product = {
                 "id": str(product["_id"]),
                 "name": product.get("name", ""),
-                "formatted_reviews_count": formatted_count,
-                "category": product.get("category", ""),
+                "category": MongoDBCategory.get_category_by_id(str(product.get("category_id", ""))).get("CategoryName", ""),
+                "subcategory": product.get("subcategory", ""),
                 "price": product.get("price", 0),
-                "discounted_price": product.get("discounted_price", 0),
-                "image_url": product.get("image_url", ""),
-                "image_url_alt": product.get("image_url_alt", ""),
-                "description": product.get("description", ""),
-                "status": product.get("status", "active"),
-                "rating": product.get("rating", 5),
-                "reviews": product.get("reviews", []),
-                "reviews_count": reviews_count,
-                "stock": product.get("stock", 0)
+                "stock": product.get("stock", 0),
+                "variants": product.get("variants", {}),  # Fetching variants (color, size)
+                "tags": product.get("tags", []),  # Fetching product tags
+                "description": MongoDBDescription.get_description_by_product_id(str(product["_id"])).get("description", ""),
+                "reviews": product.get("reviewsDictionary", []),  # Storing review IDs
+                "weight": product.get("weight", ""),
+                "dimensions": product.get("dimensions", {}),  # Fetching dimensions (length, height, width)
+                "images": product.get("images", []),  # List of image dictionaries (main & alt)
+                "banner_img": product.get("banner_img", {"Url": "", "alt": ""})  # Banner image details
             }
-            
+
+
             # Get cart data if user is authenticated
             cart_items = []
             cart_total = 0
             cart_items_count = 0
-            
+
             if request.user.is_authenticated:
                 user_id = request.session.get('user_id')
                 if user_id:
@@ -1022,7 +1084,7 @@ def product_detail(request, product_id):
                                     price = float(cart_product.get("discounted_price") or cart_product.get("price", 0))
                                     item_total = price * item["quantity"]
                                     cart_total += item_total
-                                    
+
                                     cart_items.append({
                                         "product": {
                                             "id": str(cart_product["_id"]),
@@ -1038,17 +1100,17 @@ def product_detail(request, product_id):
                             except Exception as e:
                                 print(f"Error processing cart item: {str(e)}")
                                 continue
-                        
+
                         cart_items_count = sum(item["quantity"] for item in cart.get("products", []))
-            
+
             # Get related products (same category)
             related_products = list(products_collection.find(
                 {
-                    "category": product["category"],
+                    "category": product["category_id"],
                     "_id": {"$ne": ObjectId(product_id)}
                 }
             ).limit(4))
-            
+
             # Process related products
             processed_related_products = []
             for related in related_products:
@@ -1060,28 +1122,31 @@ def product_detail(request, product_id):
                     "image_url": related.get("image_url", ""),
                     "stock": related.get("stock", 0)
                 })
-            
+
+            for review in reviews:
+                user = MongoDBUser.get_user_by_id(review["UID"])  # Fetch user by UID
+                review["UID"] = user["username"] if user else "Unknown User"  # Replace UID with username
+           
             context = {
                 "product": processed_product,
                 "cart_items": cart_items,
                 "cart_total": "{:.2f}".format(cart_total),
                 "cart_items_count": cart_items_count,
-                "related_products": processed_related_products
+                "related_products": processed_related_products,
+                "reviews": reviews,  # The reviews are passed here as well
             }
-            
+
             print("Context data:", context)  # Debug print
-            
+
             return render(request, "USER/product_detail.html", context)
         else:
             raise Http404("Product not found")
-            
+
     except Exception as e:
         print(f"Error in product_detail: {str(e)}")
         import traceback
         print(f"Traceback: {traceback.format_exc()}")
         return render(request, "error.html", {"message": "Unable to fetch product details"})
-
-
 
 def add_review(request, product_id):
     if request.method == 'POST':
@@ -1091,54 +1156,28 @@ def add_review(request, product_id):
             # Get the form data
             rating = int(request.POST.get('rating', 0))
             review_text = request.POST.get('review_text', '')
-            name = request.POST.get('name', '')
-            email = request.POST.get('email', '')
-            
-            # Get current product to check current reviews_count
-            current_product = products_collection.find_one({"_id": ObjectId(product_id)})
-            current_count = current_product.get('reviews_count', 0)
-            
-            # Convert string count to integer if necessary
-            if isinstance(current_count, str):
-                try:
-                    current_count = int(current_count.replace('k', '000'))
-                except ValueError:
-                    current_count = 0
-            
-            # Create the review object
-            review = {
-                "name": name,
-                "email": email,
-                "rating": rating,
-                "text": review_text,
-                "date": datetime.now().strftime("%B %d, %Y"),
-                "avatar": None
-            }
-            
-            # Update the product document with new review and incremented count
-            result = products_collection.update_one(
-                {"_id": ObjectId(product_id)},
-                {
-                    "$push": {"reviews": review},
-                    "$set": {
-                        "reviews_count": current_count + 1,
-                        "updated_at": datetime.now()
-                    }
-                }
-            )
-            
-            print("MongoDB update result:", result.modified_count)  # Debug print
-            
-            if result.modified_count > 0:
+
+            # Get the user ID from the session
+            user_id = request.session.get('user_id')
+
+            if not user_id:
+                messages.error(request, 'You must be logged in to submit a review.')
+                return redirect('product_detail', product_id=product_id)
+
+            # Save review using MongoDBReview class
+            review_id = MongoDBReview.add_review(product_id, user_id, review_text, rating)
+
+            if review_id:
                 messages.success(request, 'Your review has been submitted successfully!')
             else:
                 messages.error(request, 'Failed to submit review. Please try again.')
-                
+
         except Exception as e:
             print(f"Error adding review: {str(e)}")  # Debug print
             messages.error(request, 'An error occurred while submitting your review.')
-            
+
     return redirect('product_detail', product_id=product_id)
+
 
 @login_required
 def admin_contact_messages(request):
@@ -1586,3 +1625,6 @@ def add_product(request):
 
 def editBanners(request):
     return render(request, 'Admin/editBanners.html')
+
+def productsList(request):
+    return render(request, 'Admin/productsList.html')

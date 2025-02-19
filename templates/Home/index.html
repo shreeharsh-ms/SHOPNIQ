@@ -158,8 +158,11 @@
 document.addEventListener("DOMContentLoaded", function () {
   const video = document.getElementById("loader-video");
   const loader = document.getElementById("loader");
+  let videoEnded = false; // Flag to track if the video has ended
 
   function checkVisibility() {
+    if (videoEnded) return; // Prevent showing loader again after video ends
+
     const rect = video.getBoundingClientRect();
     const isFullyVisible = rect.top >= 0 && rect.left >= 0 && rect.bottom <= window.innerHeight && rect.right <= window.innerWidth;
 
@@ -172,9 +175,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Hide loader with smooth fade-out and blur when video ends
   video.onended = function () {
+    videoEnded = true; // Mark video as ended
     loader.style.filter = "blur(10px)"; // Apply blur effect
     loader.style.opacity = "0"; // Fade out
-    setTimeout(() => loader.style.display = "none", 1000); // Hide after transition
+
+    setTimeout(() => {
+      loader.style.display = "none"; // Hide after transition
+    }, 1000);
   };
 
   // Check visibility on resize and scroll
@@ -184,7 +191,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initial check on load
   checkVisibility();
 });
-
 </script>
 
 
@@ -851,44 +857,50 @@ document.addEventListener("DOMContentLoaded", function () {
         <div class="tab-pane fade show active" id="collections-tab-1" role="tabpanel"
           aria-labelledby="collections-tab-1-trigger">
           <p>welcome, {{user}}</p>
-          <div class="row">
-            {% if products %}
-            {% for product in products %}
-            {% load static %} <!-- Ensure static is loaded at the top -->
+<div class="row">
+  {% if products %}
+    {% for product in products %}
+      {% load static %} <!-- Ensure static is loaded at the top -->
 
-            <div class="col-6 col-md-4 col-lg-3">
-              <div class="product-card mb-3 mb-md-4 mb-xxl-5">
-                <div class="pc__img-wrapper">
-                  <a href="{% url 'product_detail' product_id=product.id %}">
-                    <img loading="lazy" src="{% static 'images/product_3.jpg' %}" width="330" height="400"
-                      alt="Cotton T-Shirt" class="pc__img">
-
-                    <img loading="lazy" src="{% static 'images/product_3-1.jpg' %}" width="330" height="400"
-                      alt="Cotton T-Shirt" class="pc__img pc__img-second">
-                  </a>
-                </div>
-
-                <div class="pc__info position-relative">
-                  <p class="pc__category">{{ product.category }}</p>
-                  <h6 class="pc__title">
-                    <a href="{% url 'product_detail' product_id=product.id %}">{{ product.name }}</a>
-                  </h6>
-                  <div class="product-card__price d-flex">
-                    <span class="money price price-sale">${{ product.discounted_price }}</span>
-                    <span class="money price price-old">${{ product.original_price }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-
-            {% endfor %}
-            {% else %}
-            <div class="col-12 text-center">
-              <p>No products available at the moment.</p>
-            </div>
-            {% endif %}
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="product-card mb-3 mb-md-4 mb-xxl-5">
+          <div class="pc__img-wrapper">
+            <a href="{% url 'product_detail' product_id=product.id %}">
+              {% if product.banner_img %}
+                <img loading="lazy" src="{% static product.banner_img.Url %}" width="330" height="400"
+                     alt="{{ product.banner_img.alt }}" class="pc__img">
+              {% else %}
+                <img loading="lazy" src="{% static 'images/default-product.jpg' %}" width="330" height="400"
+                     alt="Default Product" class="pc__img">
+              {% endif %}
+            </a>
           </div>
+
+          <div class="pc__info position-relative">
+            <p class="pc__category">{{ product.subcategory }}</p>
+            <h6 class="pc__title">
+              <a href="{% url 'product_detail' product_id=product.id %}">{{ product.name }}</a>
+            </h6>
+            <div class="product-card__price d-flex">
+              <span class="money price price-sale">${{ product.price }}</span>
+              <!-- If you plan to add a discount, you could apply it here -->
+              <!-- Example if there was a discount -->
+              {% if product.discounted_price %}
+                <span class="money price price-old">${{ product.discounted_price }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    {% endfor %}
+  {% else %}
+    <div class="col-12 text-center">
+      <p>No products available at the moment.</p>
+    </div>
+  {% endif %}
+</div>
+
         </div>
 
         <div class="tab-pane fade show" id="collections-tab-2" role="tabpanel"

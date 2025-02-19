@@ -477,93 +477,7 @@
         .switchButtons {
             width: 50%;
         }
-    </style>
-
-</head>
-
-
-<!-- Top Bar Start -->
-
-<body>
-    <!-- Top Bar Start -->
-    <div class="topbar d-print-none" style="height: 100%;
-    overflow-y: scroll;">
-        <div class="container">
-            <h2>Add New Product</h2>
-            <form id="product-form">
-                <div class="row">
-                    <div class="form-group">
-                        <label class="required">Product Name</label>
-                        <input type="text" placeholder="Enter product name" id="product-name" required>
-                        <span class="error-message">Product name is required</span>
-                    </div>
-                    <div class="form-group">
-                        <label>SKU Code</label>
-                        <input type="text" placeholder="Enter SKU code" id="sku-code">
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="form-group">
-                        <label class="required">Category</label>
-                        <select id="category" required>
-                            <option value="">Select Category</option>
-                            <option>Apparel</option>
-                            <option>Footwear</option>
-                            <option>Accessories</option>
-                            <option>Equipment</option>
-                        </select>
-                        <span class="error-message">Please select a category</span>
-                    </div>
-                    <div class="form-group">
-                        <label>Subcategory</label>
-                        <select id="subcategory">
-                            <option value="">Select Subcategory</option>
-                            <option>T-Shirts</option>
-                            <option>Hoodies</option>
-                            <option>Shoes</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="form-group">
-                        <label class="required">Price</label>
-                        <input type="number" step="0.01" placeholder="Enter price" id="price" required>
-                        <span class="error-message">Valid price is required</span>
-                    </div>
-                    <div class="form-group">
-                        <label>Discount (%)</label>
-                        <input type="number" step="0.1" placeholder="Enter discount" id="discount">
-                    </div>
-                    <div class="form-group">
-                        <label>Stock Quantity</label>
-                        <input type="number" placeholder="Enter quantity" id="quantity">
-                    </div>
-                </div>
-
-                <div class="price-calculator">
-                    <div class="price-display">
-                        <div class="price-item" style="
-                        background: #fdf0d9;
-                    ">
-                            <label>Original Price</label>
-                            <span id="original-price">$0.00</span>
-                        </div>
-                        <div class="price-item" style="
-                        background: #d1dffa;
-                    ">
-                            <label>Discount Amount</label>
-                            <span id="discount-amount">$0.00</span>
-                        </div>
-                        <div class="price-item" style="background: #c2fae3;">
-                            <label>Final Price</label>
-                            <span id="final-price">$0.00</span>
-                        </div>
-                    </div>
-                </div>
-                <style>
-                    .form-group {
+        .form-group {
                         display: flex;
                         flex-direction: column;
                         position: relative;
@@ -638,125 +552,24 @@
                     .row_dim {
                         width: 24%;
                     }
-                </style>
+    </style>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            function toggleField(toggleId, inputId) {
+                document.getElementById(toggleId).addEventListener("change", function () {
+                    let inputField = document.getElementById(inputId);
+                    inputField.disabled = !this.checked;
+                    inputField.classList.toggle("enabled", this.checked);
+                });
+            }
 
-                <div class="row" style="display: flex; justify-content: space-between;">
-                    <!-- Weight -->
-                    <div class="form-group row_dim">
-                        <div class="toggle-container">
-                            <label>Enable Weight</label>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-weight">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <input type="number" step="0.01" placeholder="Enter weight" id="weight" disabled>
-                    </div>
-
-                    <!-- Length -->
-                    <div class="form-group row_dim">
-                        <div class="toggle-container">
-                            <label>Enable Length</label>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-length">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <input type="number" step="0.1" placeholder="Enter length" id="length" disabled>
-                    </div>
-
-                    <!-- Width -->
-                    <div class="form-group row_dim">
-                        <div class="toggle-container">
-                            <label>Enable Width</label>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-width">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <input type="number" step="0.1" placeholder="Enter width" id="width" disabled>
-                    </div>
-
-                    <!-- Height -->
-                    <div class="form-group row_dim">
-                        <div class="toggle-container">
-                            <label>Enable Height</label>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-height">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <input type="number" step="0.1" placeholder="Enter height" id="height" disabled>
-                    </div>
-                </div>
-
-                <script>
-                    document.addEventListener("DOMContentLoaded", function () {
-                        function toggleField(toggleId, inputId) {
-                            document.getElementById(toggleId).addEventListener("change", function () {
-                                let inputField = document.getElementById(inputId);
-                                inputField.disabled = !this.checked;
-                                inputField.classList.toggle("enabled", this.checked);
-                            });
-                        }
-
-                        toggleField("toggle-weight", "weight");
-                        toggleField("toggle-length", "length");
-                        toggleField("toggle-width", "width");
-                        toggleField("toggle-height", "height");
-                    });
-                </script>
-
-                <div class="container" style="display: flex; justify-content: space-between; gap: 20px;">
-                    <!-- Size Variants -->
-                    <div class="form-group switchButtons">
-                        <div class="switch-container">
-                            <label for="sizeAvailable" class="toggle-label">Has Size Variants?</label>
-                            <label class="switch">
-                                <input type="checkbox" id="sizeAvailable">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                        <div class="size-selection hidden">
-                            <label>Select Sizes</label>
-                            <div class="multi-select" id="sizeOptions">
-                                <div class="option" data-value="XS">XS</div>
-                                <div class="option" data-value="S">S</div>
-                                <div class="option" data-value="M">M</div>
-                                <div class="option" data-value="L">L</div>
-                                <div class="option" data-value="XL">XL</div>
-                            </div>
-                            <input type="text" id="customSizeInput" placeholder="Add Custom Size">
-                            <button class="add-btn" onclick="addCustomSize()">Add</button>
-                            <input type="hidden" name="selectedSizes" id="selectedSizesInput">
-                        </div>
-                    </div>
-
-                    <!-- Color Variants -->
-                    <div class="form-group switchButtons">
-                        <div class="switch-container">
-                            <label for="colorAvailable" class="toggle-label">Has Color Variants?</label>
-                            <label class="switch">
-                                <input type="checkbox" id="colorAvailable">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                        <div class="color-selection hidden">
-                            <label>Select Colors</label>
-                            <div class="multi-select" id="colorOptions">
-                                <div class="option" data-value="Black">Black</div>
-                                <div class="option" data-value="White">White</div>
-                                <div class="option" data-value="Red">Red</div>
-                                <div class="option" data-value="Blue">Blue</div>
-                                <div class="option" data-value="Green">Green</div>
-                            </div>
-                            <input type="text" id="customColorInput" placeholder="Add Custom Color">
-                            <button class="add-btn" onclick="addCustomColor()">Add</button>
-                            <input type="hidden" name="selectedColors" id="selectedColorsInput">
-                        </div>
-                    </div>
-                </div>
-
+            toggleField("toggle-weight", "weight");
+            toggleField("toggle-length", "length");
+            toggleField("toggle-width", "width");
+            toggleField("toggle-height", "height");
+        });
+    </script>
                 <script>
                     document.addEventListener("DOMContentLoaded", function () {
                         document.getElementById("sizeAvailable").addEventListener("change", function () {
@@ -817,6 +630,193 @@
                         }
                     }
                 </script>
+</head>
+
+
+<!-- Top Bar Start -->
+
+<body>
+    <!-- Top Bar Start -->
+    <div class="topbar d-print-none" style="height: 100%;
+    overflow-y: scroll;">
+        <div class="container">
+            <h2>Add New Product</h2>
+            <form id="product-form">
+                <div class="row">
+                    <div class="form-group">
+                        <label class="required">Product Name</label>
+                        <input type="text" placeholder="Enter product name" id="product-name" required>
+                        <span class="error-message">Product name is required</span>
+                    </div>
+                    <div class="form-group">
+                        <label>SKU Code</label>
+                        <input type="text" placeholder="Enter SKU code" id="sku-code">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label class="required">Category</label>
+                        <select id="category" required>
+                            <option value="">Select Category</option>
+                            <option>Apparel</option>
+                            <option>Footwear</option>
+                            <option>Accessories</option>
+                            <option>Equipment</option>
+                        </select>
+                        <span class="error-message">Please select a category</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Subcategory</label>
+                        <select id="subcategory">
+                            <option value="">Select Subcategory</option>
+                            <option>T-Shirts</option>
+                            <option>Hoodies</option>
+                            <option>Shoes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label class="required">Actual Price</label>
+                        <input type="number" step="0.01" placeholder="Enter Actual price" id="actualPrice" required>
+                        <span class="error-message">Valid price is required</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Price</label>
+                        <input type="number" step="0.01" placeholder="Enter price" id="price" required>
+                        <span class="error-message">Valid price is required</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Discount (%)</label>
+                        <input type="number" step="0.1" placeholder="Enter discount" id="discount">
+                    </div>
+                    <div class="form-group">
+                        <label>Stock Quantity</label>
+                        <input type="number" placeholder="Enter quantity" id="quantity">
+                    </div>
+                </div>
+
+                <div class="price-calculator">
+                    <div class="price-display">
+                        <div class="price-item" style="
+                        background: #fdf0d9;
+                    ">
+                            <label>Original Price</label>
+                            <span id="original-price">$0.00</span>
+                        </div>
+                        <div class="price-item" style="
+                        background: #d1dffa;
+                    ">
+                            <label>Discount Amount</label>
+                            <span id="discount-amount">$0.00</span>
+                        </div>
+                        <div class="price-item" style="background: #c2fae3;">
+                            <label>Final Price</label>
+                            <span id="final-price">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="display: flex; justify-content: space-between;">
+                    <!-- Weight -->
+                    <div class="form-group row_dim">
+                        <div class="toggle-container">
+                            <label>Enable Weight</label>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-weight">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <input type="number" step="0.01" placeholder="Enter weight" id="weight" disabled>
+                    </div>
+
+                    <!-- Length -->
+                    <div class="form-group row_dim">
+                        <div class="toggle-container">
+                            <label>Enable Length</label>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-length">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <input type="number" step="0.1" placeholder="Enter length" id="length" disabled>
+                    </div>
+
+                    <!-- Width -->
+                    <div class="form-group row_dim">
+                        <div class="toggle-container">
+                            <label>Enable Width</label>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-width">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <input type="number" step="0.1" placeholder="Enter width" id="width" disabled>
+                    </div>
+
+                    <!-- Height -->
+                    <div class="form-group row_dim">
+                        <div class="toggle-container">
+                            <label>Enable Height</label>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-height">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <input type="number" step="0.1" placeholder="Enter height" id="height" disabled>
+                    </div>
+                </div>
+
+                <div class="container" style="display: flex; justify-content: space-between; gap: 20px;">
+                    <!-- Size Variants -->
+                    <div class="form-group switchButtons">
+                        <div class="switch-container">
+                            <label for="sizeAvailable" class="toggle-label">Has Size Variants?</label>
+                            <label class="switch">
+                                <input type="checkbox" id="sizeAvailable">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="size-selection hidden">
+                            <label>Select Sizes</label>
+                            <div class="multi-select" id="sizeOptions">
+                                <div class="option" data-value="XS">XS</div>
+                                <div class="option" data-value="S">S</div>
+                                <div class="option" data-value="M">M</div>
+                                <div class="option" data-value="L">L</div>
+                                <div class="option" data-value="XL">XL</div>
+                            </div>
+                            <input type="text" id="customSizeInput" placeholder="Add Custom Size">
+                            <button class="add-btn" onclick="addCustomSize()">Add</button>
+                            <input type="hidden" name="selectedSizes" id="selectedSizesInput">
+                        </div>
+                    </div>
+
+                    <!-- Color Variants -->
+                    <div class="form-group switchButtons">
+                        <div class="switch-container">
+                            <label for="colorAvailable" class="toggle-label">Has Color Variants?</label>
+                            <label class="switch">
+                                <input type="checkbox" id="colorAvailable">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="color-selection hidden">
+                            <label>Select Colors</label>
+                            <div class="multi-select" id="colorOptions">
+                                <div class="option" data-value="Black">Black</div>
+                                <div class="option" data-value="White">White</div>
+                                <div class="option" data-value="Red">Red</div>
+                                <div class="option" data-value="Blue">Blue</div>
+                                <div class="option" data-value="Green">Green</div>
+                            </div>
+                            <input type="text" id="customColorInput" placeholder="Add Custom Color">
+                            <button class="add-btn" onclick="addCustomColor()">Add</button>
+                            <input type="hidden" name="selectedColors" id="selectedColorsInput">
+                        </div>
+                    </div>
+                </div>
 
                 <div class="form-group">
                     <label class="required">Product Description</label>
