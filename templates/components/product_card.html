@@ -1,0 +1,51 @@
+{% load static %}
+
+<div class="col-6 col-md-4 col-lg-3">
+    <div class="product-card mb-3 mb-md-4 mb-xxl-5">
+        <!-- <p>Product ID: {{ product.id }}</p> -->
+
+        <div class="pc__img-wrapper">
+            {% if product.id %}
+                <a href="{% url 'product_detail' product_id=product.id %}">
+            {% else %}
+                <a href="#">  <!-- Prevents broken links -->
+            {% endif %}
+            
+                {% if product.banner_img and product.banner_img.Url %}
+                    <img loading="lazy" src="{% static product.banner_img.Url %}" width="330" height="400"
+                         alt="{{ product.banner_img.alt|default:'Product Image' }}" class="pc__img">
+                {% else %}
+                    <img loading="lazy" src="{% static 'images/default-product.jpg' %}" width="330" height="400"
+                         alt="Default Product" class="pc__img">
+                {% endif %}
+            </a>
+        </div>
+
+        <div class="pc__info position-relative">
+            <p class="pc__category">{{ product.subcategory|default:'Uncategorized' }}</p>
+            <h6 class="pc__title">
+                {% if product.id %}
+                    <a href="{% url 'product_detail' product_id=product.id %}">{{ product.name }}</a>
+                {% else %}
+                    <span>{{ product.name }}</span>
+                {% endif %}
+            </h6>
+            <div class="product-card__price d-flex">
+                <span class="money price price-sale">${{ product.price|default:'0.00' }}</span>
+                {% if product.actual_price and product.actual_price > product.price %}
+                    <span class="money price price-old text-danger">${{ product.actual_price }}</span>
+                {% endif %}
+            </div>
+
+            <button class="pc__atc btn btn-primary text-uppercase fw-medium js-add-cart"
+                    data-product-id="{{ product.id }}" title="Add To Cart">Add To Cart</button>
+
+            <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist"
+                    data-product-id="{{ product.id }}" title="Add To Wishlist">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_heart"></use>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>

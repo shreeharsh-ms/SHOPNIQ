@@ -103,24 +103,42 @@
                     <div class="register-form">
                         <form name="register-form" class="needs-validation" novalidate id="registerForm">
                             {% csrf_token %}
+                        
                             <div class="form-floating mb-3">
-                                <input name="username" type="text" class="form-control form-control_gray"
-                                    id="registerUsername" placeholder="Username" required>
+                                <input name="username" type="text" class="form-control form-control_gray" id="registerUsername" placeholder="Username" required>
                                 <label for="registerUsername">Username</label>
                             </div>
-
+                        
                             <div class="form-floating mb-3">
-                                <input name="email" type="email" class="form-control form-control_gray"
-                                    id="registerEmail" placeholder="Email address *" required>
+                                <input name="email" type="email" class="form-control form-control_gray" id="registerEmail" placeholder="Email address *" required>
                                 <label for="registerEmail">Email address *</label>
                             </div>
-
+                        
                             <div class="form-floating mb-3">
-                                <input name="password" type="password" class="form-control form-control_gray"
-                                    id="registerPassword" placeholder="Password *" required>
+                                <input name="password" type="password" class="form-control form-control_gray" id="registerPassword" placeholder="Password *" required>
                                 <label for="registerPassword">Password *</label>
                             </div>
-
+                        
+                            <div class="form-floating mb-3">
+                                <input name="phone_number" type="text" class="form-control form-control_gray" id="registerPhone" placeholder="Phone Number">
+                                <label for="registerPhone">Phone Number (optional)</label>
+                            </div>
+                        
+                            <div class="form-floating mb-3">
+                                <input name="role" type="text" class="form-control form-control_gray" id="registerRole" placeholder="Role" value="user">
+                                <label for="registerRole">Role (default: user)</label>
+                            </div>
+                        
+                            <div class="form-floating mb-3">
+                                <textarea name="address" class="form-control form-control_gray" id="registerAddress" placeholder="Address"></textarea>
+                                <label for="registerAddress">Address (optional)</label>
+                            </div>
+                        
+                            <div class="form-floating mb-3">
+                                <textarea name="orders" class="form-control form-control_gray" id="registerOrders" placeholder="Orders (optional)"></textarea>
+                                <label for="registerOrders">Orders (optional)</label>
+                            </div>
+                        
                             <button type="submit" id="registerSubmitButton" class="btn btn-primary w-100 text-uppercase">Register</button>
 
                             <br>
@@ -132,6 +150,7 @@
                             
                             <div id="registerMessage" class="alert mt-3" style="display: none;"></div>
                         </form>
+                        
                     </div>
                 </div>
             </div>

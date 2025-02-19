@@ -158,6 +158,15 @@ MONGO_URI = "mongodb+srv://ramrajurkar2020:ramdb013@cluster0.xwifiky.mongodb.net
 MONGO_CLIENT = pymongo.MongoClient(MONGO_URI)
 MONGO_DB = MONGO_CLIENT["shopniq_db"]
 
+# Local MongoDB URI
+# MONGO_URI = "mongodb://localhost:27017/"
+
+# MONGO_CLIENT = pymongo.MongoClient(MONGO_URI)
+
+# # Database to connect to
+# MONGO_DB = MONGO_CLIENT["test"]
+
+
 SESSION_ENGINE = "django.contrib.sessions.backends.db"  # ✅ Ensure database-backed sessions
 SESSION_COOKIE_AGE = 86400  # 1 day
 SESSION_SAVE_EVERY_REQUEST = True  # Save session on every request
