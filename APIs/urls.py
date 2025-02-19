@@ -13,6 +13,8 @@ urlpatterns = [
     path('api/login/', views.login_user, name='login_user'),
     path('login/', views.login_view, name='login_view'),
     path('get-csrf-token/', views.get_csrf_token, name='get_csrf_token'),
+    path('api/google/login/<str:mode>/', views.google_login, name='google_login'),
+    path('api/google/callback/', views.google_callback, name='google_callback'),
 
     # path("api/auth/google/", views.google_auth, name="google_auth"),
     
@@ -92,7 +94,7 @@ urlpatterns = [
     path('orders-list/', views.orders_list, name='orders_list'),
     path('add-product/', views.add_product, name='add-product'),
     path('editBanners/', views.editBanners, name='editBanners'),
-    path('productsList/', views.productsList, name='productsList'),
+    # path('productsList/', views.productsList, name='productsList'),
 
 
 
