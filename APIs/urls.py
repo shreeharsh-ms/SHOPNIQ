@@ -35,9 +35,7 @@ urlpatterns = [
     path('about-us/', views.about_us, name='about_us'),
     path('contact/', views.contact_us, name='contact_us'),
     path('contact/submit/', views.contact_submit, name='contact_submit'),
-
-
-
+   path("search-suggestions/", views.search_suggestions, name="search-suggestions"),  # Enhanced
     # Product Management URLs
     # path('api/products/add/', views.add_product, name='add_product'),
     path('api/products/all/', views.get_all_products, name='get_all_products'),
@@ -59,7 +57,9 @@ urlpatterns = [
     path('cart/', views.cart, name='cart'),
     path('cart/items/', views.get_cart_items, name='get_cart_items'),
     path('cart/update-quantity/', views.update_cart_quantity, name='update_cart_quantity'),
-    path('cart/remove-item/', views.remove_from_cart, name='remove_from_cart'),
+    path('cart/remove/<str:product_id>/', views.remove_from_cart, name='remove_from_cart'),
+
+
 
     path('add-to-cart/', views.add_to_cart, name='add_to_cart'),
 
@@ -96,8 +96,10 @@ urlpatterns = [
     path('api/add-product/', views.api_add_product, name='api_add_product'),
     path('editBanners/', views.editBanners, name='editBanners'),
     path("api/upload-product-images/", views.upload_product_images, name="upload-product-images"),
-     path('api/categories/', views.search_categories, name='search_categories'),
-    # path('productsList/', views.productsList, name='productsList'),
+    path('api/categories/', views.search_categories, name='search_categories'),
+    path("cart/products/", views.get_cart_products, name="get_cart_products"),
+    path("api/top_rated/", views.top_rated_products, name="top_rated"),
+    path("api/latest-products/", views.get_latest_products, name="get_latest_products"),# path('productsList/', views.productsList, name='productsList'),
 
 
 

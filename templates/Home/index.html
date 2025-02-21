@@ -841,23 +841,166 @@ document.addEventListener("DOMContentLoaded", function () {
         </li>
         <li class="nav-item" role="presentation">
           <a class="nav-link nav-link_underscore" id="collections-tab-2-trigger" data-bs-toggle="tab"
-            href="#collections-tab-2" role="tab" aria-controls="collections-tab-2" aria-selected="true">New Arrivals</a>
-        </li>
+             href="#collections-tab-2" role="tab" aria-controls="collections-tab-2"
+             aria-selected="true" onclick="fetchLatestProducts()">New Arrivals</a>
+      </li>
+      
         <li class="nav-item" role="presentation">
           <a class="nav-link nav-link_underscore" id="collections-tab-3-trigger" data-bs-toggle="tab"
             href="#collections-tab-3" role="tab" aria-controls="collections-tab-3" aria-selected="true">Best Seller</a>
         </li>
         <li class="nav-item" role="presentation">
           <a class="nav-link nav-link_underscore" id="collections-tab-4-trigger" data-bs-toggle="tab"
-            href="#collections-tab-4" role="tab" aria-controls="collections-tab-4" aria-selected="true">Top Rated</a>
-        </li>
+              href="#collections-tab-4" role="tab" aria-controls="collections-tab-4"
+              aria-selected="true" onclick="fetchTopRatedProducts()">Top Rated</a>
+      </li>
+      
       </ul>
-
+      <script>
+        function fetchTopRatedProducts() {
+            fetch('api/top_rated/')  // Fetch data from Django view
+            .then(response => response.json())
+            .then(data => {
+                console.log("Top Rated Products:", data); // Debugging
+        
+                let container = document.getElementById('collections-tab-4'); // The tab-pane container
+                container.innerHTML = ''; // Clear old content
+        
+                let tabPane = document.createElement('div');
+                tabPane.className = 'tab-pane fade show active';
+                tabPane.id = 'collections-tab-4';
+                tabPane.role = 'tabpanel';
+                tabPane.setAttribute('aria-labelledby', 'collections-tab-4-trigger');
+        
+                let welcomeMessage = document.createElement('p');
+                welcomeMessage.innerHTML = 'Welcome, {{user}}'; // Assuming you dynamically replace {{user}} on server-side
+                tabPane.appendChild(welcomeMessage);
+        
+                let rowContainer = document.createElement('div');
+                rowContainer.className = 'row';
+                rowContainer.id = 'sarcastic';
+        
+                if (data.length === 0) {
+                    let noProductsMessage = document.createElement('div');
+                    noProductsMessage.className = 'col-12 text-center';
+                    noProductsMessage.innerHTML = '<p>No products available at the moment.</p>';
+                    rowContainer.appendChild(noProductsMessage);
+                } else {
+                    data.forEach(item => {
+                        let product = item.product;
+                        let productHTML = `
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <div class="product-card mb-3 mb-md-4 mb-xxl-5">
+                                    <div class="pc__img-wrapper">
+                                        <a href="/product/${product._id}">
+                                            <img loading="lazy" src="${product.images.length ? product.images[0] : '/static/images/default-product.jpg'}"
+                                                 width="330" height="400" alt="${product.name}" class="pc__img">
+                                        </a>
+                                    </div>
+        
+                                    <div class="pc__info position-relative">
+                                        <p class="pc__category">${product.subcategory || 'No Category'}</p>
+                                        <h6 class="pc__title">
+                                            <a href="/product/${product._id}">${product.name}</a>
+                                        </h6>
+                                        <div class="product-card__price d-flex">
+                                            <span class="money price price-sale">$${product.price}</span>
+                                            ${product.discounted_price ? `<span class="money price price-old">$${product.discounted_price}</span>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+        
+                        rowContainer.innerHTML += productHTML;
+                    });
+                }
+        
+                tabPane.appendChild(rowContainer);
+                container.appendChild(tabPane);
+            })
+            .catch(error => console.error("Error fetching top-rated products:", error));
+        }
+        </script>
+        
+        <script>
+          function fetchLatestProducts() {
+              fetch('api/latest-products/')  // Fetch latest products from Django view
+              .then(response => response.json())
+              .then(data => {
+                  console.log("Latest Products:", data);
+          
+                  let container = document.getElementById('collections-tab-2'); // Target the correct tab-pane
+                  container.innerHTML = ''; // Clear old content
+          
+                  // Create the row container
+                  let rowContainer = document.createElement('div');
+                  rowContainer.className = 'row';
+                  rowContainer.id = 'sarcastic';
+          
+                  // Check if products exist
+                  if (!data.products || data.products.length === 0) {
+                      let noProductsMessage = document.createElement('div');
+                      noProductsMessage.className = 'col-12 text-center';
+                      noProductsMessage.innerHTML = '<p>No new products available at the moment.</p>';
+                      rowContainer.appendChild(noProductsMessage);
+                  } else {
+                      data.products.forEach(product => {
+                          let productCard = document.createElement('div');
+                          productCard.className = 'col-6 col-md-4 col-lg-3';
+          
+                          productCard.innerHTML = `
+                              <div class="product-card mb-3 mb-md-4 mb-xxl-5">
+                                  <div class="pc__img-wrapper">
+                                      <a href="/product/${product._id}/">
+                                          <img loading="lazy" src="${product.images && product.images.length ? product.images[0] : '/static/images/default-product.jpg'}"
+                                               width="330" height="400" alt="${product.name}" class="pc__img">
+                                          ${product.images && product.images.length > 1 ? `<img loading="lazy" src="${product.images[1]}" width="330" height="400" alt="${product.name}" class="pc__img pc__img-second">` : ''}
+                                      </a>
+                                      <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside" data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
+                                  </div>
+          
+                                  <div class="pc__info position-relative">
+                                      <p class="pc__category">${product.subcategory || 'No Category'}</p>
+                                      <h6 class="pc__title">
+                                          <a href="/product/${product._id}/">${product.name}</a>
+                                      </h6>
+                                      <div class="product-card__price d-flex">
+                                          <span class="money price">$${product.price}</span>
+                                      </div>
+          
+                                      <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Add To Wishlist">
+                                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                              <use href="#icon_heart"></use>
+                                          </svg>
+                                      </button>
+                                  </div>
+                              </div>
+                          `;
+          
+                          rowContainer.appendChild(productCard);
+                      });
+                  }
+          
+                  container.appendChild(rowContainer);
+          
+                  // Add the "Discover More" link
+                  let discoverMoreDiv = document.createElement('div');
+                  discoverMoreDiv.className = 'text-center mt-2';
+                  discoverMoreDiv.innerHTML = `<a class="btn-link btn-link_lg default-underline text-uppercase fw-medium" href="/static/shop1.html">Discover More</a>`;
+                  container.appendChild(discoverMoreDiv);
+              })
+              .catch(error => console.error("Error fetching latest products:", error));
+          }
+          </script>
+          
+    
+        
       <div class="tab-content pt-2" id="collections-tab-content">
         <div class="tab-pane fade show active" id="collections-tab-1" role="tabpanel"
           aria-labelledby="collections-tab-1-trigger">
           <p>welcome, {{user}}</p>
-<div class="row">
+<div class="row" id="sarcastic">
   {% if products %}
     {% for product in products %}
       {% load static %} <!-- Ensure static is loaded at the top -->

@@ -157,18 +157,18 @@ DEBUG = True
 # MongoDB Connection using PyMongo
 import pymongo
 
-# MONGO_URI = "mongodb+srv://ramrajurkar2020:ramdb013@cluster0.xwifiky.mongodb.net/"
-
-# MONGO_CLIENT = pymongo.MongoClient(MONGO_URI)
-# MONGO_DB = MONGO_CLIENT["shopniq_db"]
-
-# Local MongoDB URI
-MONGO_URI = "mongodb://localhost:27017/"
+MONGO_URI = "mongodb+srv://ramrajurkar2020:ramdb013@cluster0.xwifiky.mongodb.net/"
 
 MONGO_CLIENT = pymongo.MongoClient(MONGO_URI)
+MONGO_DB = MONGO_CLIENT["shopniq_db"]
 
-# Database to connect to
-MONGO_DB = MONGO_CLIENT["test"]
+# Local MongoDB URI
+# MONGO_URI = "mongodb://localhost:27017/"
+
+# MONGO_CLIENT = pymongo.MongoClient(MONGO_URI)
+
+# # Database to connect to
+# MONGO_DB = MONGO_CLIENT["test"]
 
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"  # ✅ Ensure database-backed sessions

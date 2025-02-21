@@ -6,17 +6,26 @@ import pytz
 import datetime as dt
 
 # Connect to MongoDB client and set the database
-client = MongoClient("mongodb://localhost:27017/")
-db = client["test"]  # Specify the 'test' database
-products_collection = db["products"]
-descriptions_collection = db["descriptions"] 
-# Reference the collections correctly from 'db'
-users_collection = db["users"]
-contact_messages = db["contact_messages"]
-reviews_collection = db["reviews"]
-descriptions_collection = db["descriptions"]
-categories_collection = db["categories_collection"]
-brands_collection = db["brands_collection"]
+# client = MongoClient("mongodb://localhost:27017/")
+# db = client["test"]  # Specify the 'test' database
+# products_collection = db["products"]
+# descriptions_collection = db["descriptions"] 
+# # Reference the collections correctly from 'db'
+# users_collection = db["users"]
+# contact_messages = db["contact_messages"]
+# reviews_collection = db["reviews"]
+# descriptions_collection = db["descriptions"]
+# categories_collection = db["categories_collection"]
+# brands_collection = db["brands_collection"]
+
+products_collection = MONGO_DB["products"]
+descriptions_collection = MONGO_DB["descriptions"]
+users_collection = MONGO_DB["users"]
+contact_messages = MONGO_DB["contact_messages"]
+reviews_collection = MONGO_DB["reviews"]
+categories_collection = MONGO_DB["categories"]
+brands_collection = MONGO_DB["brands"]
+db = MONGO_DB
 
 ist = pytz.timezone('Asia/Kolkata')
 from datetime import datetime
@@ -161,6 +170,19 @@ class MongoDBProduct:
         products = products_collection.find().sort(sort_by, sort_order)
         return [MongoDBProduct.serialize_product(p) for p in products]
 
+        
+    @staticmethod
+    def get_top_latest_products(limit=10):
+        """Fetch the latest products, sorted by added_date (newest first)."""
+        products = products_collection.find().sort("added_date", -1).limit(limit)
+        return [MongoDBProduct.serialize_product(p) for p in products]
+
+    @staticmethod
+    def get_top_selling_products(limit=10):
+        """Fetch top products based on sales count (highest first)."""
+        products = products_collection.find().sort("sales_count", -1).limit(limit)
+        return [MongoDBProduct.serialize_product(p) for p in products]
+
     @staticmethod
     def add_product(name, brand_name, category_name, subcategory, actual_price, price, stock, variants, tags, weight, dimensions, images, description_id, reviews, banner_img):
         """Add a new product to the database, ensuring category, brand, and description exist."""
@@ -190,6 +212,7 @@ class MongoDBProduct:
             "dimensions": dimensions,
             "images": images,
             "banner_img": banner_img,
+            "sales_count": 0,  # ✅ New field to track sales count
         }
 
         # Insert the product into MongoDB
@@ -208,6 +231,14 @@ class MongoDBProduct:
         MongoDBCategory.increment_product_count(category_id)
 
         return str(product_id)
+
+    @staticmethod
+    def update_sales_count(product_id, quantity):
+        """Update the sales count when a product is purchased."""
+        products_collection.update_one(
+            {"_id": ObjectId(product_id)},
+            {"$inc": {"sales_count": quantity}}
+        )
 
     @staticmethod
     def delete_product(product_id):
@@ -233,33 +264,35 @@ class MongoDBProduct:
         """Retrieve a product by its ID and return serialized data."""
         product = products_collection.find_one({"_id": ObjectId(product_id)})
         return MongoDBProduct.serialize_product(product) if product else None
-
+    
     @staticmethod
     def serialize_product(product):
-        """Convert product document into a dictionary with string IDs."""
-        if product:
-            return {
-                "_id": str(product["_id"]),
-                "name": product["name"],
-                "brand_id": str(product["brand_id"]),  # ✅ Include brand reference
-                "added_date": product["added_date"],
-                "updated_date": product["updated_date"],
-                "category_id": str(product["category_id"]),
-                "subcategory": product["subcategory"],
-                "actual_price": product["actual_price"],
-                "price": product["price"],
-                "stock": product["stock"],
-                "variants": product["variants"],
-                "tags": product["tags"],
-                "description_id": str(product["description_id"]),
-                "reviews": [str(review_id) for review_id in product.get("reviews", [])],
-                "weight": product["weight"],
-                "dimensions": product["dimensions"],
-                "images": product["images"],
-                "banner_img": product["banner_img"],
-            }
-        return None
-    
+        """Convert product document into a dictionary with string IDs and formatted fields."""
+        if not product:
+            return None
+
+        return {
+            "_id": str(product["_id"]),
+            "name": product.get("name", ""),
+            "brand_id": str(product.get("brand_id", "")),  # ✅ Include brand reference
+            "added_date": product["added_date"].isoformat() if "added_date" in product else None,  # ✅ Convert to ISO format
+            "updated_date": product["updated_date"].isoformat() if "updated_date" in product and product["updated_date"] else None,
+            "category_id": str(product.get("category_id", "")),
+            "subcategory": product.get("subcategory", ""),
+            "actual_price": product.get("actual_price", 0.0),
+            "price": product.get("price", 0.0),
+            "stock": product.get("stock", 0),
+            "variants": product.get("variants", []),
+            "tags": product.get("tags", []),
+            "description_id": str(product.get("description_id", "")) if product.get("description_id") else None,
+            "reviews": [str(review_id) for review_id in product.get("reviews", [])],
+            "weight": product.get("weight", ""),
+            "dimensions": product.get("dimensions", ""),
+            "images": product.get("images", []),
+            "banner_img": product.get("banner_img", ""),
+            "sales_count": product.get("sales_count", 0),  # ✅ Include sales count
+        }
+
 
 class MongoDBBrand:
     @staticmethod
@@ -369,7 +402,21 @@ class MongoDBBrand:
                     brand_names.add(brand["name"])
 
         return list(brand_names)  # Convert set to list before returning
+    @staticmethod
+    def get_brands_by_query(query):
+        """
+        Retrieve a list of brand names that match the given query.
+        :param query: The search query string.
+        :return: A list of brand names matching the query.
+        """
+        if not query:
+            return []
 
+        matching_brands = brands_collection.find(
+            {"name": {"$regex": query, "$options": "i"}}, {"name": 1}
+        )
+
+        return [brand["name"] for brand in matching_brands]
 
 # sample_product = {
 #     "name": "Premium Leather Jacket",
@@ -406,6 +453,7 @@ class MongoDBBrand:
 #         "alt": "banner_alt_text"
 #     }
 # }
+
 class MongoDBReview:
     @staticmethod
     def add_review(product_id, user_id, review_text, review_stars):
@@ -505,6 +553,14 @@ class MongoDBDescription:
                 "updated_date": description.get("updated_date")  # Timestamp when last updated
             }
         return None
+    @staticmethod
+    def get_matching_descriptions(query):
+        """Fetch descriptions that contain the search query."""
+        matching_descriptions = descriptions_collection.find(
+            {"description": {"$regex": query, "$options": "i"}},  # Case-insensitive search
+            {"_id": 0, "description": 1}  # Only return descriptions
+        )
+        return [desc["description"] for desc in matching_descriptions]
 
 
 from bson import ObjectId
@@ -597,3 +653,140 @@ class MongoDBCategory:
                 "product_count": category.get("product_count", 0)  # Default to 0 if missing
             }
         return None
+    
+    @staticmethod
+    def get_categories_by_query(query):
+        """
+        Retrieve a list of category names that match the given query.
+        :param query: The search query string.
+        :return: A list of category names.
+        """
+        if not query:
+            return []
+
+        matching_categories = categories_collection.find(
+            {"CategoryName": {"$regex": query, "$options": "i"}}, {"CategoryName": 1}
+        )
+
+        return [cat["CategoryName"] for cat in matching_categories]
+
+
+
+from datetime import datetime
+from bson import ObjectId
+
+class MongoDBCart:
+    @staticmethod
+    def get_user_cart(user_id):
+        """Fetch the entire cart for a user along with product details."""
+        cart = MONGO_DB["cart"].find_one({"user_id": ObjectId(user_id)})
+
+        if not cart:
+            return None
+
+        return {
+            "_id": str(cart["_id"]),
+            "user_id": str(cart["user_id"]),
+            "products": [
+                {
+                    "product_id": str(item["product_id"]),
+                    "quantity": item["quantity"]
+                } 
+                for item in cart["products"]
+            ],
+            "created_at": cart.get("created_at"),
+            "updated_at": cart.get("updated_at")
+        }
+
+    @staticmethod
+    def add_to_cart(user_id, product_id, quantity=1):
+        """Add a product to the user's cart or create a new cart if needed."""
+        
+        user_id = ObjectId(user_id)
+        product_id = ObjectId(product_id)
+
+        cart = MONGO_DB["cart"].find_one({"user_id": user_id})
+
+        if cart:
+            # Check if product already exists in the cart
+            existing_product = next((item for item in cart["products"] if item["product_id"] == product_id), None)
+
+            if existing_product:
+                # Increase quantity
+                db["cart"].update_one(
+                    {"user_id": user_id, "products.product_id": product_id},
+                    {"$inc": {"products.$.quantity": quantity}, "$set": {"updated_at": datetime.utcnow()}}
+                )
+            else:
+                # Add new product
+                db["cart"].update_one(
+                    {"user_id": user_id},
+                    {"$push": {"products": {"product_id": product_id, "quantity": quantity}},
+                     "$set": {"updated_at": datetime.utcnow()}}
+                )
+        else:
+            # Create new cart for the user
+            new_cart = {
+                "user_id": user_id,
+                "products": [{"product_id": product_id, "quantity": quantity}],
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            db["cart"].insert_one(new_cart)
+
+    @staticmethod
+    def get_cart_items(user_id):
+        """Retrieve all cart items for a specific user."""
+        cart = db["cart"].find_one({"user_id": ObjectId(user_id)})
+        return cart["products"] if cart else []
+
+    @staticmethod
+    def update_cart_item(user_id, product_id, new_quantity):
+        """Update the quantity of a specific cart item."""
+        result = db["cart"].update_one(
+            {"user_id": ObjectId(user_id), "products.product_id": ObjectId(product_id)},
+            {"$set": {"products.$.quantity": new_quantity, "updated_at": datetime.utcnow()}}
+        )
+        return result.modified_count > 0  # True if updated
+
+    @staticmethod
+    def remove_from_cart(user_id, product_id):
+        """Remove a specific product from the cart."""
+        result = db["cart"].update_one(
+            {"user_id": ObjectId(user_id)},
+            {"$pull": {"products": {"product_id": ObjectId(product_id)}}, "$set": {"updated_at": datetime.utcnow()}}
+        )
+        return result.modified_count > 0  # True if removed
+
+    @staticmethod
+    def clear_cart(user_id):
+        """Remove all items from a user's cart."""
+        result = db["cart"].update_one(
+            {"user_id": ObjectId(user_id)},
+            {"$set": {"products": [], "updated_at": datetime.utcnow()}}
+        )
+        return result.modified_count > 0  # True if cart cleared
+
+    @staticmethod
+    def get_cart_total_items(user_id):
+        """Get the total number of items in a user's cart."""
+        cart = db["cart"].find_one({"user_id": ObjectId(user_id)}, {"products.quantity": 1})
+
+        if not cart or "products" not in cart:
+            return 0
+
+        return sum(item["quantity"] for item in cart["products"])
+
+    @staticmethod
+    def serialize_cart_item(cart_item):
+        """Convert cart document into a dictionary."""
+        return {
+            "_id": str(cart_item["_id"]),
+            "user_id": str(cart_item["user_id"]),
+            "products": [
+                {"product_id": str(item["product_id"]), "quantity": item["quantity"]}
+                for item in cart_item["products"]
+            ],
+            "created_at": cart_item.get("created_at"),
+            "updated_at": cart_item.get("updated_at")
+        }
