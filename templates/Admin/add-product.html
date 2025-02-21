@@ -582,23 +582,32 @@
                     });
 
                     function toggleSelection(event) {
-                        event.target.classList.toggle("selected");
-                        updateFormFields();
-                    }
+    event.target.classList.toggle("selected");
+    updateFormFields(); // Ensure values are updated on every selection change
+}
+
 
                     document.querySelectorAll(".multi-select .option").forEach(option => {
                         option.addEventListener("click", toggleSelection);
                     });
 
                     function updateFormFields() {
-                        let selectedSizes = Array.from(document.querySelectorAll("#sizeOptions .option.selected"))
-                            .map(opt => opt.dataset.value).join(",");
-                        let selectedColors = Array.from(document.querySelectorAll("#colorOptions .option.selected"))
-                            .map(opt => opt.dataset.value).join(",");
+    let selectedSizes = Array.from(document.querySelectorAll("#sizeOptions .option.selected"))
+        .map(opt => opt.dataset.value)
+        .join(",");
 
-                        document.getElementById("selectedSizesInput").value = selectedSizes;
-                        document.getElementById("selectedColorsInput").value = selectedColors;
-                    }
+    let selectedColors = Array.from(document.querySelectorAll("#colorOptions .option.selected"))
+        .map(opt => opt.dataset.value)
+        .join(",");
+
+    document.getElementById("selectedSizesInput").value = selectedSizes;
+    document.getElementById("selectedColorsInput").value = selectedColors;
+
+    // Debugging - Check if values are being set
+    console.log("Updated Sizes:", selectedSizes);
+    console.log("Updated Colors:", selectedColors);
+}
+
 
                     function addCustomSize() {
                         let input = document.getElementById("customSizeInput");
@@ -642,6 +651,7 @@
         <div class="container">
             <h2>Add New Product</h2>
             <form id="product-form">
+                {% csrf_token %}
                 <div class="row">
                     <div class="form-group">
                         <label class="required">Product Name</label>
@@ -649,23 +659,93 @@
                         <span class="error-message">Product name is required</span>
                     </div>
                     <div class="form-group">
-                        <label>SKU Code</label>
-                        <input type="text" placeholder="Enter SKU code" id="sku-code">
+                        <label>Brand Name</label>
+                        <input type="text" placeholder="Enter Brand" id="Brand_name">
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="form-group">
-                        <label class="required">Category</label>
-                        <select id="category" required>
-                            <option value="">Select Category</option>
-                            <option>Apparel</option>
-                            <option>Footwear</option>
-                            <option>Accessories</option>
-                            <option>Equipment</option>
-                        </select>
-                        <span class="error-message">Please select a category</span>
+                <div class="row"><div class="form-group">
+                    <label class="required">Category</label>
+                    <input type="text" id="category" placeholder="Search Category..." autocomplete="off" required>
+                    <div id="category-dropdown-container" class="dropdown-container" style="display: none;">
+                        <ul id="category-dropdown"></ul>
                     </div>
+                    <span class="error-message">Please select a category</span>
+                </div>
+                
+                <style>
+                    .dropdown-container {
+                        width: 100%;
+                        background: white;
+                        border: 1px solid #ccc;
+                        max-height: 200px;
+                        overflow-y: auto;
+                        z-index: 1000;
+                    }
+                    .dropdown-container ul {
+                        list-style-type: none;
+                        padding: 0;
+                        margin: 0;
+                    }
+                    .dropdown-container ul li {
+                        padding: 8px;
+                        cursor: pointer;
+                    }
+                    .dropdown-container ul li:hover {
+                        background-color: #f0f0f0;
+                    }
+                </style>
+                
+                <script>
+                document.getElementById("category").addEventListener("input", async function () {
+                    let query = this.value.trim();
+                    let dropdownContainer = document.getElementById("category-dropdown-container");
+                    let categoryDropdown = document.getElementById("category-dropdown");
+                
+                    if (query.length > 0) {
+                        try {
+                            let response = await fetch(`/api/categories/?q=${query}`);
+                            let data = await response.json();
+                
+                            categoryDropdown.innerHTML = ""; // Clear previous options
+                
+                            if (data.categories.length > 0) {
+                                data.categories.forEach(category => {
+                                    let listItem = document.createElement("li");
+                                    listItem.textContent = category.CategoryName;
+                                    listItem.dataset.value = category.CategoryName;
+                
+                                    listItem.addEventListener("click", function () {
+                                        document.getElementById("category").value = this.dataset.value;
+                                        dropdownContainer.style.display = "none"; // Hide dropdown after selection
+                                    });
+                
+                                    categoryDropdown.appendChild(listItem);
+                                });
+                
+                                dropdownContainer.style.display = "block"; // Show dropdown when results exist
+                            } else {
+                                dropdownContainer.style.display = "none"; // Hide if no results
+                            }
+                        } catch (error) {
+                            console.error("Error fetching categories:", error);
+                        }
+                    } else {
+                        dropdownContainer.style.display = "none"; // Hide dropdown when input is empty
+                    }
+                });
+                
+                // Hide dropdown when clicking outside
+                document.addEventListener("click", function (event) {
+                    let dropdownContainer = document.getElementById("category-dropdown-container");
+                    let categoryInput = document.getElementById("category");
+                
+                    if (!categoryInput.contains(event.target) && !dropdownContainer.contains(event.target)) {
+                        dropdownContainer.style.display = "none";
+                    }
+                });
+                </script>
+                
                     <div class="form-group">
                         <label>Subcategory</label>
                         <select id="subcategory">
@@ -788,7 +868,7 @@
                                 <div class="option" data-value="XL">XL</div>
                             </div>
                             <input type="text" id="customSizeInput" placeholder="Add Custom Size">
-                            <button class="add-btn" onclick="addCustomSize()">Add</button>
+                            <button class="add-btn" onclick="addCustomSize(event)">Add</button>
                             <input type="hidden" name="selectedSizes" id="selectedSizesInput">
                         </div>
                     </div>
@@ -812,7 +892,7 @@
                                 <div class="option" data-value="Green">Green</div>
                             </div>
                             <input type="text" id="customColorInput" placeholder="Add Custom Color">
-                            <button class="add-btn" onclick="addCustomColor()">Add</button>
+                            <button class="add-btn" onclick="addCustomColor(event)">Add</button>
                             <input type="hidden" name="selectedColors" id="selectedColorsInput">
                         </div>
                     </div>
@@ -837,44 +917,107 @@
                             <div class="option" data-value="Exclusive">Exclusive</div>
                         </div>
                         <input type="text" id="customTagInput" placeholder="Add Custom Tag">
-                        <button class="add-btn" onclick="addCustomTag()">Add</button>
+                        <button class="add-btn" onclick="addCustomTag(event)">Add</button>
                         <input type="hidden" name="selectedTags" id="selectedTagsInput">
                     </div>
                 </div>
-
                 <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        // Toggle visibility of size and color sections based on checkboxes
+                        document.getElementById("sizeAvailable").addEventListener("change", function () {
+                            document.querySelector(".size-selection").classList.toggle("hidden", !this.checked);
+                        });
+                
+                        document.getElementById("colorAvailable").addEventListener("change", function () {
+                            document.querySelector(".color-selection").classList.toggle("hidden", !this.checked);
+                        });
+                
+                        // Attach event listeners to existing options
+                        document.querySelectorAll(".multi-select .option").forEach(option => {
+                            option.addEventListener("click", toggleSelection);
+                        });
+                    });
+                
                     function toggleSelection(event) {
                         event.target.classList.toggle("selected");
                         updateFormFields();
                     }
-
-                    document.querySelectorAll(".multi-select .option").forEach(option => {
-                        option.addEventListener("click", toggleSelection);
-                    });
-
+                
                     function updateFormFields() {
+                        // Update selected Sizes
+                        let selectedSizes = Array.from(document.querySelectorAll("#sizeOptions .option.selected"))
+                            .map(opt => opt.dataset.value)
+                            .join(",");
+                        document.getElementById("selectedSizesInput").value = selectedSizes;
+                
+                        // Update selected Colors
+                        let selectedColors = Array.from(document.querySelectorAll("#colorOptions .option.selected"))
+                            .map(opt => opt.dataset.value)
+                            .join(",");
+                        document.getElementById("selectedColorsInput").value = selectedColors;
+                
+                        // Update selected Tags
                         let selectedTags = Array.from(document.querySelectorAll("#tagOptions .option.selected"))
-                            .map(opt => opt.dataset.value).join(",");
+                            .map(opt => opt.dataset.value)
+                            .join(",");
                         document.getElementById("selectedTagsInput").value = selectedTags;
+                
+                        // Debugging - Check if values are being set
+                        console.log("Updated Sizes:", selectedSizes);
+                        console.log("Updated Colors:", selectedColors);
+                        console.log("Updated Tags:", selectedTags);
                     }
+                
+                    function addCustomSize(event) {
+    event.preventDefault(); // Prevent form submission
+    let input = document.getElementById("customSizeInput");
+    let value = input.value.trim();
+    if (value) {
+        let newOption = document.createElement("div");
+        newOption.classList.add("option");
+        newOption.dataset.value = value;
+        newOption.textContent = value;
+        newOption.addEventListener("click", toggleSelection);
+        document.getElementById("sizeOptions").appendChild(newOption);
+        input.value = "";
+        updateFormFields();
+    }
+}
 
-                    function addCustomTag() {
-                        let input = document.getElementById("customTagInput");
-                        let value = input.value.trim();
-                        if (value) {
-                            let newOption = document.createElement("div");
-                            newOption.classList.add("option");
-                            newOption.dataset.value = value;
-                            newOption.textContent = value;
-                            newOption.addEventListener("click", toggleSelection);
-                            document.getElementById("tagOptions").appendChild(newOption);
-                            input.value = "";
-                            updateFormFields();
-                        }
-                    }
+function addCustomColor(event) {
+    event.preventDefault(); // Prevent form submission
+    let input = document.getElementById("customColorInput");
+    let value = input.value.trim();
+    if (value) {
+        let newOption = document.createElement("div");
+        newOption.classList.add("option");
+        newOption.dataset.value = value;
+        newOption.textContent = value;
+        newOption.addEventListener("click", toggleSelection);
+        document.getElementById("colorOptions").appendChild(newOption);
+        input.value = "";
+        updateFormFields();
+    }
+}
+
+function addCustomTag(event) {
+    event.preventDefault(); // Prevent form submission
+    let input = document.getElementById("customTagInput");
+    let value = input.value.trim();
+    if (value) {
+        let newOption = document.createElement("div");
+        newOption.classList.add("option");
+        newOption.dataset.value = value;
+        newOption.textContent = value;
+        newOption.addEventListener("click", toggleSelection);
+        document.getElementById("tagOptions").appendChild(newOption);
+        input.value = "";
+        updateFormFields();
+    }
+}
+
                 </script>
-
-
+                
 
                 <div class="file-upload-wrapper">
                     <div class="file-upload" id="drop-zone">
@@ -975,52 +1118,6 @@
                         transform: scale(1.1);
                     }
                 </style>
-                <script>
-                    document.addEventListener("DOMContentLoaded", function () {
-                        const fileInput = document.getElementById("file-input");
-                        const imagePreview = document.getElementById("image-preview");
-                        let coverImage = null;
-
-                        fileInput.addEventListener("change", function () {
-                            Array.from(this.files).forEach((file, index) => {
-                                const reader = new FileReader();
-                                reader.onload = function (e) {
-                                    const imageContainer = document.createElement("div");
-                                    imageContainer.classList.add("image-container");
-
-                                    const img = document.createElement("img");
-                                    img.src = e.target.result;
-                                    img.setAttribute("data-index", index);
-
-                                    if (index === 0) {
-                                        img.classList.add("cover-selected");
-                                        coverImage = img;
-                                    }
-
-                                    img.addEventListener("click", function () {
-                                        if (coverImage) {
-                                            coverImage.classList.remove("cover-selected");
-                                        }
-                                        coverImage = img;
-                                        img.classList.add("cover-selected");
-                                    });
-
-                                    const deleteBtn = document.createElement("button");
-                                    deleteBtn.innerHTML = "&times;";
-                                    deleteBtn.classList.add("delete-btn");
-                                    deleteBtn.addEventListener("click", function () {
-                                        imageContainer.remove();
-                                    });
-
-                                    imageContainer.appendChild(img);
-                                    imageContainer.appendChild(deleteBtn);
-                                    imagePreview.appendChild(imageContainer);
-                                };
-                                reader.readAsDataURL(file);
-                            });
-                        });
-                    });
-                </script>
 
 
                 <div class="row">
@@ -1049,6 +1146,150 @@
             </form>
         </div>
 
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const fileInput = document.getElementById("file-input");
+                const imagePreview = document.getElementById("image-preview");
+                let coverImage = null;
+                let uploadedImages = []; // Store uploaded image paths
+        
+                fileInput.addEventListener("change", async function () {
+                    const formData = new FormData();
+        
+                    for (let file of this.files) {
+                        formData.append("images", file);
+                    }
+        
+                    try {
+                        let response = await fetch("/api/upload-product-images/", {
+                            method: "POST",
+                            body: formData
+                        });
+        
+                        let data = await response.json();
+        
+                        if (response.ok) {
+                            data.image_paths.forEach((path, index) => {
+                                uploadedImages.push(path); // Store uploaded image paths
+        
+                                const imageContainer = document.createElement("div");
+                                imageContainer.classList.add("image-container");
+        
+                                const img = document.createElement("img");
+                                img.src = path; // Use uploaded path
+                                img.setAttribute("data-index", index);
+        
+                                if (index === 0) {
+                                    img.classList.add("cover-selected");
+                                    coverImage = img;
+                                }
+        
+                                img.addEventListener("click", function () {
+                                    if (coverImage) {
+                                        coverImage.classList.remove("cover-selected");
+                                    }
+                                    coverImage = img;
+                                    img.classList.add("cover-selected");
+                                });
+        
+                                const deleteBtn = document.createElement("button");
+                                deleteBtn.innerHTML = "&times;";
+                                deleteBtn.classList.add("delete-btn");
+                                deleteBtn.addEventListener("click", function () {
+                                    uploadedImages = uploadedImages.filter((_, i) => i !== index); // Remove from list
+                                    imageContainer.remove();
+                                });
+        
+                                imageContainer.appendChild(img);
+                                imageContainer.appendChild(deleteBtn);
+                                imagePreview.appendChild(imageContainer);
+                            });
+                        } else {
+                            alert("Image upload failed: " + data.error);
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                        alert("Failed to upload images.");
+                    }
+                });
+                document.getElementById("product-form").addEventListener("submit", async function (event) {
+    event.preventDefault(); // Prevent default form submission
+
+    // Ensure selected variants are updated before form submission
+    updateFormFields();
+
+    let formData = {
+        name: document.getElementById("product-name").value,
+        brand_name: document.getElementById("Brand_name").value.trim(),  // ✅ Added Brand Name
+        category_name: document.getElementById("category").value.trim(),
+        subcategory: document.getElementById("subcategory").value,
+        actual_price: parseFloat(document.getElementById("actualPrice").value),
+        price: parseFloat(document.getElementById("price").value),
+        stock: document.getElementById("quantity").value ? parseInt(document.getElementById("quantity").value) : 0,
+        weight: document.getElementById("weight").disabled ? "" : parseFloat(document.getElementById("weight").value),
+        dimensions: {
+            length: document.getElementById("length").disabled || !document.getElementById("length").value ? null : parseFloat(document.getElementById("length").value),
+            width: document.getElementById("width").disabled || !document.getElementById("width").value ? null : parseFloat(document.getElementById("width").value),
+            height: document.getElementById("height").disabled || !document.getElementById("height").value ? null : parseFloat(document.getElementById("height").value),
+        },
+        tags: document.getElementById("selectedTagsInput").value.split(",").filter(tag => tag.trim() !== ""),
+        variants: {
+            sizes: document.getElementById("sizeAvailable").checked 
+                ? document.getElementById("selectedSizesInput").value.split(",").filter(size => size.trim() !== "")
+                : [],
+            colors: document.getElementById("colorAvailable").checked 
+                ? document.getElementById("selectedColorsInput").value.split(",").filter(color => color.trim() !== "")
+                : [],
+        },
+        description_id: document.getElementById("description").value,
+        images: uploadedImages, // Include uploaded images
+        banner_img: uploadedImages.length > 0 ? uploadedImages[0] : "" // Set banner image
+    };
+
+    console.log("Final Form Data:", formData);
+
+    try {
+        let response = await fetch("/api/add-product/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken() // Ensure CSRF protection
+            },
+            body: JSON.stringify(formData),
+        });
+
+        let data = await response.json();
+
+        if (response.ok) {
+            alert("Product added successfully!");
+            location.reload(); // Refresh or redirect
+        } else {
+            alert("Error: " + data.error);
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Failed to submit the form.");
+    }
+});
+
+                // Function to retrieve CSRF token (if CSRF is enabled)
+                function getCSRFToken() {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== "") {
+                        let cookies = document.cookie.split(";");
+                        for (let i = 0; i < cookies.length; i++) {
+                            let cookie = cookies[i].trim();
+                            if (cookie.startsWith("csrftoken=")) {
+                                cookieValue = cookie.substring("csrftoken=".length, cookie.length);
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+            });
+        </script>
+        
     </div>
     <!-- Top Bar End -->
 

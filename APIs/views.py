@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from APIs.mongodb import MongoDBUser, MongoDBReview,MongoDBDescription,MongoDBCategory,MongoDBProduct    # Import MongoDB Helper
+from APIs.mongodb import MongoDBUser, MongoDBReview,MongoDBDescription,MongoDBCategory,MongoDBProduct,MongoDBBrand    # Import MongoDB Helper
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
@@ -31,6 +31,17 @@ from django.contrib.auth.tokens import default_token_generator
 from django.middleware.csrf import get_token
 from django.http import JsonResponse
 from .permissions import IsMongoAuthenticated
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from pymongo import MongoClient
+client = MongoClient("mongodb://localhost:27017/")
+db = client["test"]  # Specify the 'test' database
+products_collection = db["products"]
+descriptions_collection = db["descriptions"] 
+import os
+import uuid
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 # from .mongodb import cart_collection, products_collection  # Ensure these are defined
 
 
@@ -359,7 +370,7 @@ def index(request):
                 "reviews": [str(review) for review in product.get("reviewsDictionary", [])],  # Convert ObjectIds to strings
                 "weight": product.get("weight", ""),
                 "dimensions": product.get("dimensions", {}),
-                "images": product.get("imagesDictionary", []),  # List of image dictionaries
+                "images": product.get("images", []),  # List of image dictionaries
                 "banner_img": product.get("banner_img", {}),  # Banner image details
                 "status": product.get("status", "active"),
                 "created_at": product.get("created_at", ""),
@@ -476,62 +487,153 @@ def order_complete(request):
 def dashboard(request):
     return render(request, 'USER/Dashboard.html')
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 @login_required
 def item_sort(request):
     try:
-        # Get filter parameters from request
-        category = request.GET.get('category')
-        sort_by = request.GET.get('sort_by', 'price')  # Default sort by price
-        order = request.GET.get('order', 'asc')  # Default ascending order
-        
-        # Base query
-        query = {}
-        
-        # Add category filter if specified
-        if category:
-            query['category'] = category
-            
-        # Get products from MongoDB
-        if order == 'asc':
-            products = products_collection.find(query).sort(sort_by, 1)
+        query = request.GET.get('query', '').strip()
+        category_query = request.GET.get('category', '').strip()
+        sort_by = request.GET.get('sort_by', 'price')
+        order = request.GET.get('order', 'desc')
+        min_price = request.GET.get('min_price')
+        max_price = request.GET.get('max_price')
+        brand_query = request.GET.get('brand', '').strip()
+
+        product_query = {}
+
+        # 🔹 Step 1: Combination Search (Name, Description, Tags)
+        search_conditions = []
+        if query:
+            search_conditions.append({"name": {"$regex": query, "$options": "i"}})
+            search_conditions.append({"tags": {"$elemMatch": {"$regex": query, "$options": "i"}}})
+
+            matching_descriptions = descriptions_collection.find(
+                {"description": {"$regex": query, "$options": "i"}}
+            )
+            description_ids = [desc["PID"] for desc in matching_descriptions]
+
+            if description_ids:
+                search_conditions.append({"_id": {"$in": description_ids}})
+
+        if search_conditions:
+            product_query["$or"] = search_conditions
+
+        # 🔹 Step 2: Get Top 10 Categories with Highest Product Count
+        top_categories = MongoDBCategory.get_all_categories()
+        top_categories = sorted(top_categories, key=lambda x: x["product_count"], reverse=True)[:10]
+
+        # 🔹 Step 3: Fetch Brands Associated with Categories
+        category_brands = {}
+
+        # 🔹 Step 4: Filter by Category
+        selected_category_brands = None  # Stores brands of the selected category (if any)
+
+        if category_query:
+            category_ids = MongoDBCategory.get_category_ids_by_name(category_query)
+
+            if not category_ids and ObjectId.is_valid(category_query):
+                category_ids = [category_query]  # Assume category_query is a valid ObjectId
+
+            if category_ids:
+                product_query["category_id"] = {"$in": [ObjectId(cat_id) for cat_id in category_ids]}
+                
+                # 🔥 Fetch brands ONLY for the selected category
+                selected_category_brands = MongoDBBrand.get_brands_by_category(category_ids[0])
+                print(f"📢 Selected Category: {category_query} → Brands: {selected_category_brands}")
+
         else:
-            products = products_collection.find(query).sort(sort_by, -1)
-            
-        # Convert MongoDB cursor to list and process products
+            # If no specific category is selected, fetch brands for top categories
+            category_brands = MongoDBBrand.get_product_brands()
+
+        # 🔹 Step 5: Filter by Brand
+        if brand_query:
+            brand_id = MongoDBBrand.get_brand_id_by_name(brand_query)
+            if brand_id:
+                product_query["brand_id"] = ObjectId(brand_id)
+
+        # 🔹 Step 6: Apply Price Filtering
+        price_filter = {}
+        if min_price and min_price.isdigit():
+            price_filter["$gte"] = float(min_price)
+        if max_price and max_price.isdigit():
+            price_filter["$lte"] = float(max_price)
+
+        if price_filter:
+            product_query["price"] = price_filter
+
+        # 🔹 Step 7: Sorting
+        sort_order = -1 if order == 'desc' else 1
+        sort_field = {
+            "price": "price",
+            "name": "name",
+            "description": "description_id",
+            "tags": "tags",
+            "category": "category_id",
+            "brand": "brand_id",
+            "product_count": "product_count"
+        }.get(sort_by, "price")
+
+        # 🔹 Step 8: Fetch & Sort Products
+        products = products_collection.find(product_query).sort(sort_field, sort_order)
+
+        # 🔹 Step 9: Convert to List
         products_list = []
         for product in products:
-            products_list.append({
-                'id': str(product['_id']),
-                'name': product.get('name', ''),
-                'price': product.get('price', 0),
-                'image': product.get('image', ''),
-                'category': product.get('category', ''),
-                'description': product.get('description', ''),
-                'in_stock': product.get('in_stock', True)
-            })
-            
-        # Get all unique categories for filter dropdown
-        categories = products_collection.distinct('category')
-            
-        context = {
-            'products': products_list,
-            'categories': categories,
-            'selected_category': category,
-            'sort_by': sort_by,
-            'order': order
-        }
-        
-        return render(request, 'USER/Item-Sort.html', context)
-        
-    except Exception as e:
-        print(f"Error in item_sort view: {str(e)}")
+            try:
+                serialized_product = {
+                    'id': str(product['_id']),
+                    'name': product.get('name', ''),
+                    'price': product.get('price', 0),
+                    'image': product.get('images', [''])[0] if product.get('images') else '',
+                    'description': MongoDBDescription.get_description_by_product_id(product['_id'])["description"]
+                    if product.get("description_id") else "No description available",
+                    'tags': product.get('tags', []),
+                    'category': MongoDBCategory.get_category_by_id(product.get('category_id', ''))["CategoryName"]
+                    if product.get('category_id') else "Uncategorized",
+                    'brand': MongoDBBrand.get_brand_by_id(product.get('brand_id', ''))["name"]
+                    if product.get('brand_id') else "No Brand",
+                    'in_stock': product.get('stock', 0) > 0
+                }
+                products_list.append(serialized_product)
+            except Exception as e:
+                print(f"⚠️ Error processing product {product['_id']}: {e}")
+
+        # 🔹 Step 10: Print Debugging Info
+        print(f"🔍 Query: {query}, Category: {category_query}, Brand: {brand_query}, Sort By: {sort_by}, Order: {order}, Min Price: {min_price}, Max Price: {max_price}")
+        print(f"🛒 Filtered Products: {products_list}")
+        print(f"📌 Top Categories: {top_categories}")
+
+        # Print brands based on category selection
+        if selected_category_brands:
+            print(f"✅ Displaying brands for selected category '{category_query}': {selected_category_brands}")
+        else:
+            for cat in top_categories:
+                cat_id = str(cat["_id"])
+                brands = category_brands.get(cat_id, [])
+                print(f"📢 Category: {cat['CategoryName']} → Brands: {brands}")
+
         return render(request, 'USER/Item-Sort.html', {
-            'products': [],
-            'categories': [],
-            'error_message': 'Unable to fetch products'
+            'products': products_list,
+            'query': query,
+            'category': category_query,
+            'brand': brand_query,
+            'sort_by': sort_by,
+            'order': order,
+            'min_price': min_price,
+            'max_price': max_price,
+            'top_categories': top_categories,  # Pass top categories
+            'category_brands': selected_category_brands if selected_category_brands else category_brands  # Show relevant brands
         })
 
-
+    except Exception as e:
+        print(f"🚨 Error in item_sort: {str(e)}")
+        return render(request, 'USER/Item-Sort.html', {
+            'products': [],
+            'error_message': 'Unable to fetch products'
+        })
 
 def orders(request):
     return render(request, 'USER/Orders.html')
@@ -602,9 +704,54 @@ import json
 from bson.objectid import ObjectId
 import datetime
 
+
+@csrf_exempt
+def upload_product_images(request):
+    print("CHADDDDDDDDDDDDDDDDDDI UPLOADED")
+    if request.method == "POST" and request.FILES:
+        uploaded_files = request.FILES.getlist("images")  # Multiple images
+        image_paths = []
+
+        for file in uploaded_files:
+            ext = os.path.splitext(file.name)[-1]
+            unique_filename = f"products/{uuid.uuid4().hex}{ext}"
+            file_path = default_storage.save(unique_filename, ContentFile(file.read()))
+
+            image_paths.append(f"/media/{file_path}")  # Return media path
+
+        return JsonResponse({"image_paths": image_paths}, status=201)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+def add_product(request):
+    return render(request, 'Admin/add-product.html')
+
+
+@api_view(['GET'])
+def search_categories(request):
+    """API endpoint to search categories by name."""
+    try:
+        search_query = request.GET.get('q', '').strip().lower()  # Get search query from request
+        
+        # Fetch all categories
+        categories = MongoDBCategory.get_all_categories()
+        
+        # Filter categories based on search query
+        if search_query:
+            filtered_categories = [
+                category for category in categories
+                if search_query in category["CategoryName"].lower()
+            ]
+        else:
+            filtered_categories = categories  # Return all if no search query
+        
+        return JsonResponse({"categories": filtered_categories}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500) 
+
 @api_view(['POST'])
 @csrf_exempt
-def add_product(request):
+def api_add_product(request):
     """API endpoint to add a new product using MongoDBProduct class."""
     if request.method == "POST":
         try:
@@ -612,7 +759,8 @@ def add_product(request):
 
             # Extract fields from request body
             name = body.get("name")
-            category_id = body.get("category_id")
+            brand_name = body.get("brand_name")  # ✅ Added Brand Name
+            category_name = body.get("category_name")
             subcategory = body.get("subcategory")
             actual_price = body.get("actual_price")
             price = body.get("price")
@@ -627,13 +775,14 @@ def add_product(request):
             banner_img = body.get("banner_img", {})
 
             # Validate required fields
-            if not name or not category_id or not actual_price or not price:
+            if not name or not category_name or not actual_price or not price:
                 return JsonResponse({"error": "Missing required fields"}, status=400)
 
             # Call MongoDBProduct method to insert the product
             product_id = MongoDBProduct.add_product(
                 name=name,
-                category_id=category_id,
+                brand_name=brand_name,  # ✅ Added Brand Name to MongoDB insert
+                category_name=category_name,
                 subcategory=subcategory,
                 actual_price=actual_price,
                 price=price,
@@ -654,7 +803,6 @@ def add_product(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
-
 
 @api_view(['GET'])
 def get_product_details(request, product_id):
@@ -1151,7 +1299,13 @@ def product_detail(request, product_id):
             except (ValueError, TypeError):
                 formatted_count = "0"
 
-            # Process product data
+
+            sorted_reviews = sorted(
+                reviews,
+                key=lambda x: x["Date"], 
+                reverse=True  # Latest reviews come first
+            )
+
             processed_product = {
                 "id": str(product["_id"]),
                 "name": product.get("name", ""),
@@ -1161,8 +1315,8 @@ def product_detail(request, product_id):
                 "stock": product.get("stock", 0),
                 "variants": product.get("variants", {}),  # Fetching variants (color, size)
                 "tags": product.get("tags", []),  # Fetching product tags
-                "description": MongoDBDescription.get_description_by_product_id(str(product["_id"])).get("description", ""),
-                "reviews": product.get("reviewsDictionary", []),  # Storing review IDs
+                "description": MongoDBDescription.get_description_by_product_id(str(product["_id"])).get("description", "fuck"),
+                "reviews": sorted_reviews,  # Sorted reviews by date (newest first)
                 "weight": product.get("weight", ""),
                 "dimensions": product.get("dimensions", {}),  # Fetching dimensions (length, height, width)
                 "images": product.get("images", []),  # List of image dictionaries (main & alt)
@@ -1236,7 +1390,7 @@ def product_detail(request, product_id):
                 "cart_total": "{:.2f}".format(cart_total),
                 "cart_items_count": cart_items_count,
                 "related_products": processed_related_products,
-                "reviews": reviews,  # The reviews are passed here as well
+                "reviews": sorted_reviews,  # The reviews are passed here as well
             }
 
             print("Context data:", context)  # Debug print
@@ -1722,9 +1876,6 @@ def orders_list(request):
 def test_view(request):
     return JsonResponse({"message": "You are logged in!"})
 
-
-def add_product(request):
-    return render(request, 'Admin/add-product.html')
 
 def editBanners(request):
     return render(request, 'Admin/editBanners.html')

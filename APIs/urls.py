@@ -93,7 +93,10 @@ urlpatterns = [
     path('orders-detail/', views.orders_detail, name='orders_detail'),
     path('orders-list/', views.orders_list, name='orders_list'),
     path('add-product/', views.add_product, name='add-product'),
+    path('api/add-product/', views.api_add_product, name='api_add_product'),
     path('editBanners/', views.editBanners, name='editBanners'),
+    path("api/upload-product-images/", views.upload_product_images, name="upload-product-images"),
+     path('api/categories/', views.search_categories, name='search_categories'),
     # path('productsList/', views.productsList, name='productsList'),
 
 

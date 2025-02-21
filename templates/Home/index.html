@@ -865,14 +865,20 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="col-6 col-md-4 col-lg-3">
         <div class="product-card mb-3 mb-md-4 mb-xxl-5">
           <div class="pc__img-wrapper">
+            <script>
+              console.log("Product Images:", {{ product.images|safe }});
+          </script>
+          
             <a href="{% url 'product_detail' product_id=product.id %}">
-              {% if product.banner_img %}
-                <img loading="lazy" src="{% static product.banner_img.Url %}" width="330" height="400"
-                     alt="{{ product.banner_img.alt }}" class="pc__img">
-              {% else %}
-                <img loading="lazy" src="{% static 'images/default-product.jpg' %}" width="330" height="400"
-                     alt="Default Product" class="pc__img">
-              {% endif %}
+              {% if product.images and product.images.0 %}
+              <img loading="lazy" src="{{ product.images.0 }}" width="330" height="400"
+                   alt="{{ product.name }}" class="pc__img">
+          {% else %}
+              <img loading="lazy" src="{% static 'images/default-product.jpg' %}" width="330" height="400"
+                   alt="Default Product" class="pc__img">
+          {% endif %}
+          
+          
             </a>
           </div>
 
