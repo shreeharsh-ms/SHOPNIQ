@@ -1760,7 +1760,7 @@ def cart(request):
                                 "id": str(product["_id"]),
                                 "name": product["name"],
                                 "image": {
-                                    "url": product["image_url"]
+                                    "url": product["images"][0]
                                 },
                                 "price": price
                             },
