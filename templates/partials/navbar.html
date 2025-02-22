@@ -316,10 +316,10 @@
             </div>
 
             <div class="search-popup js-hidden-content">
-              <form action="/search/" method="GET" class="search-field container">
+              <form action="/item_sort/" method="GET" class="search-field container">
                   <p class="text-uppercase text-secondary fw-medium mb-4">What are you looking for?</p>
                   <div class="position-relative">
-                      <input class="search-popup__input search-field__input w-100 fw-medium" type="text" name="search-keyword" placeholder="Search products">
+                      <input class="search-popup__input search-field__input w-100 fw-medium" type="text" name="search-keyword" placeholder="Search products or categories">
                       <button class="btn-icon search-popup__submit" type="submit">
                           <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <use href="#icon_search"></use>
@@ -336,91 +336,113 @@
                   </div>
               </form>
           </div>
-          
-          
+
           <script>
             document.addEventListener("DOMContentLoaded", function () {
-    const searchInput = document.querySelector(".search-popup__input");
-    const suggestionContainer = document.querySelector(".search-suggestion .sub-menu__list");
-
-    searchInput.addEventListener("input", function () {
-        let query = searchInput.value.trim();
-        if (query.length < 2) {
-            suggestionContainer.innerHTML = "";
-            return;
-        }
-
-        // Fetch search suggestions
-        fetch(`/search-suggestions/?search-keyword=${query}`)
-            .then(response => response.json())
-            .then(data => {
-                displaySuggestions(data.suggestions);
-            })
-            .catch(error => console.error("Error fetching search suggestions:", error));
-    });
-
-    function displaySuggestions(suggestions) {
-        suggestionContainer.innerHTML = ""; // Clear previous results
-
-        let { products, categories, brands, tags } = suggestions;
-
-        if (products.length === 0 && categories.length === 0 && brands.length === 0 && tags.length === 0) {
-            suggestionContainer.innerHTML = `<li class="sub-menu__item text-muted">No suggestions found.</li>`;
-            return;
-        }
-
-        // 🔹 Add Product Suggestions
-        if (products.length > 0) {
-            suggestionContainer.innerHTML += `<li class="sub-menu__title">Products</li>`;
-            products.forEach(name => {
-                suggestionContainer.innerHTML += `<li class="sub-menu__item">
-                    <a href="#" class="menu-link suggestion-item">${name}</a>
-                </li>`;
+                const searchInput = document.querySelector(".search-popup__input");
+                const suggestionContainer = document.querySelector(".search-suggestion .sub-menu__list");
+            
+                searchInput.addEventListener("input", function () {
+                    let query = searchInput.value.trim();
+                    if (query.length < 2) {
+                        suggestionContainer.innerHTML = "";
+                        return;
+                    }
+            
+                    // Fetch search suggestions
+                    fetch(`/search-suggestions/?search-keyword=${query}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("Suggestions data:", data); // Log the raw data
+                            displaySuggestions(data.suggestions);
+                        })
+                        .catch(error => console.error("Error fetching search suggestions:", error));
+                });
+            
+                function displaySuggestions(suggestions) {
+                    suggestionContainer.innerHTML = ""; // Clear previous results
+            
+                    // Check if suggestions are defined and have the expected structure
+                    if (!suggestions || typeof suggestions !== 'object') {
+                        suggestionContainer.innerHTML = `<li class="sub-menu__item text-muted">No suggestions found.</li>`;
+                        return;
+                    }
+            
+                    let { products = [], categories = [], brands = [], tags = [] } = suggestions; // Default to empty arrays if undefined
+            
+                    if (products.length === 0 && categories.length === 0 && brands.length === 0 && tags.length === 0) {
+                        suggestionContainer.innerHTML = `<li class="sub-menu__item text-muted">No suggestions found.</li>`;
+                        return;
+                    }
+            
+                    // 🔹 Add Product Suggestions
+                    if (products.length > 0) {
+                        suggestionContainer.innerHTML += `<li class="sub-menu__title">Products</li>`;
+                        products.forEach(product => {
+                            if (typeof product === 'string') { // Ensure product is a string
+                                suggestionContainer.innerHTML += `
+                                    <li class="sub-menu__item">
+                                        <a href="/item_sort/?query=${encodeURIComponent(product)}" class="menu-link suggestion-item">${product}</a>
+                                    </li>`;
+                            }
+                        });
+                    }
+            
+                    // 🔹 Add Category Suggestions
+                    if (categories.length > 0) {
+                        suggestionContainer.innerHTML += `<li class="sub-menu__title">Categories</li>`;
+                        categories.forEach(category => {
+                            if (typeof category === 'string') { // Ensure category is a string
+                                suggestionContainer.innerHTML += `
+                                    <li class="sub-menu__item">
+                                        <a href="/item_sort/?category=${encodeURIComponent(category)}" class="menu-link suggestion-item">${category}</a>
+                                    </li>`;
+                            }
+                        });
+                    }
+            
+                    // 🔹 Add Brand Suggestions
+                    if (brands.length > 0) {
+                        suggestionContainer.innerHTML += `<li class="sub-menu__title">Brands</li>`;
+                        brands.forEach(brand => {
+                            if (typeof brand === 'string') { // Ensure brand is a string
+                                suggestionContainer.innerHTML += `
+                                    <li class="sub-menu__item">
+                                        <a href="/item_sort/?brand=${encodeURIComponent(brand)}" class="menu-link suggestion-item">${brand}</a>
+                                    </li>`;
+                            }
+                        });
+                    }
+            
+                    // 🔹 Add Tag Suggestions
+                    if (tags.length > 0) {
+                        suggestionContainer.innerHTML += `<li class="sub-menu__title">Tags</li>`;
+                        tags.forEach(tag => {
+                            if (typeof tag === 'string') { // Ensure tag is a string
+                                suggestionContainer.innerHTML += `
+                                    <li class="sub-menu__item">
+                                        <a href="/item_sort/?tags=${encodeURIComponent(tag)}" class="menu-link suggestion-item">${tag}</a>
+                                    </li>`;
+                            }
+                        });
+                    }
+            
+                    // Allow clicking on suggestions
+                    document.querySelectorAll(".suggestion-item").forEach(item => {
+                        item.addEventListener("click", function () {
+                            // Redirect to the clicked link
+                            window.location.href = this.href; // Navigate to the suggestion link
+                        });
+                    });
+                }
             });
-        }
+            </script>
+            
 
-        // 🔹 Add Category Suggestions
-        if (categories.length > 0) {
-            suggestionContainer.innerHTML += `<li class="sub-menu__title">Categories</li>`;
-            categories.forEach(cat => {
-                suggestionContainer.innerHTML += `<li class="sub-menu__item">
-                    <a href="#" class="menu-link suggestion-item">${cat}</a>
-                </li>`;
-            });
-        }
+          
+          
+          
 
-        // 🔹 Add Brand Suggestions
-        if (brands.length > 0) {
-            suggestionContainer.innerHTML += `<li class="sub-menu__title">Brands</li>`;
-            brands.forEach(brand => {
-                suggestionContainer.innerHTML += `<li class="sub-menu__item">
-                    <a href="#" class="menu-link suggestion-item">${brand}</a>
-                </li>`;
-            });
-        }
-
-        // 🔹 Add Tag Suggestions
-        if (tags.length > 0) {
-            suggestionContainer.innerHTML += `<li class="sub-menu__title">Tags</li>`;
-            tags.forEach(tag => {
-                suggestionContainer.innerHTML += `<li class="sub-menu__item">
-                    <a href="#" class="menu-link suggestion-item">${tag}</a>
-                </li>`;
-            });
-        }
-
-        // Allow clicking on suggestions
-        document.querySelectorAll(".suggestion-item").forEach(item => {
-            item.addEventListener("click", function (e) {
-                e.preventDefault();
-                searchInput.value = this.textContent;
-                searchInput.dispatchEvent(new Event("input")); // Trigger search
-            });
-        });
-    }
-});
-
-          </script>
             <!-- /.search-popup -->
           </div><!-- /.header-tools__item hover-container -->
 

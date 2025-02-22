@@ -417,6 +417,46 @@ class MongoDBBrand:
         )
 
         return [brand["name"] for brand in matching_brands]
+    
+    @staticmethod
+    def get_brand_categories(brand_id=None):
+        """
+        Fetch all products, extract their brand IDs and category IDs,
+        retrieve corresponding category names, and return data accordingly.
+
+        - If `brand_id` is provided, return only categories for that brand.
+        - If `brand_id` is None, return a dictionary of all categories grouped by brand.
+        """
+        # Query to filter by brand_id if provided
+        query = {"brand_id": ObjectId(brand_id)} if brand_id else {}
+
+        # Fetch matching products
+        products = products_collection.find(query, {"brand_id": 1, "category_id": 1})
+
+        brand_categories = {}
+
+        for product in products:
+            product_brand_id = str(product.get("brand_id", "Unknown"))
+            category_id = product.get("category_id")
+
+            if category_id:
+                category = MongoDBCategory.get_category_by_id(category_id)
+                category_name = category["CategoryName"] if category else "Unknown Category"
+            else:
+                category_name = "No Category"
+
+            # Organize categories under brand IDs
+            if product_brand_id not in brand_categories:
+                brand_categories[product_brand_id] = set()
+            brand_categories[product_brand_id].add(category_name)
+
+        # Convert sets to lists before returning
+        result = {brand: list(categories) for brand, categories in brand_categories.items()}
+
+        # If brand_id was provided, return only its categories
+        return result.get(str(brand_id), []) if brand_id else result
+
+
 
 # sample_product = {
 #     "name": "Premium Leather Jacket",

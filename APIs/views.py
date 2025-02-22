@@ -541,9 +541,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 @login_required
 def item_sort(request):
     try:
+        # 🔹 Step 1: Get Query Parameters
         query = request.GET.get('query', '').strip()
         category_query = request.GET.get('category', '').strip()
         sort_by = request.GET.get('sort_by', 'price')
@@ -554,48 +556,51 @@ def item_sort(request):
 
         product_query = {}
 
-        # 🔹 Step 1: Combination Search (Name, Description, Tags)
+        # 🔹 Step 2: Text Search (Name, Tags, Description)
         search_conditions = []
-        if query:
-            search_conditions.append({"name": {"$regex": query, "$options": "i"}})
-            search_conditions.append({"tags": {"$elemMatch": {"$regex": query, "$options": "i"}}})
+        brand_categories = None
+        is_product_name_search = False
 
+        if query:
+            search_conditions.extend([
+                {"name": {"$regex": query, "$options": "i"}},
+                {"tags": {"$elemMatch": {"$regex": query, "$options": "i"}}}
+            ])
+
+            # Search in descriptions
             matching_descriptions = descriptions_collection.find(
                 {"description": {"$regex": query, "$options": "i"}}
             )
             description_ids = [desc["PID"] for desc in matching_descriptions]
-
             if description_ids:
                 search_conditions.append({"_id": {"$in": description_ids}})
+
+            # Get brand categories if the query is based on a product name
+            product = products_collection.find_one({"name": {"$regex": f"^{query}$", "$options": "i"}})
+            if product and "brand_id" in product:
+                brand_categories = MongoDBBrand.get_brand_categories(product["brand_id"])
+                is_product_name_search = True  # ✅ Mark as product name search
 
         if search_conditions:
             product_query["$or"] = search_conditions
 
-        # 🔹 Step 2: Get Top 10 Categories with Highest Product Count
+        # 🔹 Step 3: Always Fetch Top 10 Categories
         top_categories = MongoDBCategory.get_all_categories()
         top_categories = sorted(top_categories, key=lambda x: x["product_count"], reverse=True)[:10]
 
-        # 🔹 Step 3: Fetch Brands Associated with Categories
         category_brands = {}
+        selected_category_brands = None
 
         # 🔹 Step 4: Filter by Category
-        selected_category_brands = None  # Stores brands of the selected category (if any)
-
         if category_query:
             category_ids = MongoDBCategory.get_category_ids_by_name(category_query)
-
             if not category_ids and ObjectId.is_valid(category_query):
-                category_ids = [category_query]  # Assume category_query is a valid ObjectId
+                category_ids = [category_query]
 
             if category_ids:
                 product_query["category_id"] = {"$in": [ObjectId(cat_id) for cat_id in category_ids]}
-                
-                # 🔥 Fetch brands ONLY for the selected category
                 selected_category_brands = MongoDBBrand.get_brands_by_category(category_ids[0])
-                print(f"📢 Selected Category: {category_query} → Brands: {selected_category_brands}")
-
         else:
-            # If no specific category is selected, fetch brands for top categories
             category_brands = MongoDBBrand.get_product_brands()
 
         # 🔹 Step 5: Filter by Brand
@@ -610,13 +615,12 @@ def item_sort(request):
             price_filter["$gte"] = float(min_price)
         if max_price and max_price.isdigit():
             price_filter["$lte"] = float(max_price)
-
         if price_filter:
             product_query["price"] = price_filter
 
         # 🔹 Step 7: Sorting
         sort_order = -1 if order == 'desc' else 1
-        sort_field = {
+        sort_field_map = {
             "price": "price",
             "name": "name",
             "description": "description_id",
@@ -624,26 +628,27 @@ def item_sort(request):
             "category": "category_id",
             "brand": "brand_id",
             "product_count": "product_count"
-        }.get(sort_by, "price")
+        }
+        sort_field = sort_field_map.get(sort_by, "price")
 
         # 🔹 Step 8: Fetch & Sort Products
         products = products_collection.find(product_query).sort(sort_field, sort_order)
 
-        # 🔹 Step 9: Convert to List
+        # 🔹 Step 9: Convert to JSON-safe List
         products_list = []
         for product in products:
             try:
                 serialized_product = {
                     'id': str(product['_id']),
-                    'name': product.get('name', ''),
+                    'name': product.get('name', 'Unnamed Product'),
                     'price': product.get('price', 0),
                     'image': product.get('images', [''])[0] if product.get('images') else '',
-                    'description': MongoDBDescription.get_description_by_product_id(product['_id'])["description"]
+                    'description': MongoDBDescription.get_description_by_product_id(product['_id']).get("description", "No description available")
                     if product.get("description_id") else "No description available",
                     'tags': product.get('tags', []),
-                    'category': MongoDBCategory.get_category_by_id(product.get('category_id', ''))["CategoryName"]
+                    'category': MongoDBCategory.get_category_by_id(product.get('category_id', '')).get("CategoryName", "Uncategorized")
                     if product.get('category_id') else "Uncategorized",
-                    'brand': MongoDBBrand.get_brand_by_id(product.get('brand_id', ''))["name"]
+                    'brand': MongoDBBrand.get_brand_by_id(product.get('brand_id', '')).get("name", "No Brand")
                     if product.get('brand_id') else "No Brand",
                     'in_stock': product.get('stock', 0) > 0
                 }
@@ -651,20 +656,15 @@ def item_sort(request):
             except Exception as e:
                 print(f"⚠️ Error processing product {product['_id']}: {e}")
 
-        # 🔹 Step 10: Print Debugging Info
+        # 🔹 Step 10: Debugging Info
         print(f"🔍 Query: {query}, Category: {category_query}, Brand: {brand_query}, Sort By: {sort_by}, Order: {order}, Min Price: {min_price}, Max Price: {max_price}")
-        print(f"🛒 Filtered Products: {products_list}")
-        # print(f"📌 Top Categories: {top_categories}")
+        print(f"🛒 Filtered Products Count: {len(products_list)}")
+        print(f"📌 Top Categories: {top_categories}")
+        print(f"🔹 Brand Categories: {brand_categories if brand_categories else 'N/A'}")
+        print(f"🗂 Selected Category Brands: {selected_category_brands if selected_category_brands else 'N/A'}")
+        print(f"📦 All Product Brands: {category_brands}")
 
-        # Print brands based on category selection
-        if selected_category_brands:
-            print(f"✅ Displaying brands for selected category '{category_query}': {selected_category_brands}")
-        else:
-            for cat in top_categories:
-                cat_id = str(cat["_id"])
-                brands = category_brands.get(cat_id, [])
-                print(f"📢 Category: {cat['CategoryName']} → Brands: {brands}")
-
+        # 🔹 Step 11: Pass Data to Template
         return render(request, 'USER/Item-Sort.html', {
             'products': products_list,
             'query': query,
@@ -674,16 +674,18 @@ def item_sort(request):
             'order': order,
             'min_price': min_price,
             'max_price': max_price,
-            'top_categories': top_categories,  # Pass top categories
-            'category_brands': selected_category_brands if selected_category_brands else category_brands  # Show relevant brands
+            'top_categories': top_categories,  # ✅ Always included
+            'brand_categories': brand_categories if brand_categories else None,
+            'category_brands': selected_category_brands if selected_category_brands else category_brands
         })
 
     except Exception as e:
         print(f"🚨 Error in item_sort: {str(e)}")
         return render(request, 'USER/Item-Sort.html', {
-            'products': [],
+            'products_json': '[]',
             'error_message': 'Unable to fetch products'
         })
+
 
 @csrf_exempt
 def search_suggestions(request):
