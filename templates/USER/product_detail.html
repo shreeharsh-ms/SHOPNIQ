@@ -29,6 +29,186 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
   <script src="{% static 'js/loader.js' %}"></script>
   <link rel="stylesheet" href="{% static 'css/loader.css' %}">
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+    console.log("Script Loaded");
+
+    function attachCartClickListener() {
+        const cartTrigger = document.getElementById("cartTrigger");
+
+        if (cartTrigger) {
+            console.log("Cart trigger found");
+
+            cartTrigger.addEventListener("click", function (event) {
+                console.log("Cart clicked!");
+                event.preventDefault();
+                fetchCartData();
+            });
+        } else {
+            console.error("Cart trigger NOT found");
+        }
+    }
+
+    function fetchCartData() {
+        fetch("/cart/products/", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin"
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Cart Data:", data);
+
+            if (data.cart && data.cart.length > 0) {
+                populateCartDrawer(data.cart, data.total_amount);
+            } else {
+                clearCartDrawer();
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching cart:", error);
+        });
+    }
+    function populateCartDrawer(cartItems, totalAmount) {
+    const cartList = document.querySelector(".cart-drawer-items-list");
+    const cartAmount = document.querySelector(".js-cart-items-count");
+    const cartSubtotal = document.querySelector(".cart-subtotal");
+
+    if (!cartList || !cartAmount || !cartSubtotal) {
+        console.error("Cart elements not found in the DOM.");
+        return;
+    }
+
+    cartList.innerHTML = ""; // Clear previous items
+
+    cartItems.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+
+        const cartItemHTML = `
+            <div class="cart-drawer-item d-flex position-relative">
+                <div class="position-relative">
+                    <a href="/product/${item._id}/">
+                        <img loading="lazy" class="cart-drawer-item__img" src="${item.image}" alt="${item.name}">
+                    </a>
+                </div>
+                <div class="cart-drawer-item__info flex-grow-1">
+                    <h6 class="cart-drawer-item__title fw-normal">
+                        <a href="/product/${item._id}/">${item.name}</a>
+                    </h6>
+                    <p class="cart-drawer-item__option text-secondary">Price: $${item.price}</p>
+                    <div class="d-flex align-items-center justify-content-between mt-1">
+                        <div class="qty-control position-relative qty-initialized">
+                            <input type="number" name="quantity" value="${item.quantity}" min="1" class="qty-control__number border-0 text-center" data-id="${item._id}">
+                            <div class="qty-control__reduce text-start" data-id="${item._id}">-</div>
+                            <div class="qty-control__increase text-end" data-id="${item._id}">+</div>
+                        </div>
+                        <span class="cart-drawer-item__price money price">$${itemTotal.toFixed(2)}</span>
+                    </div>
+                </div>
+                <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove" data-id="${item._id}"></button>
+            </div>
+            <hr class="cart-drawer-divider">
+        `;
+
+        cartList.insertAdjacentHTML("beforeend", cartItemHTML);
+    });
+
+    cartAmount.innerText = cartItems.length;
+    cartSubtotal.innerText = `$${totalAmount.toFixed(2)}`; // 💡 Display the total amount correctly
+
+    attachRemoveListeners(); // Attach remove functionality to buttons
+}
+
+    function clearCartDrawer() {
+        const cartList = document.querySelector(".cart-drawer-items-list");
+        const cartAmount = document.querySelector(".js-cart-items-count");
+        const cartSubtotal = document.querySelector(".cart-subtotal");
+
+        if (cartList && cartAmount && cartSubtotal) {
+            cartList.innerHTML = `<p class="text-center text-muted">Your cart is empty.</p>`;
+            cartAmount.innerText = "0";
+            cartSubtotal.innerText = "$0.00";
+        }
+    }
+
+    function attachRemoveListeners() {
+        document.querySelectorAll(".js-cart-item-remove").forEach(button => {
+            button.addEventListener("click", function () {
+                const productId = this.getAttribute("data-id");
+                removeCartItem(productId);
+            });
+        });
+
+        document.querySelectorAll(".qty-control__reduce").forEach(button => {
+            button.addEventListener("click", function () {
+                const productId = this.getAttribute("data-id");
+                updateCartItem(productId, -1);
+            });
+        });
+
+        document.querySelectorAll(".qty-control__increase").forEach(button => {
+            button.addEventListener("click", function () {
+                const productId = this.getAttribute("data-id");
+                updateCartItem(productId, 1);
+            });
+        });
+
+        document.querySelectorAll(".qty-control__number").forEach(input => {
+            input.addEventListener("change", function () {
+                const productId = this.getAttribute("data-id");
+                const newQuantity = parseInt(this.value);
+                updateCartItem(productId, newQuantity - 1, true);
+            });
+        });
+    }
+
+    function removeCartItem(productId) {
+        fetch(`/cart/remove/${productId}/`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin"
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Item removed:", data);
+            fetchCartData(); // Refresh the cart after removing item
+        })
+        .catch(error => {
+            console.error("Error removing item:", error);
+        });
+    }
+
+    function updateCartItem(productId, change, absolute = false) {
+        const inputField = document.querySelector(`.qty-control__number[data-id="${productId}"]`);
+        let newQuantity = absolute ? change : parseInt(inputField.value) + change;
+
+        if (newQuantity < 1) newQuantity = 1; // Prevent going below 1
+
+        fetch(`/cart/update/${productId}/`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ quantity: newQuantity })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Item updated:", data);
+            fetchCartData(); // Refresh the cart after update
+        })
+        .catch(error => {
+            console.error("Error updating item:", error);
+        });
+    }
+
+    attachCartClickListener();
+
+    // Make functions accessible for debugging
+    window.fetchCartData = fetchCartData;
+    window.removeCartItem = removeCartItem;
+    window.updateCartItem = updateCartItem;
+});
+
+  </script>
   </head>
   
   <body>
@@ -124,7 +304,8 @@
           </div>
           <div class="product-single__short-desc">
             <p>{{ product.description }}</p>
-          </div>
+        </div>
+        
           <form name="addtocart-form" method="post" action="{% url 'add_to_cart' %}">
             {% csrf_token %}
             <input type="hidden" name="product_id" value="{{ product.id }}">
@@ -136,10 +317,13 @@
               </div><!-- .qty-control -->
               {% if product.stock > 0 %}
                 <button type="button" 
-                        class="btn btn-primary btn-addtocart js-add-cart js-open-aside" 
+                        class="btn btn-primary btn-addtocart js-add-cart" 
                         data-aside="cartDrawer"
                         data-product-id="{{ product.id }}"
-                        title="Add To Cart">
+                        title="Add To Cart"
+                        onclick="fetchCartData()"
+                        >
+                
                   Add to Cart
                 </button>
               {% else %}
@@ -239,23 +423,24 @@
               <div class="item">
                 <label class="h6">Dimensions</label>
                 <span>{{ product.dimensions.length }} x {{ product.dimensions.width }} x {{ product.dimensions.height }} cm</span>
-              </div>
-              <div class="item">
+              </div><div class="item">
                 <label class="h6">Available Sizes</label>
                 <span>
-                  {% for size, stock in product.variants.size.items %}
-                    {{ size }}{% if not forloop.last %}, {% endif %}
-                  {% endfor %}
+                    {% for size in product.variants.sizes %}
+                        {{ size }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
                 </span>
-              </div>
-              <div class="item">
+            </div>
+            
+            <div class="item">
                 <label class="h6">Available Colors</label>
                 <span>
-                  {% for color, stock in product.variants.color.items %}
-                    {{ color|capfirst }}{% if not forloop.last %}, {% endif %}
-                  {% endfor %}
+                    {% for color in product.variants.colors %}
+                        {{ color|capfirst }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
                 </span>
-              </div>
+            </div>
+            
               <div class="item">
                 <label class="h6">Tags</label>
                 <span>
@@ -273,41 +458,38 @@
           
           <div class="tab-pane fade" id="tab-reviews" role="tabpanel" aria-labelledby="tab-reviews-tab">
             <h2 class="product-single__reviews-title">Reviews</h2>
-            {% if product.reviews %}
-            <div class="product-single__reviews-list">
-                {% for review in reviews %}
-                    <div class="product-single__reviews-item">
-                        <div class="customer-avatar">
-                            {% if review.avatar %}
-                                <img loading="lazy" src="{{ review.avatar }}" alt="">
-                            {% else %}
-                                <img loading="lazy" src="{% static 'images/avatar.jpg' %}" alt="">
-                            {% endif %}
-                        </div>
-                        <div class="customer-review">
-                            <div class="customer-name">
-                                <h6>{{ review.UID }}</h6>
-                                <div class="reviews-group d-flex">
-                                    {% for i in "12345"|make_list %}
-                                        {% if forloop.counter <= review.ReviewStars %}
-                                            <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-                                        {% else %}
-                                            <svg class="review-star-empty" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star_empty"></use></svg>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="review-date">{{ review.Date }}</div>
-                            <div class="review-text">
-                                <p>{{ review.ReviewText }}</p>
-                            </div>
+            {% for review in reviews %}
+            <div class="product-single__reviews-item">
+                <div class="customer-avatar">
+                    {% if review.avatar %}
+                        <img loading="lazy" src="{{ review.avatar }}" alt="Avatar">
+                    {% else %}
+                        <img loading="lazy" src="{% static 'images/avatar.jpg' %}" alt="Default Avatar">
+                    {% endif %}
+                </div>
+                <div class="customer-review">
+                    <div class="customer-name">
+                        <h6>{{ review.UID }}</h6>
+                        <div class="reviews-group d-flex">
+                            {% for i in "12345"|make_list %}
+                                {% if forloop.counter <= review.ReviewStars %}
+                                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
+                                {% else %}
+                                    <svg class="review-star-empty" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star_empty"></use></svg>
+                                {% endif %}
+                            {% endfor %}
                         </div>
                     </div>
-                {% endfor %}
+                    <div class="review-date">{{ review.Date|date:"Y-m-d H:i" }}</div>
+                    <div class="review-text">
+                        <p>{{ review.ReviewText }}</p>
+                    </div>
+                </div>
             </div>
-        {% else %}
-            <p>No reviews yet. Be the first to leave a review!</p>
-        {% endif %}
+        {% empty %}
+            <p>No reviews yet.</p>
+        {% endfor %}
+            </div>
         
             <div class="product-single__review-form">
                 <form name="customer-review-form" method="POST" action="{% url 'add_review' product.id %}">
@@ -1050,58 +1232,96 @@
   <!-- Cart Drawer -->
   <div class="aside aside_right overflow-hidden cart-drawer" id="cartDrawer">
     <div class="aside-header d-flex align-items-center">
-      <h3 class="text-uppercase fs-6 mb-0">SHOPPING BAG ( <span class="cart-amount js-cart-items-count">{{ cart_items_count|default:0 }}</span> ) </h3>
+      <h3 class="text-uppercase fs-6 mb-0">SHOPPING BAG ( <span class="cart-amount js-cart-items-count">1</span> ) </h3>
       <button class="btn-close-lg js-close-aside btn-close-aside ms-auto"></button>
-    </div>
+    </div><!-- /.aside-header -->
 
     <div class="aside-content cart-drawer-items-list">
-      {% for item in cart_items %}
       <div class="cart-drawer-item d-flex position-relative">
         <div class="position-relative">
-          <a href="{% url 'product_detail' item.product.id %}">
-            <img loading="lazy" class="cart-drawer-item__img" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+          <a href="./product1_simple.html">
+            <img loading="lazy" class="cart-drawer-item__img" src="../images/cart-item-1.jpg" alt="">
           </a>
         </div>
         <div class="cart-drawer-item__info flex-grow-1">
-          <h6 class="cart-drawer-item__title fw-normal">
-            <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
-          </h6>
-          {% if item.color %}<p class="cart-drawer-item__option text-secondary">Color: {{ item.color }}</p>{% endif %}
-          {% if item.size %}<p class="cart-drawer-item__option text-secondary">Size: {{ item.size }}</p>{% endif %}
+          <h6 class="cart-drawer-item__title fw-normal"><a href="./product1_simple.html">Zessi Dresses</a></h6>
+          <p class="cart-drawer-item__option text-secondary">Color: Yellow</p>
+          <p class="cart-drawer-item__option text-secondary">Size: L</p>
           <div class="d-flex align-items-center justify-content-between mt-1">
-            <div class="qty-control position-relative">
-              <input type="number" name="quantity" value="{{ item.quantity }}" min="1" 
-                     class="qty-control__number border-0 text-center"
-                     data-product-id="{{ item.product.id }}">
+            <div class="qty-control position-relative qty-initialized">
+              <input type="number" name="quantity" value="1" min="1" class="qty-control__number border-0 text-center">
               <div class="qty-control__reduce text-start">-</div>
               <div class="qty-control__increase text-end">+</div>
-            </div>
-            <span class="cart-drawer-item__price money price">${{ item.get_total_price }}</span>
+            </div><!-- .qty-control -->
+            <span class="cart-drawer-item__price money price">$99</span>
           </div>
         </div>
-        <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove" 
-                data-product-id="{{ item.product.id }}"></button>
-      </div>
-      {% if not forloop.last %}<hr class="cart-drawer-divider">{% endif %}
-      {% empty %}
-      <div class="text-center py-4">
-        <p>Your cart is empty</p>
-      </div>
-      {% endfor %}
-    </div>
 
-    {% if cart_items %}
-    <div class="aside-footer">
-      <div class="cart-drawer-subtotal d-flex align-items-center justify-content-between">
-        <span>Subtotal:</span>
-        <span class="cart-drawer-subtotal__price money">$<span class="js-cart-subtotal">{{ cart_total }}</span></span>
-      </div>
-      <a href="{% url 'cart' %}" class="btn btn-primary w-100 mt-3">View Cart</a>
-      <a href="{% url 'checkout' %}" class="btn btn-dark w-100 mt-2">Checkout</a>
-    </div>
-    {% endif %}
+        <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove"></button>
+      </div><!-- /.cart-drawer-item d-flex -->
+
+      <hr class="cart-drawer-divider">
+
+      <div class="cart-drawer-item d-flex position-relative">
+        <div class="position-relative">
+          <a href="./product1_simple.html">
+            <img loading="lazy" class="cart-drawer-item__img" src="../images/cart-item-2.jpg" alt="">
+          </a>
+        </div>
+        <div class="cart-drawer-item__info flex-grow-1">
+          <h6 class="cart-drawer-item__title fw-normal"><a href="./product1_simple.html">Kirby T-Shirt</a></h6>
+          <p class="cart-drawer-item__option text-secondary">Color: Black</p>
+          <p class="cart-drawer-item__option text-secondary">Size: XS</p>
+          <div class="d-flex align-items-center justify-content-between mt-1">
+            <div class="qty-control position-relative qty-initialized">
+              <input type="number" name="quantity" value="4" min="1" class="qty-control__number border-0 text-center">
+              <div class="qty-control__reduce text-start">-</div>
+              <div class="qty-control__increase text-end">+</div>
+            </div><!-- .qty-control -->
+            <span class="cart-drawer-item__price money price">$89</span>
+          </div>
+        </div>
+
+        <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove"></button>
+      </div><!-- /.cart-drawer-item d-flex -->
+
+      <hr class="cart-drawer-divider">
+
+      <div class="cart-drawer-item d-flex position-relative">
+        <div class="position-relative">
+          <a href="./product1_simple.html">
+            <img loading="lazy" class="cart-drawer-item__img" src="../images/cart-item-3.jpg" alt="">
+          </a>
+        </div>
+        <div class="cart-drawer-item__info flex-grow-1">
+          <h6 class="cart-drawer-item__title fw-normal"><a href="./product1_simple.html">Cableknit Shawl</a></h6>
+          <p class="cart-drawer-item__option text-secondary">Color: Green</p>
+          <p class="cart-drawer-item__option text-secondary">Size: L</p>
+          <div class="d-flex align-items-center justify-content-between mt-1">
+            <div class="qty-control position-relative qty-initialized">
+              <input type="number" name="quantity" value="3" min="1" class="qty-control__number border-0 text-center">
+              <div class="qty-control__reduce text-start">-</div>
+              <div class="qty-control__increase text-end">+</div>
+            </div><!-- .qty-control -->
+            <span class="cart-drawer-item__price money price">$129</span>
+          </div>
+        </div>
+
+        <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove"></button>
+      </div><!-- /.cart-drawer-item d-flex -->
+
+    </div><!-- /.aside-content -->
+
+    <div class="cart-drawer-actions position-absolute start-0 bottom-0 w-100">
+      <hr class="cart-drawer-divider">
+      <div class="d-flex justify-content-between">
+        <h6 class="fs-base fw-medium">SUBTOTAL:</h6>
+        <span class="cart-subtotal fw-medium">$176.00</span>
+      </div><!-- /.d-flex justify-content-between -->
+      <a href="./shop_cart.html" class="btn btn-light mt-3 d-block">View Cart</a>
+      <a href="./shop_checkout.html" class="btn btn-primary mt-3 d-block">Checkout</a>
+    </div><!-- /.aside-content -->
   </div>
-
   <!-- Sitemap -->
   <div class="modal fade" id="siteMap" tabindex="-1">
     <div class="modal-dialog modal-fullscreen">

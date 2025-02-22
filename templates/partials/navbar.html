@@ -163,10 +163,13 @@
         </a>
       </div><!-- /.logo -->
 
-      <a href="#" class="header-tools__item header-tools__cart js-open-aside" data-aside="cartDrawer">
-        <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_cart"></use></svg>
+      <a href="#" id="cartTrigger" class="header-tools__item header-tools__cart js-open-aside" data-aside="cartDrawer" onclick="fetchCartData()">
+        <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <use href="#icon_cart"></use>
+        </svg>
         <span class="cart-amount d-block position-absolute js-cart-items-count">3</span>
-      </a>
+    </a>
+    
     </div><!-- /.container -->
 
     <nav class="header-mobile__navigation navigation d-flex flex-column w-100 position-absolute top-100 bg-body overflow-auto">
@@ -313,32 +316,112 @@
             </div>
 
             <div class="search-popup js-hidden-content">
-              <form action="./search_result.html" method="GET" class="search-field container">
-                <p class="text-uppercase text-secondary fw-medium mb-4">What are you looking for?</p>
-                <div class="position-relative">
-                  <input class="search-field__input search-popup__input w-100 fw-medium" type="text" name="search-keyword" placeholder="Search products">
-                  <button class="btn-icon search-popup__submit" type="submit">
-                    <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_search"></use></svg>
-                  </button>
-                  <button class="btn-icon btn-close-lg search-popup__reset" type="reset"></button>
-                </div>
-
-                <div class="search-popup__results">
-                  <div class="sub-menu search-suggestion">
-                    <h6 class="sub-menu__title fs-base">Quicklinks</h6>
-                    <ul class="sub-menu__list list-unstyled">
-                      <li class="sub-menu__item"><a href="{% static './shop2.html' %}" class="menu-link menu-link_us-s">New Arrivals</a></li>
-                      <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Dresses</a></li>
-                      <li class="sub-menu__item"><a href="{% static './shop3.html' %}" class="menu-link menu-link_us-s">Accessories</a></li>
-                      <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Footwear</a></li>
-                      <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Sweatshirt</a></li>
-                    </ul>
+              <form action="/search/" method="GET" class="search-field container">
+                  <p class="text-uppercase text-secondary fw-medium mb-4">What are you looking for?</p>
+                  <div class="position-relative">
+                      <input class="search-popup__input search-field__input w-100 fw-medium" type="text" name="search-keyword" placeholder="Search products">
+                      <button class="btn-icon search-popup__submit" type="submit">
+                          <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <use href="#icon_search"></use>
+                          </svg>
+                      </button>
+                      <button class="btn-icon btn-close-lg search-popup__reset" type="reset"></button>
                   </div>
+          
+                  <!-- 🔥 Search Suggestions -->
+                  <div class="search-popup__results">
+                      <div class="sub-menu search-suggestion">
+                          <ul class="sub-menu__list list-unstyled"></ul> <!-- 🆕 Dynamic Suggestions -->
+                      </div>
+                  </div>
+              </form>
+          </div>
+          
+          
+          <script>
+            document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.querySelector(".search-popup__input");
+    const suggestionContainer = document.querySelector(".search-suggestion .sub-menu__list");
 
-                  <div class="search-result row row-cols-5"></div>
-                </div>
-              </form><!-- /.header-search -->
-            </div><!-- /.search-popup -->
+    searchInput.addEventListener("input", function () {
+        let query = searchInput.value.trim();
+        if (query.length < 2) {
+            suggestionContainer.innerHTML = "";
+            return;
+        }
+
+        // Fetch search suggestions
+        fetch(`/search-suggestions/?search-keyword=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                displaySuggestions(data.suggestions);
+            })
+            .catch(error => console.error("Error fetching search suggestions:", error));
+    });
+
+    function displaySuggestions(suggestions) {
+        suggestionContainer.innerHTML = ""; // Clear previous results
+
+        let { products, categories, brands, tags } = suggestions;
+
+        if (products.length === 0 && categories.length === 0 && brands.length === 0 && tags.length === 0) {
+            suggestionContainer.innerHTML = `<li class="sub-menu__item text-muted">No suggestions found.</li>`;
+            return;
+        }
+
+        // 🔹 Add Product Suggestions
+        if (products.length > 0) {
+            suggestionContainer.innerHTML += `<li class="sub-menu__title">Products</li>`;
+            products.forEach(name => {
+                suggestionContainer.innerHTML += `<li class="sub-menu__item">
+                    <a href="#" class="menu-link suggestion-item">${name}</a>
+                </li>`;
+            });
+        }
+
+        // 🔹 Add Category Suggestions
+        if (categories.length > 0) {
+            suggestionContainer.innerHTML += `<li class="sub-menu__title">Categories</li>`;
+            categories.forEach(cat => {
+                suggestionContainer.innerHTML += `<li class="sub-menu__item">
+                    <a href="#" class="menu-link suggestion-item">${cat}</a>
+                </li>`;
+            });
+        }
+
+        // 🔹 Add Brand Suggestions
+        if (brands.length > 0) {
+            suggestionContainer.innerHTML += `<li class="sub-menu__title">Brands</li>`;
+            brands.forEach(brand => {
+                suggestionContainer.innerHTML += `<li class="sub-menu__item">
+                    <a href="#" class="menu-link suggestion-item">${brand}</a>
+                </li>`;
+            });
+        }
+
+        // 🔹 Add Tag Suggestions
+        if (tags.length > 0) {
+            suggestionContainer.innerHTML += `<li class="sub-menu__title">Tags</li>`;
+            tags.forEach(tag => {
+                suggestionContainer.innerHTML += `<li class="sub-menu__item">
+                    <a href="#" class="menu-link suggestion-item">${tag}</a>
+                </li>`;
+            });
+        }
+
+        // Allow clicking on suggestions
+        document.querySelectorAll(".suggestion-item").forEach(item => {
+            item.addEventListener("click", function (e) {
+                e.preventDefault();
+                searchInput.value = this.textContent;
+                searchInput.dispatchEvent(new Event("input")); // Trigger search
+            });
+        });
+    }
+});
+
+          </script>
+            <!-- /.search-popup -->
           </div><!-- /.header-tools__item hover-container -->
 
           <div class="header-tools__item hover-container">
@@ -347,7 +430,7 @@
             </a>
           </div>
 
-          <a href="#" class="header-tools__item header-tools__cart js-open-aside" data-aside="cartDrawer">
+          <a href="#" id="cartTrigger" class="header-tools__item header-tools__cart js-open-aside" data-aside="cartDrawer" onclick="fetchCartData()">
             <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_cart"></use></svg>
             <span class="cart-amount d-block position-absolute js-cart-items-count">3</span>
           </a>
