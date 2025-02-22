@@ -417,6 +417,7 @@ def address(request):
     return render(request, 'USER/Address.html')
 
 def checkout(request):
+    
     return render(request, 'USER/CheckOut.html')
 
 @login_required
@@ -495,7 +496,7 @@ def orders(request):
 # def product_item(request):
 #     return render(request, 'USER/product-Item.html')
 
-@login_required
+
 def wishlist(request):
     return render(request, 'USER/WishList.html')
 
@@ -821,7 +822,7 @@ def get_product_by_id(product_id):
 
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
-from datetime import datetime
+import datetime
 from django.conf import settings
 import json
 from bson import ObjectId
