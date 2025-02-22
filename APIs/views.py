@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from APIs.mongodb import MongoDBUser, MongoDBReview,MongoDBDescription,MongoDBCategory,MongoDBProduct,MongoDBBrand ,MongoDBCart   # Import MongoDB Helper
+from APIs.mongodb import MongoDBUser, MongoDBReview,MongoDBDescription,MongoDBCategory,MongoDBProduct,MongoDBBrand ,MongoDBCart, MongoDBOrders  # Import MongoDB Helper
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
@@ -521,10 +521,121 @@ def acc_details(request):
 def address(request):
     return render(request, 'USER/Address.html')
 
-def checkout(request):
-    
-    return render(request, 'USER/CheckOut.html')
+from bson import ObjectId
+from django.shortcuts import render, redirect
+from django.contrib import messages
 
+
+def checkout(request):
+    if request.method == 'POST':
+        # Fetch user ID from session
+        user_id = request.session.get('user_id')
+        if not user_id:
+            return render(request, 'USER/CheckOut.html', {"error": "User not logged in."})
+
+        # Fetch cart items
+        cart = cart_collection.find_one({"user_id": ObjectId(user_id)})
+        cart_items = cart.get('products', []) if cart else []
+        print("@@@@@@@@@",cart_items)
+        
+        
+                    
+
+        if not cart_items:
+            return render(request, 'USER/CheckOut.html', {"error": "Your cart is empty."})
+
+        # Extract checkout details
+        shipping_address = {
+            "FirstName": request.POST.get('checkout_first_name', '').strip(),
+            "LastName": request.POST.get('checkout_last_name', '').strip(),
+            "CompanyName": request.POST.get('checkout_company_name', '').strip(),
+            "CountryRegion": request.POST.get('search-keyword', '').strip(),
+            "StreetAddress": request.POST.get('checkout_street_address', '').strip(),
+            "StreetAddress2": request.POST.get('checkout_street_address_2', '').strip(),
+            "City": request.POST.get('checkout_city', '').strip(),
+            "Zipcode": request.POST.get('checkout_zipcode', '').strip(),
+            "Phone": request.POST.get('checkout_phone', '').strip(),
+            "Email": request.POST.get('checkout_email', '').strip(),
+            "OrderNotes": request.POST.get('order_notes', '').strip()
+        }
+
+        # Calculate order total
+        total_amount = 0  # Initialize total amount
+        items = []  # List to store formatted items
+
+        for item in cart_items:
+            product = products_collection.find_one({"_id": ObjectId(item['product_id'])})
+            if product:  # Check if the product exists
+                price = product.get('price', 0)  # Get price, default to 0 if not found
+                quantity = item.get('quantity', 1)  # Default to 1 if not found
+                subtotal = price * quantity  # Calculate subtotal
+
+                # Append item in the correct format for place_order
+                items.append({
+                    "product_id": str(item["product_id"]),
+                    "product_name": product.get("name", "Unknown Product"),  # Use DB name
+                    "quantity": quantity,
+                    "price_per_unit": price,
+                    "subtotal": subtotal
+                })
+
+                total_amount += subtotal  # Update total amount
+
+        print("Total amt: ", total_amount)  # Print the total amount
+
+        # Generate unique transaction ID
+        transaction_id = f"TXN{ObjectId()}"
+
+
+
+        # Place order
+        order_id = MongoDBOrders.place_order(
+            user_id=user_id,
+            items=items,
+            total_amount=total_amount,
+            shipping_address=shipping_address,
+            payment_status="Pending",
+            transaction_id=transaction_id,
+            estimated_delivery_days=5
+        )
+
+        # Clear cart after order
+        cart_collection.update_one({"user_id": ObjectId(user_id)}, {"$set": {"products": []}})
+
+        # Redirect to order confirmation
+        return redirect('order_complete')
+
+    # Render checkout page
+    user_id = request.session.get('user_id')
+    context = {}
+
+    if user_id:
+            # Fetch user data if needed
+            user_data = MongoDBUser.get_user_by_id(user_id)  # Replace with your actual method to get user data
+            context['user'] = user_data
+
+            # Fetch cart items for the user
+            cart = cart_collection.find_one({"user_id": user_id})  # Fetch the user's cart
+            if cart:
+                context['cart_items'] = cart.get('products', [])
+                # Calculate total with error handling
+                cart_total = 0
+                for item in context['cart_items']:
+                    try:
+                        # Fetch product details from the database
+                        product = products_collection.find_one({"_id": ObjectId(item['product_id'])})
+                        if product:
+                            price = product.get('price', 0)  # Default to 0 if price is not found
+                            quantity = item['quantity']  # Access the quantity
+                            cart_total += price * quantity  # Calculate total
+                        else:
+                            print(f"Product not found for ID: {item['product_id']}")
+                    except Exception as e:
+                        print(f"Error fetching product details: {e}")
+
+                context['cart_total'] = cart_total  # Set the total in context
+
+            return render(request, 'USER/CheckOut.html', context)
 @login_required
 def order_complete(request):
     # Verify order exists and is complete
@@ -542,9 +653,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 @login_required
 def item_sort(request):
     try:
+        # 🔹 Step 1: Get Query Parameters
         query = request.GET.get('query', '').strip()
         category_query = request.GET.get('category', '').strip()
         sort_by = request.GET.get('sort_by', 'price')
@@ -555,48 +668,51 @@ def item_sort(request):
 
         product_query = {}
 
-        # 🔹 Step 1: Combination Search (Name, Description, Tags)
+        # 🔹 Step 2: Text Search (Name, Tags, Description)
         search_conditions = []
-        if query:
-            search_conditions.append({"name": {"$regex": query, "$options": "i"}})
-            search_conditions.append({"tags": {"$elemMatch": {"$regex": query, "$options": "i"}}})
+        brand_categories = None
+        is_product_name_search = False
 
+        if query:
+            search_conditions.extend([
+                {"name": {"$regex": query, "$options": "i"}},
+                {"tags": {"$elemMatch": {"$regex": query, "$options": "i"}}}
+            ])
+
+            # Search in descriptions
             matching_descriptions = descriptions_collection.find(
                 {"description": {"$regex": query, "$options": "i"}}
             )
             description_ids = [desc["PID"] for desc in matching_descriptions]
-
             if description_ids:
                 search_conditions.append({"_id": {"$in": description_ids}})
+
+            # Get brand categories if the query is based on a product name
+            product = products_collection.find_one({"name": {"$regex": f"^{query}$", "$options": "i"}})
+            if product and "brand_id" in product:
+                brand_categories = MongoDBBrand.get_brand_categories(product["brand_id"])
+                is_product_name_search = True  # ✅ Mark as product name search
 
         if search_conditions:
             product_query["$or"] = search_conditions
 
-        # 🔹 Step 2: Get Top 10 Categories with Highest Product Count
+        # 🔹 Step 3: Always Fetch Top 10 Categories
         top_categories = MongoDBCategory.get_all_categories()
         top_categories = sorted(top_categories, key=lambda x: x["product_count"], reverse=True)[:10]
 
-        # 🔹 Step 3: Fetch Brands Associated with Categories
         category_brands = {}
+        selected_category_brands = None
 
         # 🔹 Step 4: Filter by Category
-        selected_category_brands = None  # Stores brands of the selected category (if any)
-
         if category_query:
             category_ids = MongoDBCategory.get_category_ids_by_name(category_query)
-
             if not category_ids and ObjectId.is_valid(category_query):
-                category_ids = [category_query]  # Assume category_query is a valid ObjectId
+                category_ids = [category_query]
 
             if category_ids:
                 product_query["category_id"] = {"$in": [ObjectId(cat_id) for cat_id in category_ids]}
-                
-                # 🔥 Fetch brands ONLY for the selected category
                 selected_category_brands = MongoDBBrand.get_brands_by_category(category_ids[0])
-                print(f"📢 Selected Category: {category_query} → Brands: {selected_category_brands}")
-
         else:
-            # If no specific category is selected, fetch brands for top categories
             category_brands = MongoDBBrand.get_product_brands()
 
         # 🔹 Step 5: Filter by Brand
@@ -611,13 +727,12 @@ def item_sort(request):
             price_filter["$gte"] = float(min_price)
         if max_price and max_price.isdigit():
             price_filter["$lte"] = float(max_price)
-
         if price_filter:
             product_query["price"] = price_filter
 
         # 🔹 Step 7: Sorting
         sort_order = -1 if order == 'desc' else 1
-        sort_field = {
+        sort_field_map = {
             "price": "price",
             "name": "name",
             "description": "description_id",
@@ -625,26 +740,27 @@ def item_sort(request):
             "category": "category_id",
             "brand": "brand_id",
             "product_count": "product_count"
-        }.get(sort_by, "price")
+        }
+        sort_field = sort_field_map.get(sort_by, "price")
 
         # 🔹 Step 8: Fetch & Sort Products
         products = products_collection.find(product_query).sort(sort_field, sort_order)
 
-        # 🔹 Step 9: Convert to List
+        # 🔹 Step 9: Convert to JSON-safe List
         products_list = []
         for product in products:
             try:
                 serialized_product = {
                     'id': str(product['_id']),
-                    'name': product.get('name', ''),
+                    'name': product.get('name', 'Unnamed Product'),
                     'price': product.get('price', 0),
                     'image': product.get('images', [''])[0] if product.get('images') else '',
-                    'description': MongoDBDescription.get_description_by_product_id(product['_id'])["description"]
+                    'description': MongoDBDescription.get_description_by_product_id(product['_id']).get("description", "No description available")
                     if product.get("description_id") else "No description available",
                     'tags': product.get('tags', []),
-                    'category': MongoDBCategory.get_category_by_id(product.get('category_id', ''))["CategoryName"]
+                    'category': MongoDBCategory.get_category_by_id(product.get('category_id', '')).get("CategoryName", "Uncategorized")
                     if product.get('category_id') else "Uncategorized",
-                    'brand': MongoDBBrand.get_brand_by_id(product.get('brand_id', ''))["name"]
+                    'brand': MongoDBBrand.get_brand_by_id(product.get('brand_id', '')).get("name", "No Brand")
                     if product.get('brand_id') else "No Brand",
                     'in_stock': product.get('stock', 0) > 0
                 }
@@ -652,20 +768,15 @@ def item_sort(request):
             except Exception as e:
                 print(f"⚠️ Error processing product {product['_id']}: {e}")
 
-        # 🔹 Step 10: Print Debugging Info
+        # 🔹 Step 10: Debugging Info
         print(f"🔍 Query: {query}, Category: {category_query}, Brand: {brand_query}, Sort By: {sort_by}, Order: {order}, Min Price: {min_price}, Max Price: {max_price}")
-        print(f"🛒 Filtered Products: {products_list}")
-        # print(f"📌 Top Categories: {top_categories}")
+        print(f"🛒 Filtered Products Count: {len(products_list)}")
+        print(f"📌 Top Categories: {top_categories}")
+        print(f"🔹 Brand Categories: {brand_categories if brand_categories else 'N/A'}")
+        print(f"🗂 Selected Category Brands: {selected_category_brands if selected_category_brands else 'N/A'}")
+        print(f"📦 All Product Brands: {category_brands}")
 
-        # Print brands based on category selection
-        if selected_category_brands:
-            print(f"✅ Displaying brands for selected category '{category_query}': {selected_category_brands}")
-        else:
-            for cat in top_categories:
-                cat_id = str(cat["_id"])
-                brands = category_brands.get(cat_id, [])
-                print(f"📢 Category: {cat['CategoryName']} → Brands: {brands}")
-
+        # 🔹 Step 11: Pass Data to Template
         return render(request, 'USER/Item-Sort.html', {
             'products': products_list,
             'query': query,
@@ -675,16 +786,18 @@ def item_sort(request):
             'order': order,
             'min_price': min_price,
             'max_price': max_price,
-            'top_categories': top_categories,  # Pass top categories
-            'category_brands': selected_category_brands if selected_category_brands else category_brands  # Show relevant brands
+            'top_categories': top_categories,  # ✅ Always included
+            'brand_categories': brand_categories if brand_categories else None,
+            'category_brands': selected_category_brands if selected_category_brands else category_brands
         })
 
     except Exception as e:
         print(f"🚨 Error in item_sort: {str(e)}")
         return render(request, 'USER/Item-Sort.html', {
-            'products': [],
+            'products_json': '[]',
             'error_message': 'Unable to fetch products'
         })
+
 
 @csrf_exempt
 def search_suggestions(request):
@@ -1229,43 +1342,43 @@ def update_cart_total_price(cart):
 # Place Order API
 orders_collection = settings.MONGO_DB["orders"]
 
-@api_view(['POST'])
-def place_order(request):
-    if request.method == "POST":
-        try:
-            body = json.loads(request.body.decode('utf-8'))
-            user_id = body.get("user_id")
-            shipping_address = body.get("shipping_address")
+# @api_view(['POST'])
+# def place_order(request):
+#     if request.method == "POST":
+#         try:
+#             body = json.loads(request.body.decode('utf-8'))
+#             user_id = body.get("user_id")
+#             shipping_address = body.get("shipping_address")
 
-            if not user_id or not shipping_address:
-                return JsonResponse({"error": "Missing required fields"}, status=400)
+#             if not user_id or not shipping_address:
+#                 return JsonResponse({"error": "Missing required fields"}, status=400)
 
-            # Retrieve the user's cart
-            cart = cart_collection.find_one({"user_id": ObjectId(user_id)})
+#             # Retrieve the user's cart
+#             cart = cart_collection.find_one({"user_id": ObjectId(user_id)})
 
-            if not cart or not cart["products"]:
-                return JsonResponse({"error": "Cart is empty, cannot place order"}, status=400)
+#             if not cart or not cart["products"]:
+#                 return JsonResponse({"error": "Cart is empty, cannot place order"}, status=400)
 
-            # Create an order
-            order_data = {
-                "user_id": ObjectId(user_id),
-                "products": cart["products"],
-                "order_status": "pending",
-                "total_price": cart["total_price"],
-                "created_at": datetime.now(),
-                "shipping_address": shipping_address,
-            }
-            result = orders_collection.insert_one(order_data)
+#             # Create an order
+#             order_data = {
+#                 "user_id": ObjectId(user_id),
+#                 "products": cart["products"],
+#                 "order_status": "pending",
+#                 "total_price": cart["total_price"],
+#                 "created_at": datetime.now(),
+#                 "shipping_address": shipping_address,
+#             }
+#             result = orders_collection.insert_one(order_data)
 
-            # Empty the cart after placing the order
-            cart_collection.update_one({"user_id": ObjectId(user_id)}, {"$set": {"products": [], "total_price": 0}})
+#             # Empty the cart after placing the order
+#             cart_collection.update_one({"user_id": ObjectId(user_id)}, {"$set": {"products": [], "total_price": 0}})
 
-            return JsonResponse({"message": "Order placed successfully", "order_id": str(result.inserted_id)})
+#             return JsonResponse({"message": "Order placed successfully", "order_id": str(result.inserted_id)})
 
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+#         except Exception as e:
+#             return JsonResponse({"error": str(e)}, status=500)
 
-    return JsonResponse({"error": "Invalid request method"}, status=405)
+#     return JsonResponse({"error": "Invalid request method"}, status=405)
 
 # Get UserCart API
 @api_view(['GET'])
