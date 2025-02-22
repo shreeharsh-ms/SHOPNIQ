@@ -592,7 +592,7 @@ def item_sort(request):
         category_brands = {}
         selected_category_brands = None
 
-        # 🔹 Step 4: Filter by Category
+        # 🔹 Step 4: Filter by Category and Fetch Brands Accordingly
         if category_query:
             category_ids = MongoDBCategory.get_category_ids_by_name(category_query)
             if not category_ids and ObjectId.is_valid(category_query):
@@ -600,9 +600,9 @@ def item_sort(request):
 
             if category_ids:
                 product_query["category_id"] = {"$in": [ObjectId(cat_id) for cat_id in category_ids]}
-                selected_category_brands = MongoDBBrand.get_brands_by_category(category_ids[0])
+                selected_category_brands = MongoDBBrand.get_brands_by_category(category_ids[0])  # Fetch brands under the category
         else:
-            category_brands = MongoDBBrand.get_product_brands()
+            category_brands = MongoDBBrand.get_product_brands()  # Fetch all brands if no category is searched
 
         # 🔹 Step 5: Filter by Brand
         if brand_query:
@@ -666,6 +666,7 @@ def item_sort(request):
         print(f"📦 All Product Brands: {category_brands}")
 
         # 🔹 Step 11: Pass Data to Template
+        print(f'fuck OFFFF {selected_category_brands if selected_category_brands else category_brands}')
         return render(request, 'USER/Item-Sort.html', {
             'products': products_list,
             'query': query,
@@ -675,10 +676,12 @@ def item_sort(request):
             'order': order,
             'min_price': min_price,
             'max_price': max_price,
-            'top_categories': top_categories,  # ✅ Always included
+            'top_categories': top_categories,  
             'brand_categories': brand_categories if brand_categories else None,
-            'category_brands': selected_category_brands if selected_category_brands else category_brands
+            'category_brands': [{'name': brand, 'product_count': 0} for brand in selected_category_brands] 
+                if selected_category_brands else []
         })
+
 
     except Exception as e:
         print(f"🚨 Error in item_sort: {str(e)}")
@@ -686,6 +689,7 @@ def item_sort(request):
             'products_json': '[]',
             'error_message': 'Unable to fetch products'
         })
+
 
 
 @csrf_exempt

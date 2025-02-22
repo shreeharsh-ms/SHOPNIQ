@@ -36,33 +36,7 @@
   </head>
   
   <body>
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-          setTimeout(function () {
-              console.log("Script is loading after 5 seconds...");
-  
-              try {
-                  const products = JSON.parse('{{ products_json|escapejs }}');
-                  console.log("Fetched Products:", products);
-  
-                  products.forEach(product => {
-                      console.log("Product ID:", product.id);
-                      console.log("Product Name:", product.name);
-                      console.log("Product Price:", product.price);
-                      console.log("Product Image:", product.image);
-                      console.log("Product Description:", product.description);
-                      console.log("Product Tags:", product.tags);
-                      console.log("Product Category:", product.category);
-                      console.log("Product Brand:", product.brand);
-                      console.log("In Stock:", product.in_stock);
-                  });
-              } catch (error) {
-                  console.error("❌ Error parsing JSON:", error);
-              }
-          }, 5000);
-      });
-  </script>
-  
+ 
   
       <div id="page">
           <div class="loader">
@@ -202,54 +176,44 @@
                   </g>
                 </svg>
               </button>
-            </h5>
-            <div id="accordion-filter-brand" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-brand" data-bs-parent="#brand-filters">
+            </h5><div id="accordion-filter-brand" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-brand" data-bs-parent="#brand-filters">
               <div class="search-field multi-select accordion-body px-0 pb-0">
-                <select class="d-none" multiple="" name="total-numbers-list">
-                  <option value="1">Adidas</option>
-                  <option value="2">Balmain</option>
-                  <option value="3">Balenciaga</option>
-                  <option value="4">Burberry</option>
-                  <option value="5">Kenzo</option>
-                  <option value="5">Givenchy</option>
-                  <option value="5">Zara</option>
+            
+                <!-- Debugging Output -->
+                <script>
+                  console.log('category_brands:', {{ category_brands|safe }});
+                </script>
+            
+                <!-- Hidden Select List -->
+                <select class="d-none" multiple name="total-numbers-list">
+                  {% for brand in category_brands %}
+                    <option value="{{ brand.name }}">{{ brand.name }}</option>
+                  {% endfor %}
                 </select>
+            
+                <!-- Search Input -->
                 <div class="search-field__input-wrapper mb-3">
                   <input type="text" name="search_text" class="search-field__input form-control form-control-sm border-light border-2" placeholder="SEARCH">
                 </div>
+            
+                <!-- Brand List -->
                 <ul class="multi-select__list list-unstyled">
-                  <li class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                    <span class="me-auto">Adidas</span>
-                    <span class="text-secondary">2</span>
-                  </li>
-                  <li class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                    <span class="me-auto">Balmain</span>
-                    <span class="text-secondary">7</span>
-                  </li>
-                  <li class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                    <span class="me-auto">Balenciaga</span>
-                    <span class="text-secondary">10</span>
-                  </li>
-                  <li class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                    <span class="me-auto">Burberry</span>
-                    <span class="text-secondary">39</span>
-                  </li>
-                  <li class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                    <span class="me-auto">Kenzo</span>
-                    <span class="text-secondary">95</span>
-                  </li>
-                  <li class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                    <span class="me-auto">Givenchy</span>
-                    <span class="text-secondary">1092</span>
-                  </li>
-                  <li class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                    <span class="me-auto">Zara</span>
-                    <span class="text-secondary">48</span>
-                  </li>
+                  {% for brand in category_brands %}
+                    <li class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
+                      <span class="me-auto">{{ brand.name }}</span>
+                      <span class="text-secondary">{{ brand.product_count }}</span> <!-- Display actual product counts -->
+                    </li>
+                  {% empty %}
+                    <li class="text-muted">No brands available</li>
+                  {% endfor %}
                 </ul>
+            
               </div>
             </div>
-          </div><!-- /.accordion-item -->
+            
+          </div>
+          
+          <!-- /.accordion-item -->
         </div><!-- /.accordion -->
 
 
