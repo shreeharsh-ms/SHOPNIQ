@@ -172,7 +172,7 @@ MONGO_DB = MONGO_CLIENT["shopniq_db"]
 
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"  # ✅ Ensure database-backed sessions
-SESSION_COOKIE_AGE = 86400  # 1 day
+SESSION_COOKIE_AGE = 864000000  # 1 day
 SESSION_SAVE_EVERY_REQUEST = True  # Save session on every request
 
 

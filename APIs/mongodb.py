@@ -694,6 +694,7 @@ class MongoDBCategory:
             }
         return None
     
+    
     @staticmethod
     def get_categories_by_query(query):
         """
@@ -709,6 +710,170 @@ class MongoDBCategory:
         )
 
         return [cat["CategoryName"] for cat in matching_categories]
+
+
+from bson import ObjectId
+import datetime
+
+orders_collection = MONGO_DB["orders"]
+
+class MongoDBOrders:
+    @staticmethod
+    def place_order(user_id, items, total_amount, shipping_address, payment_status="Pending", transaction_id=None, estimated_delivery_days=5):
+        """
+        Places an order with multiple items and sets an estimated delivery date.
+        """
+        order_data = {
+            "UID": ObjectId(user_id),  # User who placed the order
+            "Items": [
+                {
+                    "PID": ObjectId(item["product_id"]),
+                    "ProductName": item["product_name"],
+                    "Quantity": item["quantity"],
+                    "PricePerUnit": item["price_per_unit"],
+                    "Subtotal": item["subtotal"]
+                }
+                for item in items
+            ],
+            "TotalAmount": total_amount,
+            "ShippingAddress": shipping_address,  # User’s shipping address
+            "Status": "Pending",  # Order status
+            "PaymentStatus": payment_status,  # Payment status
+            "TransactionID": transaction_id,  # Payment transaction ID
+            "OrderDate": datetime.datetime.utcnow(),  # Order timestamp
+            "EstimatedDelivery": datetime.datetime.utcnow() + datetime.timedelta(days=estimated_delivery_days),  # Estimated delivery date
+            "Tracking": [],  # Stores tracking updates
+            "RefundStatus": None,  # Tracks refund status if applicable
+            "Cancelled": False  # Order cancellation flag
+        }
+
+        result = orders_collection.insert_one(order_data)
+        return str(result.inserted_id)
+
+    @staticmethod
+    def get_orders_by_user(user_id):
+        """
+        Retrieves all orders placed by a specific user.
+        """
+        orders = orders_collection.find({"UID": ObjectId(user_id)})
+        return [MongoDBOrders.serialize_order(order) for order in orders] if orders else []
+
+    @staticmethod
+    def get_order_by_id(order_id):
+        """
+        Retrieves order details by order ID.
+        """
+        order = orders_collection.find_one({"_id": ObjectId(order_id)})
+        return MongoDBOrders.serialize_order(order) if order else {"error": "Order not found"}
+
+    @staticmethod
+    def track_order(order_id):
+        """
+        Retrieves tracking details and estimated delivery date of an order.
+        """
+        order = orders_collection.find_one({"_id": ObjectId(order_id)})
+        if order:
+            return {
+                "OrderID": str(order["_id"]),
+                "Status": order["Status"],
+                "TrackingUpdates": order["Tracking"],
+                "OrderDate": order["OrderDate"],
+                "EstimatedDelivery": order.get("EstimatedDelivery"),
+                "RefundStatus": order.get("RefundStatus")
+            }
+        return {"error": "Order not found"}
+
+    @staticmethod
+    def update_order_status(order_id, new_status):
+        """
+        Updates the status of an order (e.g., Processing, Shipped, Delivered).
+        """
+        order = orders_collection.find_one({"_id": ObjectId(order_id)})
+        if order:
+            orders_collection.update_one({"_id": ObjectId(order_id)}, {"$set": {"Status": new_status}})
+            return {"message": f"Order status updated to {new_status}"}
+        return {"error": "Order not found"}
+
+    @staticmethod
+    def cancel_order(order_id, reason):
+        """
+        Cancels an order if it has not been shipped yet.
+        """
+        order = orders_collection.find_one({"_id": ObjectId(order_id)})
+        if order:
+            if order["Status"] in ["Pending", "Processing"]:
+                orders_collection.update_one({"_id": ObjectId(order_id)}, {
+                    "$set": {"Status": "Cancelled", "Cancelled": True, "CancelReason": reason}
+                })
+                return {"message": "Order cancelled successfully"}
+            return {"error": "Order cannot be cancelled as it has already been shipped or delivered"}
+        return {"error": "Order not found"}
+
+    @staticmethod
+    def process_refund(order_id, reason):
+        """
+        Processes a refund if the order is eligible.
+        """
+        order = orders_collection.find_one({"_id": ObjectId(order_id)})
+        if order:
+            if order["PaymentStatus"] == "Paid" and order["Status"] in ["Cancelled", "Delivered"]:
+                refund_data = {
+                    "RefundStatus": "Initiated",
+                    "RefundReason": reason,
+                    "RefundDate": datetime.datetime.utcnow()
+                }
+                orders_collection.update_one({"_id": ObjectId(order_id)}, {"$set": refund_data})
+                return {"message": "Refund initiated successfully"}
+            return {"error": "Order is not eligible for a refund"}
+        return {"error": "Order not found"}
+
+    @staticmethod
+    def add_tracking_update(order_id, status_update):
+        """
+        Adds a tracking update to the order.
+        """
+        order = orders_collection.find_one({"_id": ObjectId(order_id)})
+        if order:
+            tracking_update = {
+                "Status": status_update,
+                "Timestamp": datetime.datetime.utcnow()
+            }
+            orders_collection.update_one({"_id": ObjectId(order_id)}, {"$push": {"Tracking": tracking_update}})
+            return {"message": "Tracking update added successfully"}
+        return {"error": "Order not found"}
+
+    @staticmethod
+    def serialize_order(order):
+        """
+        Converts the MongoDB order document into a dictionary format.
+        """
+        if order:
+            return {
+                "OrderID": str(order["_id"]),
+                "UserID": str(order["UID"]),
+                "TotalAmount": order["TotalAmount"],
+                "ShippingAddress": order["ShippingAddress"],
+                "Status": order["Status"],
+                "PaymentStatus": order["PaymentStatus"],
+                "TransactionID": order.get("TransactionID"),
+                "OrderDate": order["OrderDate"],
+                "EstimatedDelivery": order.get("EstimatedDelivery"),
+                "RefundStatus": order.get("RefundStatus"),
+                "Cancelled": order.get("Cancelled", False),
+                "Tracking": order.get("Tracking", []),
+                "Items": [
+                    {
+                        "ProductID": str(item["PID"]),
+                        "ProductName": item["ProductName"],
+                        "Quantity": item["Quantity"],
+                        "PricePerUnit": item["PricePerUnit"],
+                        "Subtotal": item["Subtotal"]
+                    }
+                    for item in order["Items"]
+                ]
+            }
+        return None
+    
 
 
 
