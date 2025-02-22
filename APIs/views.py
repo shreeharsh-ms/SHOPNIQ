@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from APIs.mongodb import MongoDBUser, MongoDBReview,MongoDBDescription,MongoDBCategory,MongoDBProduct,MongoDBBrand ,MongoDBCart   # Import MongoDB Helper
+from APIs.mongodb import MongoDBUser, MongoDBReview,MongoDBDescription,MongoDBCategory,MongoDBProduct,MongoDBBrand ,MongoDBCart, MongoDBOrders  # Import MongoDB Helper
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
@@ -521,10 +521,121 @@ def acc_details(request):
 def address(request):
     return render(request, 'USER/Address.html')
 
-def checkout(request):
-    
-    return render(request, 'USER/CheckOut.html')
+from bson import ObjectId
+from django.shortcuts import render, redirect
+from django.contrib import messages
 
+
+def checkout(request):
+    if request.method == 'POST':
+        # Fetch user ID from session
+        user_id = request.session.get('user_id')
+        if not user_id:
+            return render(request, 'USER/CheckOut.html', {"error": "User not logged in."})
+
+        # Fetch cart items
+        cart = cart_collection.find_one({"user_id": ObjectId(user_id)})
+        cart_items = cart.get('products', []) if cart else []
+        print("@@@@@@@@@",cart_items)
+        
+        
+                    
+
+        if not cart_items:
+            return render(request, 'USER/CheckOut.html', {"error": "Your cart is empty."})
+
+        # Extract checkout details
+        shipping_address = {
+            "FirstName": request.POST.get('checkout_first_name', '').strip(),
+            "LastName": request.POST.get('checkout_last_name', '').strip(),
+            "CompanyName": request.POST.get('checkout_company_name', '').strip(),
+            "CountryRegion": request.POST.get('search-keyword', '').strip(),
+            "StreetAddress": request.POST.get('checkout_street_address', '').strip(),
+            "StreetAddress2": request.POST.get('checkout_street_address_2', '').strip(),
+            "City": request.POST.get('checkout_city', '').strip(),
+            "Zipcode": request.POST.get('checkout_zipcode', '').strip(),
+            "Phone": request.POST.get('checkout_phone', '').strip(),
+            "Email": request.POST.get('checkout_email', '').strip(),
+            "OrderNotes": request.POST.get('order_notes', '').strip()
+        }
+
+        # Calculate order total
+        total_amount = 0  # Initialize total amount
+        items = []  # List to store formatted items
+
+        for item in cart_items:
+            product = products_collection.find_one({"_id": ObjectId(item['product_id'])})
+            if product:  # Check if the product exists
+                price = product.get('price', 0)  # Get price, default to 0 if not found
+                quantity = item.get('quantity', 1)  # Default to 1 if not found
+                subtotal = price * quantity  # Calculate subtotal
+
+                # Append item in the correct format for place_order
+                items.append({
+                    "product_id": str(item["product_id"]),
+                    "product_name": product.get("name", "Unknown Product"),  # Use DB name
+                    "quantity": quantity,
+                    "price_per_unit": price,
+                    "subtotal": subtotal
+                })
+
+                total_amount += subtotal  # Update total amount
+
+        print("Total amt: ", total_amount)  # Print the total amount
+
+        # Generate unique transaction ID
+        transaction_id = f"TXN{ObjectId()}"
+
+
+
+        # Place order
+        order_id = MongoDBOrders.place_order(
+            user_id=user_id,
+            items=items,
+            total_amount=total_amount,
+            shipping_address=shipping_address,
+            payment_status="Pending",
+            transaction_id=transaction_id,
+            estimated_delivery_days=5
+        )
+
+        # Clear cart after order
+        cart_collection.update_one({"user_id": ObjectId(user_id)}, {"$set": {"products": []}})
+
+        # Redirect to order confirmation
+        return redirect('order_complete')
+
+    # Render checkout page
+    user_id = request.session.get('user_id')
+    context = {}
+
+    if user_id:
+            # Fetch user data if needed
+            user_data = MongoDBUser.get_user_by_id(user_id)  # Replace with your actual method to get user data
+            context['user'] = user_data
+
+            # Fetch cart items for the user
+            cart = cart_collection.find_one({"user_id": user_id})  # Fetch the user's cart
+            if cart:
+                context['cart_items'] = cart.get('products', [])
+                # Calculate total with error handling
+                cart_total = 0
+                for item in context['cart_items']:
+                    try:
+                        # Fetch product details from the database
+                        product = products_collection.find_one({"_id": ObjectId(item['product_id'])})
+                        if product:
+                            price = product.get('price', 0)  # Default to 0 if price is not found
+                            quantity = item['quantity']  # Access the quantity
+                            cart_total += price * quantity  # Calculate total
+                        else:
+                            print(f"Product not found for ID: {item['product_id']}")
+                    except Exception as e:
+                        print(f"Error fetching product details: {e}")
+
+                context['cart_total'] = cart_total  # Set the total in context
+
+            return render(request, 'USER/CheckOut.html', context)
 @login_required
 def order_complete(request):
     # Verify order exists and is complete
@@ -1235,43 +1346,43 @@ def update_cart_total_price(cart):
 # Place Order API
 orders_collection = settings.MONGO_DB["orders"]
 
-@api_view(['POST'])
-def place_order(request):
-    if request.method == "POST":
-        try:
-            body = json.loads(request.body.decode('utf-8'))
-            user_id = body.get("user_id")
-            shipping_address = body.get("shipping_address")
+# @api_view(['POST'])
+# def place_order(request):
+#     if request.method == "POST":
+#         try:
+#             body = json.loads(request.body.decode('utf-8'))
+#             user_id = body.get("user_id")
+#             shipping_address = body.get("shipping_address")
 
-            if not user_id or not shipping_address:
-                return JsonResponse({"error": "Missing required fields"}, status=400)
+#             if not user_id or not shipping_address:
+#                 return JsonResponse({"error": "Missing required fields"}, status=400)
 
-            # Retrieve the user's cart
-            cart = cart_collection.find_one({"user_id": ObjectId(user_id)})
+#             # Retrieve the user's cart
+#             cart = cart_collection.find_one({"user_id": ObjectId(user_id)})
 
-            if not cart or not cart["products"]:
-                return JsonResponse({"error": "Cart is empty, cannot place order"}, status=400)
+#             if not cart or not cart["products"]:
+#                 return JsonResponse({"error": "Cart is empty, cannot place order"}, status=400)
 
-            # Create an order
-            order_data = {
-                "user_id": ObjectId(user_id),
-                "products": cart["products"],
-                "order_status": "pending",
-                "total_price": cart["total_price"],
-                "created_at": datetime.now(),
-                "shipping_address": shipping_address,
-            }
-            result = orders_collection.insert_one(order_data)
+#             # Create an order
+#             order_data = {
+#                 "user_id": ObjectId(user_id),
+#                 "products": cart["products"],
+#                 "order_status": "pending",
+#                 "total_price": cart["total_price"],
+#                 "created_at": datetime.now(),
+#                 "shipping_address": shipping_address,
+#             }
+#             result = orders_collection.insert_one(order_data)
 
-            # Empty the cart after placing the order
-            cart_collection.update_one({"user_id": ObjectId(user_id)}, {"$set": {"products": [], "total_price": 0}})
+#             # Empty the cart after placing the order
+#             cart_collection.update_one({"user_id": ObjectId(user_id)}, {"$set": {"products": [], "total_price": 0}})
 
-            return JsonResponse({"message": "Order placed successfully", "order_id": str(result.inserted_id)})
+#             return JsonResponse({"message": "Order placed successfully", "order_id": str(result.inserted_id)})
 
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+#         except Exception as e:
+#             return JsonResponse({"error": str(e)}, status=500)
 
-    return JsonResponse({"error": "Invalid request method"}, status=405)
+#     return JsonResponse({"error": "Invalid request method"}, status=405)
 
 # Get UserCart API
 @api_view(['GET'])
@@ -1766,7 +1877,7 @@ def cart(request):
                                 "id": str(product["_id"]),
                                 "name": product["name"],
                                 "image": {
-                                    "url": product["image_url"]
+                                    "url": product["images"][0]
                                 },
                                 "price": price
                             },

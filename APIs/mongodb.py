@@ -4,6 +4,7 @@ from SHOPNIQ.settings import MONGO_DB
 from bson import ObjectId
 import pytz
 import datetime as dt
+from datetime import datetime, timedelta
 
 # Connect to MongoDB client and set the database
 # client = MongoClient("mongodb://localhost:27017/")
@@ -677,7 +678,7 @@ class MongoDBCategory:
 
     @staticmethod
     def decrement_product_count(category_id):
-        """Decrease product count for the given category, ensuring it doesn’t go below zero."""
+        """Decrease product count for the given category, ensuring it doesn't go below zero."""
         categories_collection.update_one(
             {"_id": ObjectId(category_id), "product_count": {"$gt": 0}},  # Prevent negative count
             {"$inc": {"product_count": -1}}
@@ -694,7 +695,7 @@ class MongoDBCategory:
             }
         return None
     
-    
+
     @staticmethod
     def get_categories_by_query(query):
         """
@@ -714,12 +715,15 @@ class MongoDBCategory:
 
 from bson import ObjectId
 import datetime
+from datetime import datetime, timedelta
+from bson import ObjectId
 
-orders_collection = MONGO_DB["orders"]
+orders_collection = MONGO_DB["orders"]  # Assuming you have an 'orders' collection
 
 class MongoDBOrders:
     @staticmethod
-    def place_order(user_id, items, total_amount, shipping_address, payment_status="Pending", transaction_id=None, estimated_delivery_days=5):
+
+    def place_order(user_id, items, total_amount, shipping_address, payment_status="Pending", transaction_id=None, estimated_delivery_days=5, applied_coupon="XYZOFF50"):
         """
         Places an order with multiple items and sets an estimated delivery date.
         """
@@ -735,13 +739,25 @@ class MongoDBOrders:
                 }
                 for item in items
             ],
+            "FirstName": shipping_address["FirstName"],
+            "LastName": shipping_address["LastName"],
+            "CompanyName": shipping_address["CompanyName"],
+            "CountryRegion": shipping_address["CountryRegion"],
+            "StreetAddress": shipping_address["StreetAddress"],
+            "StreetAddress2": shipping_address["StreetAddress2"],
+            "City": shipping_address["City"],
+            "Zipcode": shipping_address["Zipcode"],
+            "Phone": shipping_address["Phone"],
+            "Email": shipping_address["Email"],
+            "OrderNotes": shipping_address["OrderNotes"],
             "TotalAmount": total_amount,
-            "ShippingAddress": shipping_address,  # User’s shipping address
-            "Status": "Pending",  # Order status
+            "AppliedCoupon": applied_coupon,
+            "ShippingAddress": shipping_address,  # Stores entire shipping address
+            "Status": "Pending",  # Initial order status
             "PaymentStatus": payment_status,  # Payment status
-            "TransactionID": transaction_id,  # Payment transaction ID
-            "OrderDate": datetime.datetime.utcnow(),  # Order timestamp
-            "EstimatedDelivery": datetime.datetime.utcnow() + datetime.timedelta(days=estimated_delivery_days),  # Estimated delivery date
+            "TransactionID": transaction_id,  # Unique transaction ID
+            "OrderDate": datetime.utcnow(),  # Timestamp of order placement
+            "EstimatedDelivery": datetime.utcnow() + timedelta(days=estimated_delivery_days),  # Expected delivery date
             "Tracking": [],  # Stores tracking updates
             "RefundStatus": None,  # Tracks refund status if applicable
             "Cancelled": False  # Order cancellation flag
@@ -749,6 +765,7 @@ class MongoDBOrders:
 
         result = orders_collection.insert_one(order_data)
         return str(result.inserted_id)
+
 
     @staticmethod
     def get_orders_by_user(user_id):
@@ -845,35 +862,48 @@ class MongoDBOrders:
     @staticmethod
     def serialize_order(order):
         """
-        Converts the MongoDB order document into a dictionary format.
+        Converts the MongoDB order document into a dictionary format for API responses or frontend rendering.
         """
         if order:
             return {
                 "OrderID": str(order["_id"]),
                 "UserID": str(order["UID"]),
-                "TotalAmount": order["TotalAmount"],
-                "ShippingAddress": order["ShippingAddress"],
-                "Status": order["Status"],
-                "PaymentStatus": order["PaymentStatus"],
-                "TransactionID": order.get("TransactionID"),
-                "OrderDate": order["OrderDate"],
+                "TotalAmount": order.get("TotalAmount", 0),
+                "AppliedCoupon": order.get("AppliedCoupon", None),
+                "ShippingAddress": {
+                    "FirstName": order.get("FirstName", ""),
+                    "LastName": order.get("LastName", ""),
+                    "CompanyName": order.get("CompanyName", ""),
+                    "CountryRegion": order.get("CountryRegion", ""),
+                    "StreetAddress": order.get("StreetAddress", ""),  # Added missing field
+                    "StreetAddress2": order.get("StreetAddress2", ""),
+                    "City": order.get("City", ""),
+                    "Zipcode": order.get("Zipcode", ""),
+                    "Phone": order.get("Phone", ""),
+                    "Email": order.get("Email", ""),
+                    "OrderNotes": order.get("OrderNotes", "")  # Added order notes
+                },
+                "Status": order.get("Status", "Pending"),
+                "PaymentStatus": order.get("PaymentStatus", "Pending"),
+                "TransactionID": order.get("TransactionID", None),
+                "OrderDate": order.get("OrderDate"),
                 "EstimatedDelivery": order.get("EstimatedDelivery"),
-                "RefundStatus": order.get("RefundStatus"),
+                "RefundStatus": order.get("RefundStatus", None),
                 "Cancelled": order.get("Cancelled", False),
                 "Tracking": order.get("Tracking", []),
                 "Items": [
                     {
                         "ProductID": str(item["PID"]),
-                        "ProductName": item["ProductName"],
-                        "Quantity": item["Quantity"],
-                        "PricePerUnit": item["PricePerUnit"],
-                        "Subtotal": item["Subtotal"]
+                        "ProductName": item.get("ProductName", ""),
+                        "Quantity": item.get("Quantity", 0),
+                        "PricePerUnit": item.get("PricePerUnit", 0),
+                        "Subtotal": item.get("Subtotal", 0)
                     }
-                    for item in order["Items"]
+                    for item in order.get("Items", [])
                 ]
             }
         return None
-    
+
 
 
 
