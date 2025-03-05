@@ -1,0 +1,210 @@
+
+{% load static %}
+<footer style="
+position: fixed;
+bottom: 0;
+left: 0;
+right: 0;
+height: 72px;
+background: #f8f9fa;
+box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+border-radius: 24px 24px 0 0;
+padding: 8px 0;
+z-index: 1000;
+backdrop-filter: blur(10px);
+background: rgba(255, 255, 255, 0.95);
+">
+<div style="
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 100%;
+    padding: 0 8px;
+">
+    <!-- Home -->
+    <a href="#" style="
+        text-decoration: none;
+        color: #5f6368;
+        padding: 8px;
+        flex: 1;
+        text-align: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
+    " class="active">
+        <div style="position: relative;">
+            <i class='bx bx-home' style="
+                font-size: 24px;
+                display: block;
+                margin-bottom: 4px;
+                color: #1a73e8;
+                transition: all 0.2s ease;
+            "></i>
+            <span style="
+                position: absolute;
+                bottom: -8px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 4px;
+                height: 4px;
+                background: #1a73e8;
+                border-radius: 50%;
+            "></span>
+        </div>
+        <span style="
+            font-size: 12px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+            color: #1a73e8;
+        ">Home</span>
+    </a>
+
+    <!-- Shop -->
+    <a href="#" style="
+        text-decoration: none;
+        color: #5f6368;
+        padding: 8px;
+        flex: 1;
+        text-align: center;
+        transition: all 0.2s ease;
+    ">
+        <i class='bx bx-store' style="
+            font-size: 24px;
+            display: block;
+            margin-bottom: 6px;
+        "></i>
+        <span style="
+            font-size: 12px;
+            font-family: 'Roboto', sans-serif;
+        ">Shop</span>
+    </a>
+
+    <!-- Cart -->
+    <a href="#" style="
+        text-decoration: none;
+        color: #5f6368;
+        padding: 8px;
+        flex: 1;
+        text-align: center;
+        position: relative;
+        transition: all 0.2s ease;
+    ">
+        <div style="position: relative;">
+            <i class='bx bx-cart' style="
+                font-size: 24px;
+                display: block;
+                margin-bottom: 6px;
+            "></i>
+            <span style="
+                position: absolute;
+                top: -6px;
+                right: 4px;
+                background: #28a745;
+                color: white;
+                font-size: 10px;
+                min-width: 16px;
+                height: 16px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 4px;
+                font-weight: 500;
+            ">2</span>
+        </div>
+        <span style="
+            font-size: 12px;
+            font-family: 'Roboto', sans-serif;
+        ">Cart</span>
+    </a>
+
+    <!-- Wishlist -->
+    <a href="#" style="
+        text-decoration: none;
+        color: #5f6368;
+        padding: 8px;
+        flex: 1;
+        text-align: center;
+        position: relative;
+        transition: all 0.2s ease;
+    ">
+        <div style="position: relative;">
+            <i class='bx bx-bookmark-heart' style="
+                font-size: 24px;
+                display: block;
+                margin-bottom: 6px;
+            "></i>
+            <span style="
+                position: absolute;
+                top: -6px;
+                right: 4px;
+                background: #dc3545;
+                color: white;
+                font-size: 10px;
+                min-width: 16px;
+                height: 16px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 4px;
+                font-weight: 500;
+            ">3</span>
+        </div>
+        <span style="
+            font-size: 12px;
+            font-family: 'Roboto', sans-serif;
+        ">Wishlist</span>
+    </a>
+
+    <!-- Profile -->
+    <a href="#" style="
+        text-decoration: none;
+        color: #5f6368;
+        padding: 8px;
+        flex: 1;
+        text-align: center;
+        transition: all 0.2s ease;
+    ">
+        <div style="
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #6c757d;
+            margin: 0 auto 6px;
+            overflow: hidden;
+        ">
+            <!-- Add profile image here -->
+            <!-- <img src="profile.jpg" style="width:100%;height:100%;object-fit:cover"> -->
+        </div>
+        <span style="
+            font-size: 12px;
+            font-family: 'Roboto', sans-serif;
+        ">Profile</span>
+    </a>
+</div>
+
+<style>
+  /* Add hover/active states */
+a:hover {
+  transform: translateY(-2px);
+}
+
+a:active {
+  transform: translateY(1px);
+  opacity: 0.8;
+}
+
+/* Add animation for badges */
+@keyframes badge-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.wishlist-amount, .cart-badge {
+  animation: badge-bounce 0.3s ease;
+}
+</style>
+</footer>
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
