@@ -43,47 +43,124 @@
   <main>
     <div class="mb-4 pb-4"></div>
     <section class="my-account container">
-      <h2 class="page-title">Addresses</h2>
-      <div class="row">
-        {% include 'partials/dashboardSidebar.html' %}
-        <div class="col-lg-9">
-          <div class="page-content my-account__address">
-            <p class="notice">The following addresses will be used on the checkout page by default.</p>
-            <div class="my-account__address-list">
-              <div class="my-account__address-item">
-                <div class="my-account__address-item__title">
-                  <h5>Billing Address</h5>
-                  <a href="#">Edit</a>
+        <h2 class="page-title">Shipping Address</h2>
+        <div class="row">
+            {% include 'partials/dashboardSidebar.html' %}
+            <div class="col-lg-9">
+                <div class="page-content my-account__address">
+                    <p class="notice">The following address will be used on the checkout page by default.</p>
+                    <div class="my-account__address-list">
+
+                        <!-- Shipping Address -->
+                        <div class="my-account__address-item">
+                            <div class="my-account__address-item__title">
+                                <h5>Shipping Address</h5>
+                                <a href="javascript:void(0);" onclick="toggleEditForm()">
+                                    Edit
+                                </a>
+                            </div>
+
+                            <!-- Display Address or Placeholder if not set -->
+                            <div class="my-account__address-item__detail">
+                              {% if user.address %}
+                                  <p>{{ user.address.first_name }} {{ user.address.last_name }}</p>
+                                  <p>{{ user.address.street }}, {{ user.address.city }} - {{ user.address.pincode }},</p>
+                                  <p>{{ user.address.state }}, {{ user.address.country }}</p>
+                                  <br>
+                                  <p>{{ user.email }}</p>
+                                  <p>{{ user.phone_number }}</p>
+                              {% else %}
+                                  <p>No Shipping Address Added</p>
+                              {% endif %}
+                          </div>
+                          
+                          <!-- Shipping Address Edit Form -->
+                          <form method="post" action="{% url 'save_address' %}" class="edit-form p-4 border rounded" id="edit-form" style="display:none;">
+                            {% csrf_token %}
+                            <h4 class="mb-4">Edit Shipping Address</h4>
+                            
+                            <div class="row g-3">
+                                <!-- First Name -->
+                                <div class="col-md-6">
+                                    <label for="first_name" class="form-label">First Name</label>
+                                    <input type="text" name="first_name" id="first_name" 
+                                           class="form-control" 
+                                           value="{{ user.address.first_name|default:'' }}" required>
+                                </div>
+                        
+                                <!-- Last Name -->
+                                <div class="col-md-6">
+                                    <label for="last_name" class="form-label">Last Name</label>
+                                    <input type="text" name="last_name" id="last_name" 
+                                           class="form-control" 
+                                           value="{{ user.address.last_name|default:'' }}" required>
+                                </div>
+                        
+                                <!-- Street Address -->
+                                <div class="col-12">
+                                    <label for="street" class="form-label">Street Address</label>
+                                    <input type="text" name="street" id="street" 
+                                           class="form-control" 
+                                           value="{{ user.address.street|default:'' }}" required>
+                                </div>
+                        
+                                <!-- City -->
+                                <div class="col-md-6">
+                                    <label for="city" class="form-label">City</label>
+                                    <input type="text" name="city" id="city" 
+                                           class="form-control" 
+                                           value="{{ user.address.city|default:'' }}" required>
+                                </div>
+                        
+                                <!-- Pincode -->
+                                <div class="col-md-6">
+                                    <label for="pincode" class="form-label">Pincode</label>
+                                    <input type="text" name="pincode" id="pincode" 
+                                           class="form-control" 
+                                           value="{{ user.address.pincode|default:'' }}" required>
+                                </div>
+                        
+                                <!-- State -->
+                                <div class="col-md-6">
+                                    <label for="state" class="form-label">State</label>
+                                    <input type="text" name="state" id="state" 
+                                           class="form-control" 
+                                           value="{{ user.address.state|default:'' }}" required>
+                                </div>
+                        
+                                <!-- Country -->
+                                <div class="col-md-6">
+                                    <label for="country" class="form-label">Country</label>
+                                    <input type="text" name="country" id="country" 
+                                           class="form-control" 
+                                           value="{{ user.address.country|default:'' }}" required>
+                                </div>
+                            </div>
+                            
+                            <!-- Buttons -->
+                            <div class="mt-4 d-flex justify-content-end gap-2">
+                                <button type="submit" class="btn btn-primary">Save Address</button>
+                                <button type="button" class="btn btn-secondary" onclick="toggleEditForm()">Cancel</button>
+                            </div>
+                        </form>
+                        
+                        </div>
+
+                    </div>
                 </div>
-                <div class="my-account__address-item__detail">
-                  <p>Daniel Robinson</p>
-                  <p>1418 River Drive, Suite 35 Cottonhall, CA 9622</p>
-                  <p>United States</p>
-                  <br>
-                  <p>sale@uomo.com</p>
-                  <p>+1 246-345-0695</p>
-                </div>
-              </div>
-              <div class="my-account__address-item">
-                <div class="my-account__address-item__title">
-                  <h5>Shipping Address</h5>
-                  <a href="#">Edit</a>
-                </div>
-                <div class="my-account__address-item__detail">
-                  <p>Daniel Robinson</p>
-                  <p>1418 River Drive, Suite 35 Cottonhall, CA 9622</p>
-                  <p>United States</p>
-                  <br>
-                  <p>sale@uomo.com</p>
-                  <p>+1 246-345-0695</p>
-                </div>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
     </section>
-  </main>
+</main>
+
+<!-- JavaScript to toggle edit form -->
+<script>
+    function toggleEditForm() {
+        const form = document.getElementById('edit-form');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+</script>
+
 
   <div class="mb-5 pb-xl-5"></div>
   

@@ -80,7 +80,6 @@ class MongoDBUser:
             "date_of_register": dt.datetime.now(dt.timezone.utc),
             "last_login": dt.datetime.now(dt.timezone.utc),
             "session_timing": "120 min" if is_google_auth else None,
-            "address": [],
             "orders": []
         }
 
@@ -103,6 +102,60 @@ class MongoDBUser:
             except Exception as e:
                 print(f"❌ Error fetching user by ID: {e}")
                 return None
+
+    
+    @staticmethod
+    def save_address(user_id, address_data):
+        """
+        Save or update the address for a user.
+        
+        Args:
+            user_id (str): The ID of the user.
+            address_data (dict): The address data to save.
+        """
+        try:
+            # Ensure the user_id is converted to ObjectId
+            user_id = ObjectId(user_id)
+            
+            # Add timestamp to the address data
+            address_data["updated_at"] = dt.datetime.now(dt.timezone.utc)
+            
+            # Update the user document with the new address as a dictionary
+            result = users_collection.update_one(
+                {"_id": user_id},
+                {"$set": {"address": address_data}}
+            )
+            
+            return result.modified_count > 0
+        except Exception as e:
+            print(f"❌ Error saving address: {e}")
+            return False
+
+    @staticmethod
+    def get_address(user_id):
+        """
+        Fetch the address for a user.
+        
+        Args:
+            user_id (str): The ID of the user.
+        
+        Returns:
+            dict: The address of the user, or an empty dict if none is found.
+        """
+        try:
+            # Ensure the user_id is converted to ObjectId
+            user_id = ObjectId(user_id)
+            
+            # Fetch the user document and return the address
+            user = users_collection.find_one(
+                {"_id": user_id},
+                {"address": 1}  # Only fetch the address field
+            )
+            
+            return user.get("address", {}) if user else {}
+        except Exception as e:
+            print(f"❌ Error fetching address: {e}")
+            return {}
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId

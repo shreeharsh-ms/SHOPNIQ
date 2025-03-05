@@ -16,6 +16,8 @@ urlpatterns = [
     path('api/google/login/<str:mode>/', views.google_login, name='google_login'),
     path('api/google/callback/', views.google_callback, name='google_callback'),
 
+    # path('user-addresses/', views.user_addresses, name='user_addresses'),-
+    path('save-address/', views.save_address, name='save_address'),
     # path("api/auth/google/", views.google_auth, name="google_auth"),
     
     path('api/logout/', views.logout_user, name='logout_user'),

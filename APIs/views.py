@@ -571,8 +571,55 @@ def get_cart_products(request):
 def acc_details(request):
     return render(request, 'USER/Acc_details.html')
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
 def address(request):
-    return render(request, 'USER/Address.html')
+    """
+    Fetch and display the user's shipping address.
+    """
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    user_id = str(request.user.id)  # Get the logged-in user's ID
+    user_data = MongoDBUser.get_user_by_id(user_id)  # Fetch the user data
+    address = user_data.get("address", {}) if user_data else {}  # Get the address as a dictionary
+
+    context = {
+        'address': address,
+        'user': user_data,
+    }
+    return render(request, 'USER/Address.html', context)
+
+
+def save_address(request):
+    """
+    Handle the address form submission and save the address to the database.
+    """
+    if request.method == 'POST' and request.user.is_authenticated:
+        user_id = str(request.user.id)
+
+        # Gather form data into the address_data dictionary
+        address_data = {
+            "first_name": request.POST.get("first_name"),
+            "last_name": request.POST.get("last_name"),
+            "street": request.POST.get("street"),
+            "city": request.POST.get("city"),
+            "pincode": request.POST.get("pincode"),
+            "state": request.POST.get("state"),
+            "country": request.POST.get("country"),
+            "email": request.user.email,  # Auto-fill with logged-in user's email
+            "phone": request.POST.get("phone"),
+        }
+
+        # Save the address using the existing static method
+        if MongoDBUser.save_address(user_id, address_data):
+            messages.success(request, "Shipping address updated successfully!")
+        else:
+            messages.error(request, "Failed to save the shipping address.")
+
+    return redirect('address')
+
 
 from bson import ObjectId
 from django.shortcuts import render, redirect
@@ -2231,3 +2278,4 @@ def delete_expired_coupons(request):
     """Admin API to delete expired coupons"""
     result = coupon_manager.delete_expired_coupons()
     return Response(result, status=status.HTTP_200_OK)
+
