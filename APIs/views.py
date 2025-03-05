@@ -2123,7 +2123,6 @@ def login_dashboard(request):
 def order_details(request, order_no):
 
     order = MongoDBOrders.get_order_by_order_no(order_no)
-    # print(order)
     user_id = order['UserID']
     print(user_id)
     customer_details = MongoDBUser.get_user_by_id(user_id)
