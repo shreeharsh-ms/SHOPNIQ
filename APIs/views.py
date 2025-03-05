@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from APIs.mongodb import MongoDBUser, MongoDBReview,MongoDBDescription,MongoDBCategory,MongoDBProduct,MongoDBBrand ,MongoDBCart, MongoDBOrders  # Import MongoDB Helper
+from APIs.mongodb import MongoDBUser, MongoDBReview,MongoDBDescription,MongoDBCategory,MongoDBProduct,MongoDBBrand ,MongoDBCart, MongoDBOrders, MongoDBCustomers  # Import MongoDB Helper
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
@@ -155,6 +155,7 @@ def google_callback(request):
 
     google_email = user_info.get("email")
     google_name = user_info.get("name")
+    google_picture = user_info.get("picture")  # Get the profile image URL
 
     if not google_email:
         return JsonResponse({"error": "Unable to get email from Google"}, status=400)
@@ -175,7 +176,14 @@ def google_callback(request):
         if user_data:
             return JsonResponse({"error": "User already exists. Please sign in instead."}, status=403)
 
-        new_user = MongoDBUser.create_user(email=google_email, password=None, username=google_name, role="customer")
+        # Create a new user with the profile image
+        new_user = MongoDBUser.create_user(
+            email=google_email,
+            password=None,
+            username=google_name,
+            role="customer",
+            profile_image=google_picture  # Store the profile image URL
+        )
 
         user = MongoUser(new_user)
         request.session["user_id"] = str(user.id)
@@ -553,6 +561,7 @@ def checkout(request):
             "StreetAddress": request.POST.get('checkout_street_address', '').strip(),
             "StreetAddress2": request.POST.get('checkout_street_address_2', '').strip(),
             "City": request.POST.get('checkout_city', '').strip(),
+            "State": request.POST.get('checkout_state', '').strip(),
             "Zipcode": request.POST.get('checkout_zipcode', '').strip(),
             "Phone": request.POST.get('checkout_phone', '').strip(),
             "Email": request.POST.get('checkout_email', '').strip(),
@@ -569,6 +578,7 @@ def checkout(request):
                 price = product.get('price', 0)  # Get price, default to 0 if not found
                 quantity = item.get('quantity', 1)  # Default to 1 if not found
                 subtotal = price * quantity  # Calculate subtotal
+                img = product.get('banner_img','img') # Get
 
                 # Append item in the correct format for place_order
                 items.append({
@@ -576,7 +586,8 @@ def checkout(request):
                     "product_name": product.get("name", "Unknown Product"),  # Use DB name
                     "quantity": quantity,
                     "price_per_unit": price,
-                    "subtotal": subtotal
+                    "subtotal": subtotal,
+                    "image_url":img
                 })
 
                 total_amount += subtotal  # Update total amount
@@ -598,9 +609,11 @@ def checkout(request):
             transaction_id=transaction_id,
             estimated_delivery_days=5
         )
+        print("Order ID:", order_id)  # Print the order ID
 
         # Clear cart after order
         cart_collection.update_one({"user_id": ObjectId(user_id)}, {"$set": {"products": []}})
+        request.session['order_id'] = order_id
 
         # Redirect to order confirmation
         return redirect('order_complete')
@@ -642,9 +655,13 @@ def order_complete(request):
     if 'order_id' not in request.session:
         messages.warning(request, 'No order to display')
         return redirect('cart')
-        
+
+    order_id = request.session['order_id']
+    order = MongoDBOrders.get_order_by_id(order_id)
+    print("Order:", order) 
+    
     # Your order complete view code
-    return render(request, 'USER/order_complete.html')
+    return render(request, 'USER/Conformation.html')
 
 def dashboard(request):
     return render(request, 'USER/Dashboard.html')
@@ -1028,7 +1045,7 @@ def get_product_details(request, product_id):
             return JsonResponse({"error": "Product not found"}, status=404)
 
         # Fetch category details using category_id from the categories collection
-        category = categories_collection.find_one({"_id": ObjectId(product["category_id"])})
+        category = MongoDBCategory.categories_collection.find_one({"_id": ObjectId(product["category_id"])})
         category_name = category["name"] if category else "Unknown Category"
 
         # Extract product details
@@ -1282,6 +1299,7 @@ def add_to_cart(request):
 
         # Add product to cart using MongoDBCart class
         result = MongoDBCart.add_to_cart(user_id, product_id, quantity)
+        print(result)
 
         if not result["success"]:
             print(f"❌ Error adding to cart: {result['error']}")
@@ -2038,11 +2056,63 @@ def admin_dashboard(request):
 def customer_chat(request):
     return render(request, 'Admin/CustomerChat.html')
 
-def customer_details(request):
-    return render(request, 'Admin/CustomerDetails.html')
+def customer_details(request, user_id):
+    """
+    Fetch and display details of a specific customer by user ID.
+    """
+    # Fetch user details using the MongoDBCustomers class
+    user = MongoDBCustomers.get_user_details(user_id)
+
+    # If user is not found, return a 404 error
+    if user is None:
+        return render(request, 'error.html', {"message": "User not found"})
+
+    # Fetch all orders for the user
+    orders = MongoDBOrders.get_orders_by_user(user_id)
+
+    # Fetch product details from the user's orders
+    product_details = MongoDBOrders.get_product_details_from_orders(user_id)
+
+    # Prepare context to pass to the template
+    context = {
+        'user': user,
+        'orders': orders,  # Add orders to the context
+        'product_details': product_details,  # Add product details to the context
+    }
+
+    # Render the CustomerDetails.html template with the context
+    return render(request, 'Admin/CustomerDetails.html', context)
+
+from django.shortcuts import render
+from .mongodb import MongoDBCustomers  # Import the MongoDBCustomers class
 
 def customers_list(request):
-    return render(request, 'Admin/CustomersList.html')
+    # Fetch all registered users
+    all_users = MongoDBCustomers.get_all_users()
+    print("All users", all_users)
+    
+    # Fetch users who have added items to their cart
+    users_with_cart = MongoDBCustomers.get_users_with_cart()
+    print("Users with cart", users_with_cart)
+    
+    # Fetch users who have visited the site
+    users_who_visited = MongoDBCustomers.get_users_who_visited()
+    print("Users who visited", users_who_visited)
+    
+    # Fetch users who have ordered products
+    users_who_ordered = MongoDBCustomers.get_users_who_ordered()
+    print("Users who ordered", users_who_ordered)
+
+    # Prepare context to pass to the template
+    context = {
+        'all_users': all_users,
+        'users_with_cart': users_with_cart,
+        'users_who_visited': users_who_visited,
+        'users_who_ordered': users_who_ordered,
+    }
+
+    # Render the CustomersList.html template with the context
+    return render(request, 'Admin/CustomersList.html', context)
 
 def customer_stats(request):
     return render(request, 'Admin/CustomerStats.html')
@@ -2050,11 +2120,25 @@ def customer_stats(request):
 def login_dashboard(request):
     return render(request, 'Admin/LoginDashoard.html')
 
-def orders_detail(request):
-    return render(request, 'Admin/OrdersDetail.html')
+def order_details(request, order_no):
+
+    order = MongoDBOrders.get_order_by_order_no(order_no)
+    # print(order)
+    user_id = order['UserID']
+    print(user_id)
+    customer_details = MongoDBUser.get_user_by_id(user_id)
+    print(customer_details)
+    customer_username = customer_details['username']
+    
+    print(order)
+    if not order:
+        return render(request, 'error_page.html', {'message': 'Order not found'})
+    
+    return render(request, 'Admin/OrdersDetail.html', {"order": order, 'customer_username': customer_username})
 
 def orders_list(request):
-    return render(request, 'Admin/OrdersList.html')
+    orders = MongoDBOrders.get_all_orders()
+    return render(request, 'Admin/OrdersList.html', {"orders": orders})
 
 
 @login_required
@@ -2067,3 +2151,39 @@ def editBanners(request):
 
 def productsList(request):
     return render(request, 'Admin/productsList.html')
+
+
+# COUPONS SECTION
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
+from .coupons_manager import MongoDBCoupons  # Import your class
+
+coupon_manager = MongoDBCoupons()
+
+@api_view(["POST"])
+def generate_coupons(request):
+    """Admin API to generate coupons"""
+    count = request.data.get("count", 50)
+    discount = request.data.get("discount", "10%")
+    validity_days = request.data.get("validity_days", 30)
+    coupons = coupon_manager.generate_coupons(count, discount, validity_days)
+    return Response({"message": "Coupons generated successfully", "coupons": coupons}, status=status.HTTP_201_CREATED)
+
+@api_view(["GET"])
+def validate_coupon(request, code):
+    """User API to check coupon validity"""
+    result = coupon_manager.validate_coupon(code)
+    return Response(result, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def redeem_coupon(request, code):
+    """User API to redeem a coupon"""
+    result = coupon_manager.redeem_coupon(code)
+    return Response(result, status=status.HTTP_200_OK)
+
+@api_view(["DELETE"])
+def delete_expired_coupons(request):
+    """Admin API to delete expired coupons"""
+    result = coupon_manager.delete_expired_coupons()
+    return Response(result, status=status.HTTP_200_OK)

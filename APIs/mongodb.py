@@ -26,6 +26,7 @@ contact_messages = MONGO_DB["contact_messages"]
 reviews_collection = MONGO_DB["reviews"]
 categories_collection = MONGO_DB["categories"]
 brands_collection = MONGO_DB["brands"]
+cart_collection = MONGO_DB["cart"]
 db = MONGO_DB
 
 ist = pytz.timezone('Asia/Kolkata')
@@ -37,7 +38,7 @@ contact_messages = MONGO_DB["contact_messages"]
 
 class MongoDBUser:
     @staticmethod
-    def create_user(username, email, password, role="user", phone_number=None):  # Default role = user
+    def create_user(username, email, password, phone_number, role="user"):  # Default role = user
         # Hashing the password
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
@@ -60,7 +61,7 @@ class MongoDBUser:
         return result.inserted_id
 
     @staticmethod
-    def create_user(username, email, role, password=None,):
+    def create_user(username, email, role,profile_image, password=None, phone_number=None):
         """ Create a new user in MongoDB. """
         existing_user = users_collection.find_one({"email": email})
         
@@ -73,6 +74,8 @@ class MongoDBUser:
             "email": email,
             "password": password if password else None,  # Allow None password for Google OAuth
             "role": role,
+            "phone_number": phone_number,
+            "profile_image": profile_image,
             "date_of_register": dt.datetime.now(dt.timezone.utc),  # Use timezone-aware UTC now
             "last_login": dt.datetime.now(dt.timezone.utc),  # Use timezone-aware UTC now
             "session_timing": "120 min",
@@ -719,23 +722,61 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 
 orders_collection = MONGO_DB["orders"]  # Assuming you have an 'orders' collection
+order_counters_collection = MONGO_DB["order_counters"]
 
 class MongoDBOrders:
+
+    @staticmethod
+    def generate_order_number():
+        """
+        Generates a sequential order number in the format ORD-YYYYMMDD-XXXX.
+        Starts from ORD-YYYYMMDD-1001 and increments without repeating.
+        """
+        today_date = datetime.now().strftime("%Y%m%d")  # Get current date in YYYYMMDD format
+        
+        # Find and update counter atomically
+        counter_data = order_counters_collection.find_one_and_update(
+            {"date": today_date},
+            {"$inc": {"last_order_no": 1}},  # Increment last order number
+            upsert=True,  # If not found, create a new entry
+            return_document=True  # Get updated document
+        )
+        
+        # Initialize order number to 1001 if it's a new day
+        if not counter_data or "last_order_no" not in counter_data:
+            order_number = 1001  # Start from 1001 if it's a new day
+            order_counters_collection.update_one(
+                {"date": today_date},
+                {"$set": {"last_order_no": order_number}}, 
+                upsert=True
+            )
+        else:
+            order_number = counter_data["last_order_no"]
+
+        return f"ORD-{today_date}-{order_number}"  # Return the formatted order number
+
+
+
+
     @staticmethod
 
     def place_order(user_id, items, total_amount, shipping_address, payment_status="Pending", transaction_id=None, estimated_delivery_days=5, applied_coupon="XYZOFF50"):
         """
         Places an order with multiple items and sets an estimated delivery date.
         """
+        ordera_no = MongoDBOrders.generate_order_number()
+        # product_details = MongoDBProduct.get_product_by_id(item["product_id"])
         order_data = {
             "UID": ObjectId(user_id),  # User who placed the order
+            "OrderNo": ordera_no,
             "Items": [
                 {
                     "PID": ObjectId(item["product_id"]),
                     "ProductName": item["product_name"],
                     "Quantity": item["quantity"],
                     "PricePerUnit": item["price_per_unit"],
-                    "Subtotal": item["subtotal"]
+                    "Subtotal": item["subtotal"],
+                    "ImageURL": item["image_url"]  # Add the image URL here
                 }
                 for item in items
             ],
@@ -746,6 +787,7 @@ class MongoDBOrders:
             "StreetAddress": shipping_address["StreetAddress"],
             "StreetAddress2": shipping_address["StreetAddress2"],
             "City": shipping_address["City"],
+            "State": shipping_address["State"],
             "Zipcode": shipping_address["Zipcode"],
             "Phone": shipping_address["Phone"],
             "Email": shipping_address["Email"],
@@ -782,6 +824,21 @@ class MongoDBOrders:
         """
         order = orders_collection.find_one({"_id": ObjectId(order_id)})
         return MongoDBOrders.serialize_order(order) if order else {"error": "Order not found"}
+
+    @staticmethod
+    def get_order_by_order_no(order_no):
+        """
+        Retrieves order details by the unique OrderNo.
+        """
+        order = orders_collection.find_one({"OrderNo": order_no})
+        return MongoDBOrders.serialize_order(order) if order else None
+    @staticmethod
+    def get_all_orders():
+        """
+        Retrieves all orders from the database for the orders list page.
+        """
+        orders = orders_collection.find()
+        return [MongoDBOrders.serialize_order(order) for order in orders] if orders else []
 
     @staticmethod
     def track_order(order_id):
@@ -867,6 +924,7 @@ class MongoDBOrders:
         if order:
             return {
                 "OrderID": str(order["_id"]),
+                "OrderNo": str(order["OrderNo"]),
                 "UserID": str(order["UID"]),
                 "TotalAmount": order.get("TotalAmount", 0),
                 "AppliedCoupon": order.get("AppliedCoupon", None),
@@ -878,6 +936,7 @@ class MongoDBOrders:
                     "StreetAddress": order.get("StreetAddress", ""),  # Added missing field
                     "StreetAddress2": order.get("StreetAddress2", ""),
                     "City": order.get("City", ""),
+                    "State": order.get("State", ""),
                     "Zipcode": order.get("Zipcode", ""),
                     "Phone": order.get("Phone", ""),
                     "Email": order.get("Email", ""),
@@ -893,16 +952,40 @@ class MongoDBOrders:
                 "Tracking": order.get("Tracking", []),
                 "Items": [
                     {
-                        "ProductID": str(item["PID"]),
+                        "PID": str(item["PID"]),
                         "ProductName": item.get("ProductName", ""),
                         "Quantity": item.get("Quantity", 0),
                         "PricePerUnit": item.get("PricePerUnit", 0),
-                        "Subtotal": item.get("Subtotal", 0)
+                        "Subtotal": item.get("Subtotal", 0),
+                        "ImageURL": item.get("ImageURL", "")
                     }
                     for item in order.get("Items", [])
                 ]
             }
         return None
+
+    @staticmethod
+    def get_product_details_from_orders(user_id):
+        """
+        Fetches product details from all orders placed by a specific user.
+        """
+        orders = orders_collection.find({"UID": ObjectId(user_id)})
+        product_details = []
+
+        for order in orders:
+            for item in order.get("Items", []):
+                product_details.append({
+                    "OrderID": str(order["_id"]),
+                    "OrderNo": order.get("OrderNo", ""),
+                    "ProductID": str(item["PID"]),
+                    "ProductName": item.get("ProductName", ""),
+                    "Quantity": item.get("Quantity", 0),
+                    "PricePerUnit": item.get("PricePerUnit", 0),
+                    "Subtotal": item.get("Subtotal", 0),
+                    "ImageURL": item.get("ImageURL", "")
+                })
+
+        return product_details
 
 
 
@@ -1025,3 +1108,163 @@ class MongoDBCart:
             "created_at": cart_item.get("created_at"),
             "updated_at": cart_item.get("updated_at")
         }
+
+from bson import ObjectId
+
+class MongoDBCustomers:
+    @staticmethod
+    def get_all_users():
+        """
+        Fetch all registered users from the database and serialize them.
+        """
+        users = list(users_collection.find())
+        return [MongoDBCustomers.serialize_user(user) for user in users]
+
+    @staticmethod
+    def get_users_with_cart():
+        """
+        Fetch users who have added items to their cart and serialize them.
+        """
+        user_ids_with_cart = cart_collection.distinct("user_id", {"products": {"$exists": True, "$ne": []}})
+        users = list(users_collection.find({"_id": {"$in": [ObjectId(user_id) for user_id in user_ids_with_cart]}}))
+        return [MongoDBCustomers.serialize_user(user) for user in users]
+
+    @staticmethod
+    def get_users_who_visited():
+        """
+        Fetch users who have visited the site and serialize them.
+        """
+        users = list(users_collection.find({"visited": True}))  # Assuming there's a 'visited' field
+        return [MongoDBCustomers.serialize_user(user) for user in users]
+
+    @staticmethod
+    def get_users_who_ordered():
+        """
+        Fetch users who have ordered products and serialize them.
+        """
+        user_ids = orders_collection.distinct("UID")  # Assuming 'UID' is the user ID in the orders collection
+        users = list(users_collection.find({"_id": {"$in": [ObjectId(user_id) for user_id in user_ids]}}))
+        return [MongoDBCustomers.serialize_user(user) for user in users]
+
+    @staticmethod
+    def get_user_details(user_id):
+        """
+        Fetch details of a specific user by user ID and serialize them.
+        """
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        return MongoDBCustomers.serialize_user(user) if user else None
+
+    @staticmethod
+    def calculate_total_spent(user_id):
+        """
+        Calculate the total amount spent by a specific user.
+        """
+        total_spent = 0
+        # Fetch all orders for the user
+        orders = orders_collection.find({"UID": ObjectId(user_id)})
+        
+        # Sum the total amount from each order
+        for order in orders:
+            total_spent += order.get("TotalAmount", 0)  # Assuming 'TotalAmount' is the field in the order document
+        
+        return total_spent
+
+    @staticmethod
+    def serialize_user(user):
+        """
+        Convert a user document into a dictionary format for API responses or frontend rendering.
+        """
+        if user:
+            print("Date of register", user.get("date_of_register",""))
+            return {
+                "id": str(user["_id"]),  # Convert ObjectId to string
+                "username": user.get("username", ""),
+                "email": user.get("email", ""),
+                "full_name": f"{user.get('first_name', '')} {user.get('last_name', '')}",
+                "visited": user.get("visited", False),
+                "created_at": user.get("date_of_register", ""),
+                "last_order_date": user.get("last_order_date", ""),
+                "orders_count": user.get("orders_count", 0),
+                "loyalty_points": user.get("loyalty_points", 0),
+                "address": user.get("address", ""),
+                "phone_number": user.get("phone_number", ""),
+                "profile_image": user.get("profile_image"),
+                "status": MongoDBCustomers.assign_user_status(user),
+                "total_orders": MongoDBCustomers.count_orders(user['_id']),  # Assign status
+                "total_spent": MongoDBCustomers.calculate_total_spent(user['_id'])  # Calculate total spent
+                # Add any other fields you want to include
+            }
+        
+        return None
+
+    @staticmethod
+    def assign_user_status(user):
+        """
+        Assign a status to the user based on certain criteria.
+        """
+        # Ensure the user has the necessary fields
+        loyalty_points = user.get("loyalty_points", 0)
+        orders_count = user.get("orders_count", 0)
+        created_at = user.get("date_of_register")
+        last_order_date = user.get("last_order_date")
+
+        # Example criteria for assigning status
+        if loyalty_points > 100:
+            return "VIP"
+        elif orders_count > 5:
+            return "loyal"
+        elif created_at and (datetime.now() - created_at).days < 30:
+            print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+            return "new"
+        elif last_order_date and (datetime.now() - last_order_date).days < 30:
+            return "active"
+        elif last_order_date and (datetime.now() - last_order_date).days >= 30:
+            return "repeat"
+        elif user.get("referral_code"):
+            return "referral"
+        else:
+            return "inactive"
+
+    @staticmethod
+    def count_loyalty_points(user_id):
+        """
+        Count the loyalty points for a specific user.
+        """
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        return user.get("loyalty_points", 0) if user else 0
+
+    @staticmethod
+    def count_orders(user_id):
+        """
+        Count the number of orders placed by a specific user.
+        """
+        return orders_collection.count_documents({"UID": ObjectId(user_id)})
+
+    @staticmethod
+    def count_users():
+        """
+        Count the total number of registered users.
+        """
+        return users_collection.count_documents({})
+
+    @staticmethod
+    def count_users_with_cart():
+        """
+        Count the number of users who have items in their cart.
+        """
+        user_ids_with_cart = cart_collection.distinct("user_id", {"products": {"$exists": True, "$ne": []}})
+        return len(user_ids_with_cart)
+
+    @staticmethod
+    def count_users_who_visited():
+        """
+        Count the number of users who have visited the site.
+        """
+        return users_collection.count_documents({"visited": True})
+
+    @staticmethod
+    def count_users_who_ordered():
+        """
+        Count the number of users who have ordered products.
+        """
+        return orders_collection.distinct("UID").count()

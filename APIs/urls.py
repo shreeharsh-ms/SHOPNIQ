@@ -86,21 +86,26 @@ urlpatterns = [
          name='password_reset_complete'),
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('customer-chat/', views.customer_chat, name='customer_chat'),
-    path('customer-details/', views.customer_details, name='customer_details'),
-    path('customers-list/', views.customers_list, name='customers_list'),
+    path('customer-details/<str:user_id>/', views.customer_details, name='customer_details'), # DONE
+    path('customers-list/', views.customers_list, name='customers_list'), # DONE
     path('customer-stats/', views.customer_stats, name='customer_stats'),
     path('login-dashboard/', views.login_dashboard, name='login_dashboard'),
-    path('orders-detail/', views.orders_detail, name='orders_detail'),
-    path('orders-list/', views.orders_list, name='orders_list'),
-    path('add-product/', views.add_product, name='add-product'),
-    path('api/add-product/', views.api_add_product, name='api_add_product'),
-    path('editBanners/', views.editBanners, name='editBanners'),
+    path('order-details/<str:order_no>/', views.order_details, name='order_details'), # DONE
+    path('orders-list/', views.orders_list, name='orders_list'), # DONE
+    path('add-product/', views.add_product, name='add-product'), # DONE BUT NEED TO MODIFY IT
+    path('api/add-product/', views.api_add_product, name='api_add_product'), # IN PROGRESS
+    path('editBanners/', views.editBanners, name='editBanners'), # IN PROGRESS
     path("api/upload-product-images/", views.upload_product_images, name="upload-product-images"),
     path('api/categories/', views.search_categories, name='search_categories'),
     path("cart/products/", views.get_cart_products, name="get_cart_products"),
     path("api/top_rated/", views.top_rated_products, name="top_rated"),
     path("api/latest-products/", views.get_latest_products, name="get_latest_products"),# path('productsList/', views.productsList, name='productsList'),
 
+    # COUPONS APIs
+    path("generate-coupons/", views.generate_coupons, name="generate_coupons"),
+    path("validate-coupon/<str:code>/", views.validate_coupon, name="validate_coupon"),
+    path("redeem-coupon/<str:code>/", views.redeem_coupon, name="redeem_coupon"),
+    path("delete-expired-coupons/", views.delete_expired_coupons, name="delete_expired_coupons"),
 
 
     # TEST
