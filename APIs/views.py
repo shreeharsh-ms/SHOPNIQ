@@ -141,9 +141,15 @@ def google_callback(request):
     }
 
     token_response = requests.post(token_url, data=token_data)
-    token_json = token_response.json()
+    
+    try:
+        token_json = token_response.json()
+    except ValueError as e:
+        print(f"Failed to parse token response JSON: {e}")
+        return JsonResponse({"error": "Failed to authenticate with Google"}, status=400)
 
     if "access_token" not in token_json:
+        print(f"Token Response Error: {token_response.text}")
         return JsonResponse({"error": "Failed to authenticate with Google"}, status=400)
 
     access_token = token_json["access_token"]
@@ -151,16 +157,36 @@ def google_callback(request):
     # Step 2: Fetch user info
     user_info_url = "https://www.googleapis.com/oauth2/v1/userinfo"
     user_info_response = requests.get(user_info_url, headers={"Authorization": f"Bearer {access_token}"})
-    user_info = user_info_response.json()
+
+    try:
+        user_info = user_info_response.json()
+    except ValueError as e:
+        print(f"Failed to parse user info JSON: {e}")
+        return JsonResponse({"error": "Failed to fetch user information"}, status=400)
 
     google_email = user_info.get("email")
     google_name = user_info.get("name")
-    google_picture = user_info.get("picture")  # Get the profile image URL
+    google_picture = user_info.get("picture")
 
     if not google_email:
         return JsonResponse({"error": "Unable to get email from Google"}, status=400)
 
-    # Step 3: Handle Sign-In and Sign-Up
+    # Step 3: Fetch phone number with better error handling
+    phone_info_url = "https://people.googleapis.com/v1/people/me?personFields=phoneNumbers"
+    phone_info_response = requests.get(phone_info_url, headers={"Authorization": f"Bearer {access_token}"})
+
+    google_phone = None
+    if phone_info_response.status_code == 200:
+        try:
+            phone_info = phone_info_response.json()
+            google_phone = phone_info.get("phoneNumbers", [{}])[0].get("value", None)
+        except ValueError as e:
+            print(f"Failed to parse phone info JSON: {e}")
+    else:
+        print(f"Failed to fetch phone info. Status code: {phone_info_response.status_code}")
+        print(f"Response Content: {phone_info_response.text}")
+
+    # Step 4: Handle Sign-In and Sign-Up
     user_data = MongoDBUser.get_user_by_email(google_email)
 
     if mode == "signin":
@@ -176,13 +202,15 @@ def google_callback(request):
         if user_data:
             return JsonResponse({"error": "User already exists. Please sign in instead."}, status=403)
 
-        # Create a new user with the profile image
+        # Create a new user with the profile image and phone number
         new_user = MongoDBUser.create_user(
             email=google_email,
             password=None,
             username=google_name,
-            role="customer",
-            profile_image=google_picture  # Store the profile image URL
+            role="user",
+            profile_image=google_picture,  # Store the profile image URL
+            phone_number=google_phone,
+            is_google_auth=True
         )
 
         user = MongoUser(new_user)
@@ -203,37 +231,54 @@ from .permissions import IsAdmin, IsManager
 from .mongodb import MongoDBUser
 import bcrypt
 
+
 @api_view(['POST'])
 @permission_classes([AllowAny])  # Anyone can register
+
 def register_user(request):
     data = request.data
 
     # Extract the fields from the request data
     username = data.get("username")
     email = data.get("email")
-    password = data.get("password")
+    password = data.get("password")  # Required for normal signup
     phone_number = data.get("phone_number", None)  # Optional field
     role = data.get("role", "user")  # Default role = user
-    address = data.get("address", [])  # Default empty list for address
-    orders = data.get("orders", [])  # Default empty list for orders
+    profile_image = data.get("profile_image", None)  # Optional profile image
+    is_google_auth = data.get("is_google_auth", False)  # Determine signup type
+
+    # Validation
+    if not username or not email:
+        return Response({"error": "Username and email are required."}, status=400)
+    
+    if not is_google_auth and not password:
+        return Response({"error": "Password is required for normal signup."}, status=400)
 
     # Check if the user already exists
     if MongoDBUser.get_user_by_email(email):
-        return Response({"error": "User already exists"}, status=400)
+        return Response({"error": "User already exists."}, status=400)
 
     # Create the user
-    user_id = MongoDBUser.create_user(
-        username=username,
-        email=email,
-        password=password,
-        role=role,
-        phone_number=phone_number
-    )
+    try:
+        user = MongoDBUser.create_user(
+            username=username,
+            email=email,
+            password=password if not is_google_auth else None,
+            phone_number=phone_number,
+            profile_image=profile_image,
+            role=role,
+            is_google_auth=is_google_auth
+        )
+        return Response({
+            "success": True,
+            "message": "Registration successful!",
+            "user_id": str(user["_id"])
+        }, status=201)
 
-    return Response({
-        "success": True,
-        "message": "Registration successful!"
-    }, status=201)
+    except Exception as e:
+        return Response({
+            "error": f"An error occurred during registration: {str(e)}"
+        }, status=500)
 
 
 @api_view(['POST'])

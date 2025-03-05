@@ -38,69 +38,71 @@ contact_messages = MONGO_DB["contact_messages"]
 
 class MongoDBUser:
     @staticmethod
-    def create_user(username, email, password, phone_number, role="user"):  # Default role = user
-        # Hashing the password
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    def create_user(username, email, password=None, phone_number=None, profile_image=None, role="user", is_google_auth=False):
+        """
+        Create a new user in MongoDB.
+        Handles both normal and Google OAuth signups.
+        
+        Args:
+            username (str): The user's name.
+            email (str): The user's email.
+            password (str, optional): The user's password. Required for normal signup.
+            phone_number (str, optional): The user's phone number.
+            profile_image (str, optional): The user's profile image URL.
+            role (str, optional): The user's role. Default is "user".
+            is_google_auth (bool, optional): True if the signup is via Google OAuth.
+            
+        Returns:
+            dict: The created or existing user.
+        """
 
-        # Prepare user data to be inserted
+        # Check if the user already exists
+        existing_user = users_collection.find_one({"email": email})
+        if existing_user:
+            return existing_user  # Return existing user if found
+
+        # Handle password hashing for normal signup
+        hashed_password = None
+        if not is_google_auth:
+            if not password:
+                raise ValueError("Password is required for normal signup.")
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+        # Prepare user data for insertion
         user_data = {
             "username": username,
             "email": email,
-            "password": hashed_password,
-            "phone_number": phone_number,  # Optional, can be None
-            "role": role,
-            "date_of_register": dt.datetime.now(dt.timezone.utc),  # Use timezone-aware UTC now
-            "last_login": dt.datetime.now(dt.timezone.utc),  # Use timezone-aware UTC now
-            "session_timing": None,  # Initially, no session time
-            "address": [],  # Initially, no address
-            "orders": []  # Initially, no orders
-        }
-
-        # Insert user data into MongoDB
-        result = users_collection.insert_one(user_data)
-        return result.inserted_id
-
-    @staticmethod
-    def create_user(username, email, role,profile_image, password=None, phone_number=None):
-        """ Create a new user in MongoDB. """
-        existing_user = users_collection.find_one({"email": email})
-        
-        if existing_user:
-            return existing_user  # Return existing user
-        
-        # Create new user
-        new_user = {
-            "username": username,
-            "email": email,
-            "password": password if password else None,  # Allow None password for Google OAuth
-            "role": role,
+            "password": hashed_password,  # None if Google OAuth
             "phone_number": phone_number,
+            "role": role,
             "profile_image": profile_image,
-            "date_of_register": dt.datetime.now(dt.timezone.utc),  # Use timezone-aware UTC now
-            "last_login": dt.datetime.now(dt.timezone.utc),  # Use timezone-aware UTC now
-            "session_timing": "120 min",
+            "is_google_auth": is_google_auth,
+            "date_of_register": dt.datetime.now(dt.timezone.utc),
+            "last_login": dt.datetime.now(dt.timezone.utc),
+            "session_timing": "120 min" if is_google_auth else None,
             "address": [],
             "orders": []
         }
-        
-        inserted = users_collection.insert_one(new_user)
-        new_user["_id"] = inserted.inserted_id
-        return new_user
+
+        # Insert new user data into MongoDB
+        result = users_collection.insert_one(user_data)
+        user_data["_id"] = result.inserted_id
+        return user_data
 
     @staticmethod
     def get_user_by_email(email):
-        # Fetch user by email
-        return users_collection.find_one({"email": email})
+            # Fetch user by email
+            return users_collection.find_one({"email": email})
 
     @staticmethod
     def get_user_by_id(user_id):
-        try:
-            print(f"🔍 Fetching User by ID: {user_id}")  # Debugging
-            # Ensure ObjectId is used correctly for MongoDB's _id field
-            return users_collection.find_one({"_id": ObjectId(user_id)})
-        except Exception as e:
-            print(f"❌ Error fetching user by ID: {e}")
-            return None
+            try:
+                print(f"🔍 Fetching User by ID: {user_id}")  # Debugging
+                # Ensure ObjectId is used correctly for MongoDB's _id field
+                return users_collection.find_one({"_id": ObjectId(user_id)})
+            except Exception as e:
+                print(f"❌ Error fetching user by ID: {e}")
+                return None
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
