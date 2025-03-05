@@ -32,7 +32,7 @@ MIDDLEWARE = [
 # Security settings
 SECRET_KEY = 'django-insecure-+x8naul6gx88@97vxm+oxbbc5cc0y+-i3+ys)zvjzs=b2tq9af'
 DEBUG = False  # Ensure this is False in production
-ALLOWED_HOSTS = ['.vercel.app', '127.0.0.1', 'localhost']  # Add your Vercel domain here
+ALLOWED_HOSTS = ['192.168.10.38','.vercel.app', '127.0.0.1', 'localhost']  # Add your Vercel domain here
 
 # Application definition
 INSTALLED_APPS = [
