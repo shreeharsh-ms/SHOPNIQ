@@ -569,7 +569,18 @@ def get_cart_products(request):
     }, safe=False)
 
 def acc_details(request):
-    return render(request, 'USER/Acc_details.html')
+    """Display and update account details."""
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return redirect("login")
+
+    user = MongoDBUser.get_user_by_id(user_id)
+    print("Account details", user)
+
+    context = {
+        'user': user,
+    }
+    return render(request, 'USER/Acc_details.html', context)
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -2278,4 +2289,86 @@ def delete_expired_coupons(request):
     """Admin API to delete expired coupons"""
     result = coupon_manager.delete_expired_coupons()
     return Response(result, status=status.HTTP_200_OK)
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .mongodb import MongoDBUser
+
+def update_account_details(request):
+    """Handle account details update."""
+    if request.method == "POST":
+        user_id = request.session.get("user_id")
+        if not user_id:
+            return JsonResponse({"success": False, "error": "User not authenticated"}, status=401)
+
+        # Get form data
+        first_name = request.POST.get("first_name")
+        last_name = request.POST.get("last_name")
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        phone_number = request.POST.get("phone_number")
+        current_password = request.POST.get("current_password")
+        new_password = request.POST.get("new_password")
+        confirm_password = request.POST.get("confirm_password")
+
+        # Prepare update data
+        update_data = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "username": username,
+            "email": email,
+            "phone_number": phone_number
+        }
+
+        # Fetch user from the database
+        user = MongoDBUser.get_user_by_id(user_id)
+        if not user:
+            return JsonResponse({"success": False, "error": "User not found."})
+
+        # Handle password change if requested
+        if new_password or confirm_password:
+            if new_password != confirm_password:
+                return JsonResponse({"success": False, "error": "New passwords do not match."})
+
+            # Check if the password field exists and is not None
+            if 'password' not in user or user['password'] is None:
+                # Alert user that no password is set
+                if not current_password:
+                    # Allow setting a new password without current password
+                    hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                    update_data["password"] = hashed_password
+                else:
+                    return JsonResponse({"success": False, "error": "Password not set for this user. You can set a new password."})
+            else:
+                # Verify current password
+                if not bcrypt.checkpw(current_password.encode('utf-8'), user['password'].encode('utf-8')):
+                    return JsonResponse({"success": False, "error": "Current password is incorrect."})
+
+                # Hash new password
+                hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                update_data["password"] = hashed_password
+
+        # Update user details in the database
+        success = MongoDBUser.update_user_details(user_id, update_data)
+
+        if success:
+            return JsonResponse({"success": True})
+        else:
+            return JsonResponse({"success": False, "error": "Failed to update account details."})
+
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=405)
+
+# def account_details(request):
+#     """Display and update account details."""
+#     user_id = request.session.get("user_id")
+#     if not user_id:
+#         return redirect("login")
+
+#     user = MongoDBUser.get_user_by_id(user_id)
+#     print("Account details", json.dumps(user), indent=2)
+
+#     context = {
+#         'user': user,
+#     }
+#     return render(request, 'USER/Acc_details.html', context)
 

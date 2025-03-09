@@ -29,6 +29,41 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
   <script src="{% static 'js/loader.js' %}"></script>
   <link rel="stylesheet" href="{% static 'css/loader.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/libphonenumber-js@1.9.43/bundle/libphonenumber-js.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+  <link href="https://cdn.geodatasource.com/css/geodatasource-countryflag.css" rel="stylesheet" />
+  <style>
+    .form-floating .form-control[readonly] {
+        background-color: #e9ecef;
+        opacity: 1;
+    }
+    .form-floating .form-control {
+        height: calc(3.5rem + 2px);
+        padding: 1rem .75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: .25rem;
+    }
+    .form-floating label {
+        padding: 0 .75rem;
+        font-size: 1rem;
+        color: #6c757d;
+    }
+    .select2-container--default .select2-selection--single {
+        height: calc(3.5rem + 2px);
+        padding: .75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: .25rem;
+        border: 1px solid #ced4da;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 1.5;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: calc(3.5rem + 2px);
+    }
+  </style>
   </head>
   
   <body>
@@ -92,25 +127,65 @@
                 </div>
               </div>
               <div class="col-md-12">
-                <div class="search-field my-3">
-                  <div class="form-label-fixed hover-container">
-                    <label for="search-dropdown" class="form-label">Country / Region*</label>
-                    <div class="js-hover__open">
-                      <input type="text" class="form-control form-control-lg search-field__actor search-field__arrow-down" id="search-dropdown" name="country_region" readonly="" placeholder="Choose a location..." required>
-                    </div>
-                    <div class="filters-container js-hidden-content mt-2">
-                      <div class="search-field__input-wrapper">
-                        <input type="text" class="search-field__input form-control form-control-sm bg-lighter border-lighter" placeholder="Search">
-                      </div>
-                      <ul class="search-suggestion list-unstyled">
-                        <li class="search-suggestion__item js-search-select">Australia</li>
-                        <li class="search-suggestion__item js-search-select">Canada</li>
-                        <li class="search-suggestion__item js-search-select">United Kingdom</li>
-                        <li class="search-suggestion__item js-search-select">United States</li>
-                        <li class="search-suggestion__item js-search-select">Turkey</li>
-                      </ul>
-                    </div>
-                  </div>
+                <div class="form-floating my-3">
+                  <input type="text" class="form-control" id="country" name="country" value="India" readonly>
+                  <label for="country">Country</label>
+                </div>
+              </div>
+              <div class="col-md-12">
+                <div class="form-floating my-3">
+                  <select class="form-control" id="state" name="state" required>
+                    <option value="">Select State</option>
+                    <!-- States -->
+                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                    <option value="Assam">Assam</option>
+                    <option value="Bihar">Bihar</option>
+                    <option value="Chhattisgarh">Chhattisgarh</option>
+                    <option value="Goa">Goa</option>
+                    <option value="Gujarat">Gujarat</option>
+                    <option value="Haryana">Haryana</option>
+                    <option value="Himachal Pradesh">Himachal Pradesh</option>
+                    <option value="Jharkhand">Jharkhand</option>
+                    <option value="Karnataka">Karnataka</option>
+                    <option value="Kerala">Kerala</option>
+                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                    <option value="Manipur">Manipur</option>
+                    <option value="Meghalaya">Meghalaya</option>
+                    <option value="Mizoram">Mizoram</option>
+                    <option value="Nagaland">Nagaland</option>
+                    <option value="Odisha">Odisha</option>
+                    <option value="Punjab">Punjab</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Sikkim">Sikkim</option>
+                    <option value="Tamil Nadu">Tamil Nadu</option>
+                    <option value="Telangana">Telangana</option>
+                    <option value="Tripura">Tripura</option>
+                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    <option value="Uttarakhand">Uttarakhand</option>
+                    <option value="West Bengal">West Bengal</option>
+                    
+                    <!-- Union Territories -->
+                    <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                    <option value="Chandigarh">Chandigarh</option>
+                    <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Lakshadweep">Lakshadweep</option>
+                    <option value="Puducherry">Puducherry</option>
+                    <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                    <option value="Ladakh">Ladakh</option>
+                  </select>
+                  
+                  <label for="state">State *</label>
+                </div>
+              </div>
+              <div class="col-md-12">
+                <div class="form-floating my-3">
+                  <select class="form-control" id="city" name="city" required>
+                    <option value="">Select City</option>
+                  </select>
+                  <label for="city">City *</label>
                 </div>
               </div>
               <div class="col-md-12">
@@ -124,25 +199,13 @@
               </div>
               <div class="col-md-12">
                 <div class="form-floating my-3">
-                  <input type="text" class="form-control" id="checkout_city" name="checkout_city" placeholder="Town / City *" required>
-                  <label for="checkout_city">Town / City *</label>
-                </div>
-              </div>
-              <div class="col-md-12">
-                <div class="form-floating my-3">
-                  <input type="text" class="form-control" id="checkout_state" name="checkout_state" placeholder="State *" required>
-                  <label for="checkout_city">State *</label>
-                </div>
-              </div>
-              <div class="col-md-12">
-                <div class="form-floating my-3">
-                  <input type="text" class="form-control" id="checkout_zipcode" name="checkout_zipcode" placeholder="Pincode *" required>
+                  <input type="text" class="form-control" id="checkout_zipcode" name="checkout_zipcode" placeholder="Pincode *" required pattern="\d{6}" title="Please enter a valid 6-digit pincode.">
                   <label for="checkout_zipcode">Pincode *</label>
                 </div>
               </div>
               <div class="col-md-12">
                 <div class="form-floating my-3">
-                  <input type="text" class="form-control" id="checkout_phone" name="checkout_phone" placeholder="Phone *" required>
+                  <input type="text" class="form-control" id="checkout_phone" name="checkout_phone" placeholder="+91 9876543210" value="+91 " required>
                   <label for="checkout_phone">Phone *</label>
                 </div>
               </div>
@@ -866,6 +929,130 @@
   <!-- Footer Scripts -->
   <script src="{% static 'js/theme.js' %}"></script>
 
+  <script>
+    document.getElementById('checkout_phone').addEventListener('input', function (e) {
+        const phoneInput = e.target;
+        const phoneNumber = libphonenumber.parsePhoneNumberFromString(phoneInput.value, 'IN');
+        if (!phoneNumber || !phoneNumber.isValid()) {
+            phoneInput.setCustomValidity('Please enter a valid Indian phone number.');
+        } else {
+            phoneInput.setCustomValidity('');
+        }
+    });
 
+    // State to City mapping
+    const stateCityMap = {
+        "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Solapur", "Thane", "Kolhapur"],
+        "Karnataka": ["Bangalore", "Mysore", "Mangalore", "Hubli", "Belgaum", "Davangere", "Gulbarga"],
+        "Delhi": ["New Delhi", "Dwarka", "Rohini", "Saket", "Karol Bagh", "Connaught Place", "Vasant Kunj"]
+        // Add more states and cities as needed
+    };
+
+    // Update city dropdown based on selected state
+    $('#state').on('change', function() {
+        const state = $(this).val();
+        const citySelect = $('#city');
+        citySelect.empty().append('<option value="">Select City</option>'); // Reset city options
+
+        if (stateCityMap[state]) {
+            console.log(`Loading cities for state: ${state}`); // Debugging line
+            stateCityMap[state].forEach(function(city) {
+                citySelect.append(new Option(city, city));
+            });
+        } else {
+            console.log(`No cities found for state: ${state}`); // Debugging line
+        }
+    });
+  
+  </script>
+
+  <!-- Include jQuery and Select2 JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+        // Initialize Select2
+        $('#state').select2();
+        $('#city').select2({
+            placeholder: 'Select City',
+            allowClear: true
+        });
+
+        // Define state to city mapping
+        const stateCityMap = {
+    // States
+    "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Tirupati", "Amaravati"],
+    "Arunachal Pradesh": ["Itanagar", "Tawang", "Pasighat", "Ziro"],
+    "Assam": ["Guwahati", "Dibrugarh", "Jorhat", "Silchar", "Tezpur"],
+    "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga"],
+    "Chhattisgarh": ["Raipur", "Bilaspur", "Durg", "Bhilai", "Korba"],
+    "Goa": ["Panaji", "Margao", "Vasco da Gama"],
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Gandhinagar", "Bhavnagar", "Jamnagar", "Junagadh"],
+    "Haryana": ["Gurgaon", "Faridabad", "Panipat", "Hisar", "Rohtak", "Karnal"],
+    "Himachal Pradesh": ["Shimla", "Dharamshala", "Manali", "Solan", "Mandi"],
+    "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Deoghar"],
+    "Karnataka": ["Bangalore", "Mysore", "Mangalore", "Hubli", "Belgaum", "Davangere", "Gulbarga", "Tumkur"],
+    "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Kollam", "Thrissur", "Kannur", "Kottayam"],
+    "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Ujjain", "Sagar"],
+    "Maharashtra": ["Akola","Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Solapur", "Thane", "Kolhapur", "Pimpri-Chinchwad", "Amravati"],
+    "Manipur": ["Imphal", "Thoubal", "Moreh", "Moirang"],
+    "Meghalaya": ["Shillong", "Tura", "Nongpoh", "Williamnagar"],
+    "Mizoram": ["Aizawl", "Lunglei", "Champhai", "Kolasib"],
+    "Nagaland": ["Kohima", "Dimapur", "Mokokchung", "Tuensang"],
+    "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Sambalpur", "Puri", "Berhampur"],
+    "Punjab": ["Amritsar", "Ludhiana", "Jalandhar", "Patiala", "Bathinda", "Mohali"],
+    "Rajasthan": ["Jaipur", "Jodhpur", "Kota", "Udaipur", "Ajmer", "Bikaner", "Alwar", "Bharatpur", "Sawai Madhopur"],
+    "Sikkim": ["Gangtok", "Namchi", "Rangpo"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Vellore", "Erode", "Thoothukudi"],
+    "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam", "Ramagundam", "Nalgonda"],
+    "Tripura": ["Agartala", "Udaipur", "Dharmanagar"],
+    "Uttar Pradesh": ["Lucknow", "Kanpur", "Ghaziabad", "Noida", "Agra", "Varanasi", "Meerut", "Prayagraj", "Bareilly", "Aligarh", "Moradabad"],
+    "Uttarakhand": ["Dehradun", "Haridwar", "Nainital", "Haldwani", "Roorkee", "Rishikesh"],
+    "West Bengal": ["Kolkata", "Howrah", "Siliguri", "Durgapur", "Asansol", "Darjeeling", "Malda"],
+    
+    // Union Territories
+    "Andaman and Nicobar Islands": ["Port Blair"],
+    "Chandigarh": ["Chandigarh"],
+    "Dadra and Nagar Haveli and Daman and Diu": ["Daman", "Diu", "Silvassa"],
+    "Lakshadweep": ["Kavaratti"],
+    "Puducherry": ["Puducherry", "Karaikal", "Mahe", "Yanam"],
+    "Jammu and Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla"],
+    "Ladakh": ["Leh", "Kargil"]
+};
+
+
+        // Update city dropdown based on selected state
+        $('#state').on('change', function() {
+            const state = $(this).val();
+            const citySelect = $('#city');
+            citySelect.empty().append('<option value="">Select City</option>'); // Reset city options
+
+            if (stateCityMap[state]) {
+                stateCityMap[state].forEach(function(city) {
+                    citySelect.append(new Option(city, city));
+                });
+            }
+
+            // Refresh Select2
+            citySelect.trigger('change');
+        });
+    });
+  </script>
+
+  <script>
+    $(document).ready(function() {
+        // Initialize GeoDataSource for state and city with India as the default country
+        $('#state').gdsState({
+            countryCode: 'IN', // Set default country to India
+            onChange: function(value) {
+                $('#city').gdsCity({
+                    countryCode: 'IN', // Ensure the country is set to India
+                    stateCode: value
+                });
+            }
+        });
+    });
+  </script>
 
 </body></html>

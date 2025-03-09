@@ -48,60 +48,107 @@
         {% include 'partials/dashboardSidebar.html' %}
         <div class="col-lg-9">
           <div class="page-content my-account__edit">
-            <div class="my-account__edit-form">
-              <form name="account_edit_form" class="needs-validation" novalidate="">
+            <!-- Display User Details -->
+            <div id="userDetails" class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Account Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-1"><strong>First Name:</strong></p>
+                            <p class="text-muted">{{ user.first_name }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-1"><strong>Last Name:</strong></p>
+                            <p class="text-muted">{{ user.last_name }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-1"><strong>Username:</strong></p>
+                            <p class="text-muted">{{ user.username }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-1"><strong>Email:</strong></p>
+                            <p class="text-muted">{{ user.email }}</p>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <p class="mb-1"><strong>Phone Number:</strong></p>
+                            <p class="text-muted">{{ user.phone_number }}</p>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-outline-primary" id="updateProfileButton">Update Profile</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Form (Initially Hidden) -->
+            <div id="updateForm" class="my-account__edit-form" style="display: none;">
+              <form id="accountEditForm" name="account_edit_form" class="needs-validation" novalidate="">
+                {% csrf_token %}
                 <div class="row">
                   <div class="col-md-6">
                     <div class="form-floating my-3">
-                      <input type="text" class="form-control" id="account_first_name" placeholder="First Name" required="">
+                      <input type="text" class="form-control" id="account_first_name" name="first_name" placeholder="First Name" value="{{ user.first_name }}" required="">
                       <label for="account_first_name">First Name</label>
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="form-floating my-3">
-                      <input type="text" class="form-control" id="account_last_name" placeholder="Last Name" required="">
+                      <input type="text" class="form-control" id="account_last_name" name="last_name" placeholder="Last Name" value="{{ user.last_name }}" required="">
                       <label for="account_last_name">Last Name</label>
                     </div>
                   </div>
                   <div class="col-md-12">
                     <div class="form-floating my-3">
-                      <input type="text" class="form-control" id="account_display_name" placeholder="Display Name" required="">
-                      <label for="account_display_name">Display Name</label>
+                      <input type="text" class="form-control" id="account_username" name="username" placeholder="Username" value="{{ user.username }}" required="">
+                      <label for="account_username">Username</label>
                     </div>
                   </div>
                   <div class="col-md-12">
                     <div class="form-floating my-3">
-                      <input type="email" class="form-control" id="account_email" placeholder="Email Address" required="">
+                      <input type="email" class="form-control" id="account_email" name="email" placeholder="Email Address" value="{{ user.email }}" required="">
                       <label for="account_email">Email Address</label>
                     </div>
                   </div>
                   <div class="col-md-12">
+                    <div class="form-floating my-3">
+                      <input type="text" class="form-control" id="account_phone" name="phone_number" placeholder="Phone Number" value="{{ user.phone_number }}" required="">
+                      <label for="account_phone">Phone Number</label>
+                    </div>
+                  </div>
+                  <div class="col-md-12">
                     <div class="my-3">
-                      <h5 class="text-uppercase mb-0">Password Change</h5>
+                      <h5 class="text-uppercase mb-0">Password Change (Optional)</h5>
+                      {% if user.password is none %}
+                        <div style="background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 1rem;">
+                            <strong>Notice:</strong> You have not set a password. You can set a new password below.
+                        </div>
+                      {% endif %}
                     </div>
                   </div>
                   <div class="col-md-12">
                     <div class="form-floating my-3">
-                      <input type="password" class="form-control" id="account_current_password" placeholder="Current password" required="">
+                      <input type="password" class="form-control" id="account_current_password" name="current_password" placeholder="Current password">
                       <label for="account_current_password">Current password</label>
                     </div>
                   </div>
                   <div class="col-md-12">
                     <div class="form-floating my-3">
-                      <input type="password" class="form-control" id="account_new_password" placeholder="New password" required="">
+                      <input type="password" class="form-control" id="account_new_password" name="new_password" placeholder="New password">
                       <label for="account_new_password">New password</label>
                     </div>
                   </div>
                   <div class="col-md-12">
                     <div class="form-floating my-3">
-                      <input type="password" class="form-control" data-cf-pwd="#account_new_password" id="account_confirm_password" placeholder="Confirm new password" required="">
+                      <input type="password" class="form-control" data-cf-pwd="#account_new_password" id="account_confirm_password" name="confirm_password" placeholder="Confirm new password">
                       <label for="account_confirm_password">Confirm new password</label>
                       <div class="invalid-feedback">Passwords did not match!</div>
                     </div>
                   </div>
                   <div class="col-md-12">
                     <div class="my-3">
-                      <button class="btn btn-primary">Save Changes</button>
+                      <button type="button" class="btn btn-primary" id="saveChangesButton">Save Changes</button>
                     </div>
                   </div>
                 </div>
@@ -727,5 +774,35 @@
   <!-- Footer Scripts -->
   <script src="{% static 'js/theme.js' %}"></script>
 
+  <script>
+    $(document).ready(function() {
+      // Toggle form visibility
+      $('#updateProfileButton').click(function() {
+        $('#userDetails').hide();
+        $('#updateForm').show();
+      });
+
+      // Handle form submission via AJAX
+      $('#saveChangesButton').click(function() {
+        var formData = $('#accountEditForm').serialize();
+        $.ajax({
+          url: "{% url 'update_account_details' %}",
+          type: "POST",
+          data: formData,
+          success: function(response) {
+            if (response.success) {
+              alert("Account details updated successfully.");
+              location.reload(); // Reload the page to reflect changes
+            } else {
+              alert("Failed to update account details: " + response.error);
+            }
+          },
+          error: function(xhr, status, error) {
+            alert("An error occurred: " + error);
+          }
+        });
+      });
+    });
+  </script>
 
 </body></html>

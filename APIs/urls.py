@@ -12,6 +12,12 @@ urlpatterns = [
     path('api/register/', views.register_user, name='register_user'),
     path('api/login/', views.login_user, name='login_user'),
     path('login/', views.login_view, name='login_view'),
+
+    path('account/update/', views.update_account_details, name='update_account_details'),
+    # path('account/details/', views.account_details, name='account_details'),
+
+
+
     path('get-csrf-token/', views.get_csrf_token, name='get_csrf_token'),
     path('api/google/login/<str:mode>/', views.google_login, name='google_login'),
     path('api/google/callback/', views.google_callback, name='google_callback'),

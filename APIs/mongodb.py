@@ -98,7 +98,9 @@ class MongoDBUser:
             try:
                 print(f"🔍 Fetching User by ID: {user_id}")  # Debugging
                 # Ensure ObjectId is used correctly for MongoDB's _id field
-                return users_collection.find_one({"_id": ObjectId(user_id)})
+                user = users_collection.find_one({"_id": ObjectId(user_id)})
+                print(user)
+                return user
             except Exception as e:
                 print(f"❌ Error fetching user by ID: {e}")
                 return None
@@ -156,6 +158,25 @@ class MongoDBUser:
         except Exception as e:
             print(f"❌ Error fetching address: {e}")
             return {}
+
+    @staticmethod
+    def update_user_details(user_id, update_data):
+        """
+        Update user details in MongoDB.
+        
+        Args:
+            user_id (str): The ID of the user.
+            update_data (dict): A dictionary of fields to update.
+        
+        Returns:
+            bool: True if the update was successful, False otherwise.
+        """
+        try:
+            result = users_collection.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
+            return result.modified_count > 0
+        except Exception as e:
+            print(f"❌ Error updating user details: {e}")
+            return False
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -437,7 +458,7 @@ class MongoDBBrand:
 
         # Convert sets to lists before returning
         return {category: list(brands) for category, brands in category_brands.items()}
-    
+
     @staticmethod
     def get_brands_by_category(category_id):
         """
