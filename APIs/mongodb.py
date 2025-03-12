@@ -36,6 +36,9 @@ from datetime import datetime
 users_collection = MONGO_DB["users"]
 contact_messages = MONGO_DB["contact_messages"]
 
+# MongoDB collection for wishlists
+wishlist_collection = MONGO_DB["wishlists"]
+
 class MongoDBUser:
     @staticmethod
     def create_user(username, email, password=None, phone_number=None, profile_image=None, role="user", is_google_auth=False):
@@ -1344,3 +1347,75 @@ class MongoDBCustomers:
         Count the number of users who have ordered products.
         """
         return orders_collection.distinct("UID").count()
+
+class MongoDBWishlist:
+    @staticmethod
+    def add_to_wishlist(user_id, product_id):
+        """Add a product to the user's wishlist."""
+        # Check if the item is already in the wishlist
+
+        product = MongoDBProduct.get_product_by_id(product_id)
+        if not product:
+            return {"success": False, "message": "Product not found"}
+        
+
+        existing_item = wishlist_collection.find_one({
+            "user_id": ObjectId(user_id),
+            "product_id": ObjectId(product_id)
+            
+        })
+
+        if existing_item:
+            return {"success": False, "message": "Item already in wishlist"}
+
+        # Add the item to the wishlist
+        wishlist_collection.insert_one({
+            "user_id": ObjectId(user_id),
+            "product_id": ObjectId(product_id),
+            "created_at": datetime.now()
+        })
+
+        return {"success": True, "message": "Product added to wishlist successfully."}
+
+    @staticmethod
+    def get_wishlist(user_id):
+        """Fetch all wishlist items for a user with complete product details."""
+        wishlist_items = wishlist_collection.find({"user_id": ObjectId(user_id)})
+        
+        # Prepare a list to hold the product details
+        product_details = []
+        
+        for item in wishlist_items:
+            product_id = item["product_id"]
+            product = MongoDBProduct.get_product_by_id(product_id)  # Fetch product details
+            
+            if product:
+                product_details.append(product)  # Append the complete product details
+        
+        return product_details  # Return the list of product details
+
+    @staticmethod
+    def remove_from_wishlist(user_id, product_id):
+        """Remove a product from the user's wishlist."""
+        result = wishlist_collection.delete_one({
+            "user_id": ObjectId(user_id),
+            "product_id": ObjectId(product_id)
+        })
+        return result.deleted_count > 0  # Returns True if the item was removed
+
+    @staticmethod
+    def is_item_in_wishlist(user_id, product_id):
+        """Check if a product is in the user's wishlist."""
+        return wishlist_collection.find_one({
+            "user_id": ObjectId(user_id),
+            "product_id": ObjectId(product_id)
+        }) is not None
+    
+    @staticmethod
+    def get_product_ids_by_user(user_id):
+        """Fetch a list of product IDs from the user's wishlist."""
+        wishlist_items = wishlist_collection.find(
+            {"user_id": ObjectId(user_id)},
+            {"product_id": 1, "_id": 0}  # Only fetch the product_id field
+        )
+        return [str(item["product_id"]) for item in wishlist_items]

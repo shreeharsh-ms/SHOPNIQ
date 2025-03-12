@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from APIs.mongodb import MongoDBUser, MongoDBReview,MongoDBDescription,MongoDBCategory,MongoDBProduct,MongoDBBrand ,MongoDBCart, MongoDBOrders, MongoDBCustomers  # Import MongoDB Helper
+from APIs.mongodb import MongoDBUser, MongoDBReview,MongoDBDescription,MongoDBCategory,MongoDBProduct,MongoDBBrand ,MongoDBCart, MongoDBOrders, MongoDBCustomers, MongoDBWishlist  # Import MongoDB Helper
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
@@ -976,8 +976,8 @@ def orders(request):
 #     return render(request, 'USER/product-Item.html')
 
 
-def wishlist(request):
-    return render(request, 'USER/WishList.html')
+# def wishlist(request):
+#     return render(request, 'USER/WishList.html')
 
 def about_us(request):
     return render(request, 'Home/ABOUTUS.html')
@@ -1714,14 +1714,17 @@ def product_detail(request, product_id):
             for review in reviews:
                 user = MongoDBUser.get_user_by_id(review["UID"])  # Fetch user by UID
                 review["UID"] = user["username"] if user else "Unknown User"  # Replace UID with username
-           
+            user_id = request.session.get('user_id')
+            wishlist_product_ids = MongoDBWishlist.get_product_ids_by_user(user_id)
+
             context = {
                 "product": processed_product,
                 "cart_items": cart_items,
                 "cart_total": "{:.2f}".format(cart_total),
                 "cart_items_count": cart_items_count,
                 "related_products": processed_related_products,
-                "reviews": sorted_reviews,  # The reviews are passed here as well
+                "reviews": sorted_reviews,
+                "wishlist_product_ids": wishlist_product_ids  # The reviews are passed here as well
             }
 
             print("Context data:", context)  # Debug print
@@ -2371,4 +2374,113 @@ def update_account_details(request):
 #         'user': user,
 #     }
 #     return render(request, 'USER/Acc_details.html', context)
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from django.http import JsonResponse
+from bson import ObjectId
+from SHOPNIQ.settings import MONGO_DB
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_to_wishlist(request):
+    """API endpoint to add a product to the user's wishlist."""
+    try:
+        data = request.data
+        product_id = data.get('product_id')
+
+        if not product_id or not ObjectId.is_valid(product_id):
+            return JsonResponse({"error": "Invalid Product ID"}, status=400)
+
+        user_id = request.session.get('user_id')
+        if not user_id or not ObjectId.is_valid(user_id):
+            return JsonResponse({"error": "User session not found"}, status=401)
+
+        # Use MongoDBWishlist to add the item
+        result = MongoDBWishlist.add_to_wishlist(user_id, product_id)
+        return JsonResponse(result, status=201 if result["success"] else 400)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_wishlist(request):
+    """API endpoint to fetch the user's wishlist."""
+    try:
+        user_id = request.session.get('user_id')
+        if not user_id:
+            return JsonResponse({"error": "User session not found"}, status=401)
+
+        # Use MongoDBWishlist to get the wishlist items
+        wishlist = MongoDBWishlist.get_wishlist(user_id)
+        return JsonResponse({"wishlist": wishlist}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def remove_from_wishlist(request, product_id):
+    """API endpoint to remove a product from the user's wishlist."""
+    try:
+        user_id = request.session.get('user_id')
+        if not user_id:
+            return JsonResponse({"error": "User session not found"}, status=401)
+
+        # Use MongoDBWishlist to remove the item
+        removed = MongoDBWishlist.remove_from_wishlist(user_id, product_id)
+        if removed:
+            return JsonResponse({"success": True, "message": "Product removed from wishlist."}, status=200)
+        else:
+            return JsonResponse({"error": "Item not found in wishlist."}, status=404)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def wishlist(request):
+    """Render the user's wishlist page."""
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return JsonResponse({"error": "User session not found"}, status=401)
+
+    # Fetch the wishlist items using MongoDBWishlist
+    wishlist_items = MongoDBWishlist.get_wishlist(user_id)
+
+    products_list = []
+    for product in wishlist_items:
+            try:
+                serialized_product = {
+                    'id': str(product['_id']),
+                    'name': product.get('name', 'Unnamed Product'),
+                    'price': product.get('price', 0),
+                    'image': product.get('images', [''])[0] if product.get('images') else '',
+                    'description': MongoDBDescription.get_description_by_product_id(product['_id']).get("description", "No description available")
+                    if product.get("description_id") else "No description available",
+                    'tags': product.get('tags', []),
+                    'category': MongoDBCategory.get_category_by_id(product.get('category_id', '')).get("CategoryName", "Uncategorized")
+                    if product.get('category_id') else "Uncategorized",
+                    'brand': MongoDBBrand.get_brand_by_id(product.get('brand_id', '')).get("name", "No Brand")
+                    if product.get('brand_id') else "No Brand",
+                    'in_stock': product.get('stock', 0) > 0
+                }
+                products_list.append(serialized_product)
+            except Exception as e:
+                print(f"⚠️ Error processing product {product['_id']}: {e}")
+
+
+    # wishlist_items['id'] = wishlist_items['_id']
+    print("Wishlist items:    ", wishlist_items)
+    print("Wishlist items Count:    ", len(wishlist_items))
+    print("@@@@@@@@Wishlist Product items:    ", products_list)
+
+
+    # Prepare context for rendering the wishlist
+    context = {
+        'wishlist_items': products_list  # Pass the complete product details to the template
+    }
+
+    return render(request, 'USER/WishList.html', context)
 

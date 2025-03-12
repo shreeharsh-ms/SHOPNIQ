@@ -119,7 +119,10 @@ urlpatterns = [
     # TEST
     path('test-view/', views.test_view, name='test_view'),
 
-
+    # Wishlist APIs
+    path('api/wishlist/add/', views.add_to_wishlist, name='add_to_wishlist'),  # Add to wishlist
+    path('api/wishlist/', views.get_wishlist, name='get_wishlist'),  # Get wishlist
+    path('api/wishlist/remove/<str:product_id>/', views.remove_from_wishlist, name='remove_from_wishlist'),  # Remove from wishlist
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) \
   + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
