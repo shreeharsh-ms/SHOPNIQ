@@ -26,6 +26,9 @@ urlpatterns = [
     path('save-address/', views.save_address, name='save_address'),
     # path("api/auth/google/", views.google_auth, name="google_auth"),
     
+    # BuyNow Request
+    path('buy-now/', views.buy_now, name='buy_now'),
+
     path('api/logout/', views.logout_user, name='logout_user'),
     path('api/login-sessions/<str:user_id>/', views.get_user_login_sessions, name='login_sessions'),
     path('register_page/', views.register_page, name='register_page'),  # Added trailing slash

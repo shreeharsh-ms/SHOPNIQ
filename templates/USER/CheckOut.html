@@ -108,124 +108,119 @@
           <div class="billing-info__wrapper">
             <h4>BILLING DETAILS</h4>
             <div class="row">
+              <!-- First Name -->
               <div class="col-md-6">
                 <div class="form-floating my-3">
-                  <input type="text" class="form-control" id="checkout_first_name" name="checkout_first_name" placeholder="First Name" required>
+                  <input type="text" class="form-control" id="checkout_first_name" name="checkout_first_name" placeholder="First Name" value="{{ saved_address.first_name }}" required>
                   <label for="checkout_first_name">First Name</label>
                 </div>
               </div>
+      
+              <!-- Last Name -->
               <div class="col-md-6">
                 <div class="form-floating my-3">
-                  <input type="text" class="form-control" id="checkout_last_name" name="checkout_last_name" placeholder="Last Name" required>
+                  <input type="text" class="form-control" id="checkout_last_name" name="checkout_last_name" placeholder="Last Name" value="{{ saved_address.last_name }}" required>
                   <label for="checkout_last_name">Last Name</label>
                 </div>
               </div>
+      
+              <!-- Company Name (optional) -->
               <div class="col-md-12">
                 <div class="form-floating my-3">
                   <input type="text" class="form-control" id="checkout_company_name" name="checkout_company_name" placeholder="Company Name (optional)">
                   <label for="checkout_company_name">Company Name (optional)</label>
                 </div>
               </div>
+              <input type="hidden" name="is_buy_now" value="{{ is_buy_now|yesno:'true,false' }}">
+      
+              <!-- Country (Read-only) -->
               <div class="col-md-12">
                 <div class="form-floating my-3">
-                  <input type="text" class="form-control" id="country" name="country" value="India" readonly>
+                  <input type="text" class="form-control" id="country" name="country" value="{{ saved_address.country }}" readonly>
                   <label for="country">Country</label>
                 </div>
               </div>
+      
+              <!-- State -->
               <div class="col-md-12">
                 <div class="form-floating my-3">
                   <select class="form-control" id="state" name="state" required>
-                    <option value="">Select State</option>
-                    <!-- States -->
-                    <option value="Andhra Pradesh">Andhra Pradesh</option>
-                    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-                    <option value="Assam">Assam</option>
-                    <option value="Bihar">Bihar</option>
-                    <option value="Chhattisgarh">Chhattisgarh</option>
-                    <option value="Goa">Goa</option>
-                    <option value="Gujarat">Gujarat</option>
-                    <option value="Haryana">Haryana</option>
-                    <option value="Himachal Pradesh">Himachal Pradesh</option>
-                    <option value="Jharkhand">Jharkhand</option>
-                    <option value="Karnataka">Karnataka</option>
-                    <option value="Kerala">Kerala</option>
-                    <option value="Madhya Pradesh">Madhya Pradesh</option>
-                    <option value="Maharashtra">Maharashtra</option>
-                    <option value="Manipur">Manipur</option>
-                    <option value="Meghalaya">Meghalaya</option>
-                    <option value="Mizoram">Mizoram</option>
-                    <option value="Nagaland">Nagaland</option>
-                    <option value="Odisha">Odisha</option>
-                    <option value="Punjab">Punjab</option>
-                    <option value="Rajasthan">Rajasthan</option>
-                    <option value="Sikkim">Sikkim</option>
-                    <option value="Tamil Nadu">Tamil Nadu</option>
-                    <option value="Telangana">Telangana</option>
-                    <option value="Tripura">Tripura</option>
-                    <option value="Uttar Pradesh">Uttar Pradesh</option>
-                    <option value="Uttarakhand">Uttarakhand</option>
-                    <option value="West Bengal">West Bengal</option>
+                    {% if saved_address.state in state_options %}
+                      <option value="{{ saved_address.state }}" selected>{{ saved_address.state }}</option>
+                    {% else %}
+                      <option value="" selected>Select State</option>
+                    {% endif %}
                     
-                    <!-- Union Territories -->
-                    <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
-                    <option value="Chandigarh">Chandigarh</option>
-                    <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
-                    <option value="Delhi">Delhi</option>
-                    <option value="Lakshadweep">Lakshadweep</option>
-                    <option value="Puducherry">Puducherry</option>
-                    <option value="Jammu and Kashmir">Jammu and Kashmir</option>
-                    <option value="Ladakh">Ladakh</option>
+                    {% for option in state_options %}
+                      {% if option != saved_address.state %}
+                        <option value="{{ option }}">{{ option }}</option>
+                      {% endif %}
+                    {% endfor %}
                   </select>
-                  
                   <label for="state">State *</label>
                 </div>
               </div>
+      
+              <!-- City -->
               <div class="col-md-12">
                 <div class="form-floating my-3">
-                  <select class="form-control" id="city" name="city" required>
-                    <option value="">Select City</option>
-                  </select>
+                  <input type="text" class="form-control" id="city" name="city" placeholder="City" value="{{ saved_address.city }}" required>
                   <label for="city">City *</label>
                 </div>
               </div>
+      
+              <!-- Street Address -->
               <div class="col-md-12">
                 <div class="form-floating mt-3 mb-3">
-                  <input type="text" class="form-control" id="checkout_street_address" name="checkout_street_address" placeholder="Street Address *" required>
+                  <input type="text" class="form-control" id="checkout_street_address" name="checkout_street_address" placeholder="Street Address *" value="{{ saved_address.street }}" required>
                   <label for="checkout_street_address">Street Address *</label>
                 </div>
                 <div class="form-floating mt-3 mb-3">
                   <input type="text" class="form-control" id="checkout_street_address_2" name="checkout_street_address_2">
                 </div>
               </div>
+      
+              <!-- Pincode -->
               <div class="col-md-12">
                 <div class="form-floating my-3">
-                  <input type="text" class="form-control" id="checkout_zipcode" name="checkout_zipcode" placeholder="Pincode *" required pattern="\d{6}" title="Please enter a valid 6-digit pincode.">
+                  <input type="text" class="form-control" id="checkout_zipcode" name="checkout_zipcode" placeholder="Pincode *" value="{{ saved_address.pincode }}" required pattern="\d{6}" title="Please enter a valid 6-digit pincode.">
                   <label for="checkout_zipcode">Pincode *</label>
                 </div>
               </div>
+      
+              <!-- Phone -->
               <div class="col-md-12">
                 <div class="form-floating my-3">
-                  <input type="text" class="form-control" id="checkout_phone" name="checkout_phone" placeholder="+91 9876543210" value="+91 " required>
-                  <label for="checkout_phone">Phone *</label>
+                  <input type="text" class="form-control" id="checkout_phone" name="checkout_phone" placeholder="+91 9876543210"
+                    value="{{ saved_address.contact_number|default:'+91 ' }}" required>
+                  <label for="checkout_phone">Contact No *</label>
                 </div>
               </div>
+      
+              <!-- Email -->
               <div class="col-md-12">
                 <div class="form-floating my-3">
-                  <input type="email" class="form-control" id="checkout_email" name="checkout_email" placeholder="Your Mail *" required>
+                  <input type="email" class="form-control" id="checkout_email" name="checkout_email" placeholder="Your Mail *" value="{{ saved_address.email }}" required>
                   <label for="checkout_email">Your Mail *</label>
                 </div>
               </div>
-            </div>
-            <div class="col-md-12">
-              <div class="mt-3">
-                <textarea class="form-control form-control_gray" name="order_notes" placeholder="Order Notes (optional)" cols="30" rows="8"></textarea>
+      
+              <!-- Order Notes -->
+              <div class="col-md-12">
+                <div class="mt-3">
+                  <textarea class="form-control form-control_gray" name="order_notes" placeholder="Order Notes (optional)" cols="30" rows="8"></textarea>
+                </div>
               </div>
             </div>
           </div>
+      
+          <!-- Order Summary -->
           <div class="checkout__totals-wrapper">
             <div class="sticky-content">
               <div class="checkout__totals">
                 <h3>Your Order</h3>
+              
+                <!-- Cart Items Table -->
                 <table class="checkout-cart-items">
                   <thead>
                     <tr>
@@ -234,83 +229,75 @@
                     </tr>
                   </thead>
                   <tbody>
+                    {% for item in items %}
                     <tr>
-                      <td>Zessi Dresses x 2</td>
-                      <td>$32.50</td>
+                      <td>{{ item.product_name }} x {{ item.quantity }}</td>
+                      <td>${{ item.subtotal|floatformat:2 }}</td>
                     </tr>
+                    {% empty %}
                     <tr>
-                      <td>Kirby T-Shirt</td>
-                      <td>$29.90</td>
+                      <td colspan="2">No items in your cart.</td>
                     </tr>
+                    {% endfor %}
                   </tbody>
                 </table>
+              
+                <!-- Totals Section -->
                 <table class="checkout-totals">
                   <tbody>
                     <tr>
                       <th>SUBTOTAL</th>
-                      <td>$62.40</td>
+                      <td>${{ total_amount|floatformat:2 }}</td>
                     </tr>
+              
                     <tr>
                       <th>SHIPPING</th>
-                      <td>Free shipping</td>
+                      <td>
+                        {% if total_amount >= 50 %}
+                        Free shipping
+                        {% else %}
+                        $5.00
+                        {% endif %}
+                      </td>
                     </tr>
+              
                     <tr>
-                      <th>VAT</th>
-                      <td>$19</td>
+                      <th>GST (18%)</th>
+                      <td>${{ gst|floatformat:2 }}</td> <!-- Updated from VAT to GST -->
                     </tr>
+              
                     <tr>
                       <th>TOTAL</th>
-                      <td>$81.40</td>
+                      <td>${{ grand_total|floatformat:2 }}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
+              
+              <!-- Payment Methods -->
               <div class="checkout__payment-methods">
-                <!-- <div class="form-check">
-                  <input class="form-check-input form-check-input_fill" type="radio" name="checkout_payment_method" id="checkout_payment_method_1" value="bank_transfer" checked="">
-                  <label class="form-check-label" for="checkout_payment_method_1">
-                    Direct bank transfer
-                    <span class="option-detail d-block">
-                      Make your payment directly into our bank account. Please use your Order ID as the payment reference. Your order will not be shipped until the funds have cleared in our account.
-                    </span>
-                  </label>
-                </div> -->
-                <!-- <div class="form-check">
-                  <input class="form-check-input form-check-input_fill" type="radio" name="checkout_payment_method" id="checkout_payment_method_2" value="check_payment">
-                  <label class="form-check-label" for="checkout_payment_method_2">
-                    Check payments
-                    <span class="option-detail d-block">
-                      Phasellus sed volutpat orci. Fusce eget lore mauris vehicula elementum gravida nec dui. Aenean aliquam varius ipsum, non ultricies tellus sodales eu. Donec dignissim viverra nunc, ut aliquet magna posuere eget.
-                    </span>
-                  </label>
-                </div> -->
                 <div class="form-check">
                   <input class="form-check-input form-check-input_fill" type="radio" name="checkout_payment_method" id="checkout_payment_method_3" value="cash_on_delivery">
-                  <label class="form-check-label" for="checkout_payment_method_3">
-                    Cash on delivery
-                    <span class="option-detail d-block">
-                      Phasellus sed volutpat orci. Fusce eget lore mauris vehicula elementum gravida nec dui. Aenean aliquam varius ipsum, non ultricies tellus sodales eu. Donec dignissim viverra nunc, ut aliquet magna posuere eget.
-                    </span>
-                  </label>
+                  <label class="form-check-label" for="checkout_payment_method_3">Cash on delivery</label>
                 </div>
                 <div class="form-check">
                   <input class="form-check-input form-check-input_fill" type="radio" name="checkout_payment_method" id="checkout_payment_method_4" value="paypal">
-                  <label class="form-check-label" for="checkout_payment_method_4">
-                    Paypal
-                    <span class="option-detail d-block">
-                      Phasellus sed volutpat orci. Fusce eget lore mauris vehicula elementum gravida nec dui. Aenean aliquam varius ipsum, non ultricies tellus sodales eu. Donec dignissim viverra nunc, ut aliquet magna posuere eget.
-                    </span>
-                  </label>
+                  <label class="form-check-label" for="checkout_payment_method_4">Paypal</label>
                 </div>
+      
+                <!-- Privacy Policy -->
                 <div class="policy-text">
                   Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our <a href="{% static './terms.html' %}" target="_blank">privacy policy</a>.
                 </div>
               </div>
+      
+              <!-- Submit Button -->
               <button class="btn btn-primary btn-checkout" type="submit">PLACE ORDER</button>
             </div>
           </div>
         </div>
       </form>
+      
     </section>
   </main>
 

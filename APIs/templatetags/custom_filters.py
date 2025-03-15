@@ -3,11 +3,8 @@ from django import template
 register = template.Library()
 
 @register.filter
-def format_count(value):
+def mul(value, arg):
     try:
-        value = int(value)
-        if value >= 1000:
-            return f"{value/1000:.1f}k"
-        return str(value)
+        return float(value) * float(arg)
     except (ValueError, TypeError):
-        return "0"  # Return default value if conversion fails 
+        return 0

@@ -68,7 +68,7 @@
                                   <p>{{ user.address.state }}, {{ user.address.country }}</p>
                                   <br>
                                   <p>{{ user.email }}</p>
-                                  <p>{{ user.phone_number }}</p>
+                                  <p>{{ user.address.contact_number }}</p>
                               {% else %}
                                   <p>No Shipping Address Added</p>
                               {% endif %}
@@ -78,7 +78,7 @@
                           <form method="post" action="{% url 'save_address' %}" class="edit-form p-4 border rounded" id="edit-form" style="display:none;">
                             {% csrf_token %}
                             <h4 class="mb-4">Edit Shipping Address</h4>
-                            
+                        
                             <div class="row g-3">
                                 <!-- First Name -->
                                 <div class="col-md-6">
@@ -104,12 +104,22 @@
                                            value="{{ user.address.street|default:'' }}" required>
                                 </div>
                         
-                                <!-- City -->
+                                <!-- City (Dropdown) -->
                                 <div class="col-md-6">
                                     <label for="city" class="form-label">City</label>
-                                    <input type="text" name="city" id="city" 
-                                           class="form-control" 
-                                           value="{{ user.address.city|default:'' }}" required>
+                                    <select name="city" id="city" class="form-select" required>
+                                        <option value="" disabled>Select City</option>
+                                        <option value="Mumbai" {% if user.address.city == "Mumbai" %}selected{% endif %}>Mumbai</option>
+                                        <option value="Delhi" {% if user.address.city == "Delhi" %}selected{% endif %}>Delhi</option>
+                                        <option value="Bengaluru" {% if user.address.city == "Bengaluru" %}selected{% endif %}>Bengaluru</option>
+                                        <option value="Chennai" {% if user.address.city == "Chennai" %}selected{% endif %}>Chennai</option>
+                                        <option value="Kolkata" {% if user.address.city == "Kolkata" %}selected{% endif %}>Kolkata</option>
+                                        <option value="Pune" {% if user.address.city == "Pune" %}selected{% endif %}>Pune</option>
+                                        <option value="Hyderabad" {% if user.address.city == "Hyderabad" %}selected{% endif %}>Hyderabad</option>
+                                        <option value="Ahmedabad" {% if user.address.city == "Ahmedabad" %}selected{% endif %}>Ahmedabad</option>
+                                        <option value="Jaipur" {% if user.address.city == "Jaipur" %}selected{% endif %}>Jaipur</option>
+                                        <option value="Lucknow" {% if user.address.city == "Lucknow" %}selected{% endif %}>Lucknow</option>
+                                    </select>
                                 </div>
                         
                                 <!-- Pincode -->
@@ -120,12 +130,22 @@
                                            value="{{ user.address.pincode|default:'' }}" required>
                                 </div>
                         
-                                <!-- State -->
+                                <!-- State (Dropdown) -->
                                 <div class="col-md-6">
                                     <label for="state" class="form-label">State</label>
-                                    <input type="text" name="state" id="state" 
-                                           class="form-control" 
-                                           value="{{ user.address.state|default:'' }}" required>
+                                    <select name="state" id="state" class="form-select" required>
+                                        <option value="" disabled>Select State</option>
+                                        <option value="Maharashtra" {% if user.address.state == "Maharashtra" %}selected{% endif %}>Maharashtra</option>
+                                        <option value="Karnataka" {% if user.address.state == "Karnataka" %}selected{% endif %}>Karnataka</option>
+                                        <option value="Tamil Nadu" {% if user.address.state == "Tamil Nadu" %}selected{% endif %}>Tamil Nadu</option>
+                                        <option value="Delhi" {% if user.address.state == "Delhi" %}selected{% endif %}>Delhi</option>
+                                        <option value="West Bengal" {% if user.address.state == "West Bengal" %}selected{% endif %}>West Bengal</option>
+                                        <option value="Telangana" {% if user.address.state == "Telangana" %}selected{% endif %}>Telangana</option>
+                                        <option value="Gujarat" {% if user.address.state == "Gujarat" %}selected{% endif %}>Gujarat</option>
+                                        <option value="Rajasthan" {% if user.address.state == "Rajasthan" %}selected{% endif %}>Rajasthan</option>
+                                        <option value="Uttar Pradesh" {% if user.address.state == "Uttar Pradesh" %}selected{% endif %}>Uttar Pradesh</option>
+                                        <option value="Punjab" {% if user.address.state == "Punjab" %}selected{% endif %}>Punjab</option>
+                                    </select>
                                 </div>
                         
                                 <!-- Country -->
@@ -133,16 +153,26 @@
                                     <label for="country" class="form-label">Country</label>
                                     <input type="text" name="country" id="country" 
                                            class="form-control" 
-                                           value="{{ user.address.country|default:'' }}" required>
+                                           value="{{ user.address.country|default:'India' }}" required>
+                                </div>
+                        
+                                <!-- Contact Number (with Note) -->
+                                <div class="col-md-6">
+                                    <label for="contact_number" class="form-label">Contact Number</label>
+                                    <input type="text" name="contact_number" id="contact_number" 
+                                           class="form-control" 
+                                           value="{{ user.address.contact_number|default:'+91 ' }}" required>
+                                    <small class="text-muted">This number will be used for delivery verification.</small>
                                 </div>
                             </div>
-                            
+                        
                             <!-- Buttons -->
                             <div class="mt-4 d-flex justify-content-end gap-2">
                                 <button type="submit" class="btn btn-primary">Save Address</button>
                                 <button type="button" class="btn btn-secondary" onclick="toggleEditForm()">Cancel</button>
                             </div>
                         </form>
+                        
                         
                         </div>
 

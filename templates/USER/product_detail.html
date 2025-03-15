@@ -1,14 +1,19 @@
 {% load static %}
-<!DOCTYPE html><html dir="ltr" lang="zxx"><head>
+<!DOCTYPE html>
+<html dir="ltr" lang="zxx">
 
-  
+<head>
+
+
   <meta name="author" content="flexkit">
 
   <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.gstatic.com">
 
   <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
 
   <!-- Stylesheets -->
@@ -22,7 +27,7 @@
   <![endif]-->
 
   <!-- Document Title -->
- <title>SHOPNIQ Shop Detail</title>
+  <title>SHOPNIQ Shop Detail</title>
 
   <script src="https://unpkg.com/split-type"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
@@ -31,60 +36,60 @@
   <link rel="stylesheet" href="{% static 'css/loader.css' %}">
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-    console.log("Script Loaded");
+      console.log("Script Loaded");
 
-    function attachCartClickListener() {
+      function attachCartClickListener() {
         const cartTrigger = document.getElementById("cartTrigger");
 
         if (cartTrigger) {
-            console.log("Cart trigger found");
+          console.log("Cart trigger found");
 
-            cartTrigger.addEventListener("click", function (event) {
-                console.log("Cart clicked!");
-                event.preventDefault();
-                fetchCartData();
-            });
+          cartTrigger.addEventListener("click", function (event) {
+            console.log("Cart clicked!");
+            event.preventDefault();
+            fetchCartData();
+          });
         } else {
-            console.error("Cart trigger NOT found");
+          console.error("Cart trigger NOT found");
         }
-    }
+      }
 
-    function fetchCartData() {
+      function fetchCartData() {
         fetch("/cart/products/", {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "same-origin"
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin"
         })
-        .then(response => response.json())
-        .then(data => {
+          .then(response => response.json())
+          .then(data => {
             console.log("Cart Data:", data);
 
             if (data.cart && data.cart.length > 0) {
-                populateCartDrawer(data.cart, data.total_amount);
+              populateCartDrawer(data.cart, data.total_amount);
             } else {
-                clearCartDrawer();
+              clearCartDrawer();
             }
-        })
-        .catch(error => {
+          })
+          .catch(error => {
             console.error("Error fetching cart:", error);
-        });
-    }
-    function populateCartDrawer(cartItems, totalAmount) {
-    const cartList = document.querySelector(".cart-drawer-items-list");
-    const cartAmount = document.querySelector(".js-cart-items-count");
-    const cartSubtotal = document.querySelector(".cart-subtotal");
+          });
+      }
+      function populateCartDrawer(cartItems, totalAmount) {
+        const cartList = document.querySelector(".cart-drawer-items-list");
+        const cartAmount = document.querySelector(".js-cart-items-count");
+        const cartSubtotal = document.querySelector(".cart-subtotal");
 
-    if (!cartList || !cartAmount || !cartSubtotal) {
-        console.error("Cart elements not found in the DOM.");
-        return;
-    }
+        if (!cartList || !cartAmount || !cartSubtotal) {
+          console.error("Cart elements not found in the DOM.");
+          return;
+        }
 
-    cartList.innerHTML = ""; // Clear previous items
+        cartList.innerHTML = ""; // Clear previous items
 
-    cartItems.forEach(item => {
-        const itemTotal = item.price * item.quantity;
+        cartItems.forEach(item => {
+          const itemTotal = item.price * item.quantity;
 
-        const cartItemHTML = `
+          const cartItemHTML = `
             <div class="cart-drawer-item d-flex position-relative">
                 <div class="position-relative">
                     <a href="/product/${item._id}/">
@@ -110,114 +115,114 @@
             <hr class="cart-drawer-divider">
         `;
 
-        cartList.insertAdjacentHTML("beforeend", cartItemHTML);
-    });
+          cartList.insertAdjacentHTML("beforeend", cartItemHTML);
+        });
 
-    cartAmount.innerText = cartItems.length;
-    cartSubtotal.innerText = `$${totalAmount.toFixed(2)}`; // 💡 Display the total amount correctly
+        cartAmount.innerText = cartItems.length;
+        cartSubtotal.innerText = `$${totalAmount.toFixed(2)}`; // 💡 Display the total amount correctly
 
-    attachRemoveListeners(); // Attach remove functionality to buttons
-}
+        attachRemoveListeners(); // Attach remove functionality to buttons
+      }
 
-    function clearCartDrawer() {
+      function clearCartDrawer() {
         const cartList = document.querySelector(".cart-drawer-items-list");
         const cartAmount = document.querySelector(".js-cart-items-count");
         const cartSubtotal = document.querySelector(".cart-subtotal");
 
         if (cartList && cartAmount && cartSubtotal) {
-            cartList.innerHTML = `<p class="text-center text-muted">Your cart is empty.</p>`;
-            cartAmount.innerText = "0";
-            cartSubtotal.innerText = "$0.00";
+          cartList.innerHTML = `<p class="text-center text-muted">Your cart is empty.</p>`;
+          cartAmount.innerText = "0";
+          cartSubtotal.innerText = "$0.00";
         }
-    }
+      }
 
-    function attachRemoveListeners() {
+      function attachRemoveListeners() {
         document.querySelectorAll(".js-cart-item-remove").forEach(button => {
-            button.addEventListener("click", function () {
-                const productId = this.getAttribute("data-id");
-                removeCartItem(productId);
-            });
+          button.addEventListener("click", function () {
+            const productId = this.getAttribute("data-id");
+            removeCartItem(productId);
+          });
         });
 
         document.querySelectorAll(".qty-control__reduce").forEach(button => {
-            button.addEventListener("click", function () {
-                const productId = this.getAttribute("data-id");
-                updateCartItem(productId, -1);
-            });
+          button.addEventListener("click", function () {
+            const productId = this.getAttribute("data-id");
+            updateCartItem(productId, -1);
+          });
         });
 
         document.querySelectorAll(".qty-control__increase").forEach(button => {
-            button.addEventListener("click", function () {
-                const productId = this.getAttribute("data-id");
-                updateCartItem(productId, 1);
-            });
+          button.addEventListener("click", function () {
+            const productId = this.getAttribute("data-id");
+            updateCartItem(productId, 1);
+          });
         });
 
         document.querySelectorAll(".qty-control__number").forEach(input => {
-            input.addEventListener("change", function () {
-                const productId = this.getAttribute("data-id");
-                const newQuantity = parseInt(this.value);
-                updateCartItem(productId, newQuantity - 1, true);
-            });
+          input.addEventListener("change", function () {
+            const productId = this.getAttribute("data-id");
+            const newQuantity = parseInt(this.value);
+            updateCartItem(productId, newQuantity - 1, true);
+          });
         });
-    }
+      }
 
-    function removeCartItem(productId) {
+      function removeCartItem(productId) {
         fetch(`/cart/remove/${productId}/`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            credentials: "same-origin"
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin"
         })
-        .then(response => response.json())
-        .then(data => {
+          .then(response => response.json())
+          .then(data => {
             console.log("Item removed:", data);
             fetchCartData(); // Refresh the cart after removing item
-        })
-        .catch(error => {
+          })
+          .catch(error => {
             console.error("Error removing item:", error);
-        });
-    }
+          });
+      }
 
-    function updateCartItem(productId, change, absolute = false) {
+      function updateCartItem(productId, change, absolute = false) {
         const inputField = document.querySelector(`.qty-control__number[data-id="${productId}"]`);
         let newQuantity = absolute ? change : parseInt(inputField.value) + change;
 
         if (newQuantity < 1) newQuantity = 1; // Prevent going below 1
 
         fetch(`/cart/update/${productId}/`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            credentials: "same-origin",
-            body: JSON.stringify({ quantity: newQuantity })
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ quantity: newQuantity })
         })
-        .then(response => response.json())
-        .then(data => {
+          .then(response => response.json())
+          .then(data => {
             console.log("Item updated:", data);
             fetchCartData(); // Refresh the cart after update
-        })
-        .catch(error => {
+          })
+          .catch(error => {
             console.error("Error updating item:", error);
-        });
-    }
+          });
+      }
 
-    attachCartClickListener();
+      attachCartClickListener();
 
-    // Make functions accessible for debugging
-    window.fetchCartData = fetchCartData;
-    window.removeCartItem = removeCartItem;
-    window.updateCartItem = updateCartItem;
-});
+      // Make functions accessible for debugging
+      window.fetchCartData = fetchCartData;
+      window.removeCartItem = removeCartItem;
+      window.updateCartItem = updateCartItem;
+    });
 
   </script>
-  </head>
-  
-  <body>
-      <div id="page">
-          <div class="loader">
-            <div class="loader-text">Loading...</div>
-          </div>
-      </div>
-      {% include 'partials/navbar.html' %}
+</head>
+
+<body>
+  <div id="page">
+    <div class="loader">
+      <div class="loader-text">Loading...</div>
+    </div>
+  </div>
+  {% include 'partials/navbar.html' %}
   <!-- End Header Type 1 -->
 
   <main>
@@ -225,48 +230,92 @@
     <section class="product-single container">
       <div class="row">
         <div class="col-lg-7">
-          <div class="product-single__media vertical-thumbnail product-media-initialized" data-media-type="vertical-thumbnail">
+          <div class="product-single__media vertical-thumbnail product-media-initialized"
+            data-media-type="vertical-thumbnail">
             <div class="product-single__image">
-              <div class="swiper-container swiper-container-initialized swiper-container-horizontal swiper-container-pointer-events" style="cursor: grab;">
-                <div class="swiper-wrapper" id="swiper-wrapper-10b149c75dba72439" aria-live="polite" style="transform: translate3d(0px, 0px, 0px);">
-                  <div class="swiper-slide product-single__image-item swiper-slide-active" role="group" aria-label="1 / 4" style="width: 534px; margin-right: 32px;">
-                    <img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg" width="674" height="674" alt="">
-                    <a data-fancybox="gallery" href="/static/images/product_3-1.jpg" data-bs-toggle="tooltip" data-bs-placement="left" title="" data-bs-original-title="Zoom">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_zoom"></use></svg>
+              <div
+                class="swiper-container swiper-container-initialized swiper-container-horizontal swiper-container-pointer-events"
+                style="cursor: grab;">
+                <div class="swiper-wrapper" id="swiper-wrapper-10b149c75dba72439" aria-live="polite"
+                  style="transform: translate3d(0px, 0px, 0px);">
+                  <div class="swiper-slide product-single__image-item swiper-slide-active" role="group"
+                    aria-label="1 / 4" style="width: 534px; margin-right: 32px;">
+                    <img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg" width="674" height="674"
+                      alt="">
+                    <a data-fancybox="gallery" href="/static/images/product_3-1.jpg" data-bs-toggle="tooltip"
+                      data-bs-placement="left" title="" data-bs-original-title="Zoom">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use href="#icon_zoom"></use>
+                      </svg>
                     </a>
                   </div>
-                  <div class="swiper-slide product-single__image-item swiper-slide-next" role="group" aria-label="2 / 4" style="width: 534px; margin-right: 32px;">
-                    <img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg" width="674" height="674" alt="">
-                    <a data-fancybox="gallery" href="/static/images/product_3-1.jpg" data-bs-toggle="tooltip" data-bs-placement="left" title="" data-bs-original-title="Zoom">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_zoom"></use></svg>
+                  <div class="swiper-slide product-single__image-item swiper-slide-next" role="group" aria-label="2 / 4"
+                    style="width: 534px; margin-right: 32px;">
+                    <img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg" width="674" height="674"
+                      alt="">
+                    <a data-fancybox="gallery" href="/static/images/product_3-1.jpg" data-bs-toggle="tooltip"
+                      data-bs-placement="left" title="" data-bs-original-title="Zoom">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use href="#icon_zoom"></use>
+                      </svg>
                     </a>
                   </div>
-                  <div class="swiper-slide product-single__image-item" role="group" aria-label="3 / 4" style="width: 534px; margin-right: 32px;">
-                    <img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg" width="674" height="674" alt="">
-                    <a data-fancybox="gallery" href="/static/images/product_3-1.jpg" data-bs-toggle="tooltip" data-bs-placement="left" title="" data-bs-original-title="Zoom">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_zoom"></use></svg>
+                  <div class="swiper-slide product-single__image-item" role="group" aria-label="3 / 4"
+                    style="width: 534px; margin-right: 32px;">
+                    <img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg" width="674" height="674"
+                      alt="">
+                    <a data-fancybox="gallery" href="/static/images/product_3-1.jpg" data-bs-toggle="tooltip"
+                      data-bs-placement="left" title="" data-bs-original-title="Zoom">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use href="#icon_zoom"></use>
+                      </svg>
                     </a>
                   </div>
-                  <div class="swiper-slide product-single__image-item" role="group" aria-label="4 / 4" style="width: 534px; margin-right: 32px;">
-                    <img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg" width="674" height="674" alt="">
-                    <a data-fancybox="gallery" href="/static/images/product_3-1.jpg" data-bs-toggle="tooltip" data-bs-placement="left" title="" data-bs-original-title="Zoom">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_zoom"></use></svg>
+                  <div class="swiper-slide product-single__image-item" role="group" aria-label="4 / 4"
+                    style="width: 534px; margin-right: 32px;">
+                    <img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg" width="674" height="674"
+                      alt="">
+                    <a data-fancybox="gallery" href="/static/images/product_3-1.jpg" data-bs-toggle="tooltip"
+                      data-bs-placement="left" title="" data-bs-original-title="Zoom">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <use href="#icon_zoom"></use>
+                      </svg>
                     </a>
                   </div>
                 </div>
-                <div class="swiper-button-prev swiper-button-disabled" tabindex="-1" role="button" aria-label="Previous slide" aria-controls="swiper-wrapper-10b149c75dba72439" aria-disabled="true"><svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg"><use href="#icon_prev_sm"></use></svg></div>
-                <div class="swiper-button-next" tabindex="0" role="button" aria-label="Next slide" aria-controls="swiper-wrapper-10b149c75dba72439" aria-disabled="false"><svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg"><use href="#icon_next_sm"></use></svg></div>
-              <span class="swiper-notification" aria-live="assertive" aria-atomic="true"></span></div>
+                <div class="swiper-button-prev swiper-button-disabled" tabindex="-1" role="button"
+                  aria-label="Previous slide" aria-controls="swiper-wrapper-10b149c75dba72439" aria-disabled="true"><svg
+                    width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_prev_sm"></use>
+                  </svg></div>
+                <div class="swiper-button-next" tabindex="0" role="button" aria-label="Next slide"
+                  aria-controls="swiper-wrapper-10b149c75dba72439" aria-disabled="false"><svg width="7" height="11"
+                    viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_next_sm"></use>
+                  </svg></div>
+                <span class="swiper-notification" aria-live="assertive" aria-atomic="true"></span>
+              </div>
             </div>
             <div class="product-single__thumbnail">
-              <div class="swiper-container swiper-container-initialized swiper-container-pointer-events swiper-container-free-mode swiper-container-thumbs swiper-container-vertical">
-                <div class="swiper-wrapper" id="swiper-wrapper-e1717521413e7e05" aria-live="polite" style="height: 103.925px; transform: translate3d(0px, 0px, 0px);">
-                  <div class="swiper-slide product-single__image-item swiper-slide-active swiper-slide-thumb-active" role="group" aria-label="1 / 4" style="height: 127.5px;"><img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg" width="104" height="104" alt=""></div>
-                  <div class="swiper-slide product-single__image-item swiper-slide-next" role="group" aria-label="2 / 4" style="height: 127.5px;"><img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg" width="104" height="104" alt=""></div>
-                  <div class="swiper-slide product-single__image-item" role="group" aria-label="3 / 4" style="height: 127.5px;"><img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg" width="104" height="104" alt=""></div>
-                  <div class="swiper-slide product-single__image-item" role="group" aria-label="4 / 4" style="height: 127.5px;"><img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg" width="104" height="104" alt=""></div>
+              <div
+                class="swiper-container swiper-container-initialized swiper-container-pointer-events swiper-container-free-mode swiper-container-thumbs swiper-container-vertical">
+                <div class="swiper-wrapper" id="swiper-wrapper-e1717521413e7e05" aria-live="polite"
+                  style="height: 103.925px; transform: translate3d(0px, 0px, 0px);">
+                  <div class="swiper-slide product-single__image-item swiper-slide-active swiper-slide-thumb-active"
+                    role="group" aria-label="1 / 4" style="height: 127.5px;"><img loading="lazy" class="h-auto"
+                      src="/static/images/product_3-1.jpg" width="104" height="104" alt=""></div>
+                  <div class="swiper-slide product-single__image-item swiper-slide-next" role="group" aria-label="2 / 4"
+                    style="height: 127.5px;"><img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg"
+                      width="104" height="104" alt=""></div>
+                  <div class="swiper-slide product-single__image-item" role="group" aria-label="3 / 4"
+                    style="height: 127.5px;"><img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg"
+                      width="104" height="104" alt=""></div>
+                  <div class="swiper-slide product-single__image-item" role="group" aria-label="4 / 4"
+                    style="height: 127.5px;"><img loading="lazy" class="h-auto" src="/static/images/product_3-1.jpg"
+                      width="104" height="104" alt=""></div>
                 </div>
-              <span class="swiper-notification" aria-live="assertive" aria-atomic="true"></span></div>
+                <span class="swiper-notification" aria-live="assertive" aria-atomic="true"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -277,82 +326,141 @@
               <span class="breadcrumb-separator menu-link fw-medium ps-1 pe-1">/</span>
               <a href="#" class="menu-link menu-link_us-s text-uppercase fw-medium">{{ product.name }}</a>
             </div><!-- /.breadcrumb -->
-    
-            <div class="product-single__prev-next d-flex align-items-center justify-content-between justify-content-md-end flex-grow-1">
-              <a href="#" class="text-uppercase fw-medium disabled"><svg class="mb-1px" width="10" height="10" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg"><use href="#icon_prev_md"></use></svg><span class="menu-link menu-link_us-s">Prev</span></a>
-              <a href="./product2_variable.html" class="text-uppercase fw-medium"><span class="menu-link menu-link_us-s">Next</span><svg class="mb-1px" width="10" height="10" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg"><use href="#icon_next_md"></use></svg></a>
+
+            <div
+              class="product-single__prev-next d-flex align-items-center justify-content-between justify-content-md-end flex-grow-1">
+              <a href="#" class="text-uppercase fw-medium disabled"><svg class="mb-1px" width="10" height="10"
+                  viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
+                  <use href="#icon_prev_md"></use>
+                </svg><span class="menu-link menu-link_us-s">Prev</span></a>
+              <a href="./product2_variable.html" class="text-uppercase fw-medium"><span
+                  class="menu-link menu-link_us-s">Next</span><svg class="mb-1px" width="10" height="10"
+                  viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
+                  <use href="#icon_next_md"></use>
+                </svg></a>
             </div><!-- /.shop-acs -->
           </div>
           <h1 class="product-single__name">{{ product.name }}</h1>
           <div class="product-single__rating">
             <div class="reviews-group d-flex">
-              <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-              <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-              <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-              <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-              <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
+              <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                <use href="#icon_star"></use>
+              </svg>
+              <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                <use href="#icon_star"></use>
+              </svg>
+              <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                <use href="#icon_star"></use>
+              </svg>
+              <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                <use href="#icon_star"></use>
+              </svg>
+              <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                <use href="#icon_star"></use>
+              </svg>
             </div>
-            <span class="reviews-note text-lowercase text-secondary ms-1">{{ product.formatted_reviews_count }} reviews</span>
+            <span class="reviews-note text-lowercase text-secondary ms-1">{{ product.formatted_reviews_count }}
+              reviews</span>
           </div>
           <div class="product-single__price">
             {% if product.discounted_price %}
-                <span class="old-price">${{ product.price }}</span>
-                <span class="current-price">${{ product.discounted_price }}</span>
+            <span class="old-price">${{ product.price }}</span>
+            <span class="current-price">${{ product.discounted_price }}</span>
             {% else %}
-                <span class="current-price">${{ product.price }}</span>
+            <span class="current-price">${{ product.price }}</span>
             {% endif %}
           </div>
           <div class="product-single__short-desc">
             <p>{{ product.description }}</p>
-        </div>
-        
+          </div>
+
           <form name="addtocart-form" method="post" action="{% url 'add_to_cart' %}">
             {% csrf_token %}
             <input type="hidden" name="product_id" value="{{ product.id }}">
             <div class="product-single__addtocart">
               <div class="qty-control position-relative">
-                <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" class="qty-control__number text-center">
+                <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}"
+                  class="qty-control__number text-center">
                 <div class="qty-control__reduce">-</div>
                 <div class="qty-control__increase">+</div>
               </div><!-- .qty-control -->
               {% if product.stock > 0 %}
-                <button type="button" 
-                        class="btn btn-primary btn-addtocart js-add-cart" 
-                        data-aside="cartDrawer"
-                        data-product-id="{{ product.id }}"
-                        title="Add To Cart"
-                        onclick="fetchCartData()"
-                        >
-                
-                  Add to Cart
-                </button>
+              <button type="button" class="btn btn-primary btn-addtocart js-add-cart" data-aside="cartDrawer"
+                data-product-id="{{ product.id }}" title="Add To Cart" onclick="fetchCartData()">
+                Add to Cart
+              </button>
+              <button type="button" class="btn btn-primary btn-buy-now" data-product-id="{{ product.id }}"
+                title="Buy Now" onclick="buyNow('{{ product.id }}', this)" style="
+            position: relative; 
+            display: inline-flex; 
+            align-items: center; 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            border: none; 
+            border-radius: 8px; 
+            background: #007bff; 
+            color: white; 
+            cursor: pointer; 
+            transition: background 0.3s ease;">
+                <span class="btn-text">Buy Now</span>
+                <span class="loader" style="
+        display: none; 
+        border: 3px solid rgba(255, 255, 255, 0.3); 
+        border-top: 3px solid white; 
+        border-radius: 50%; 
+        width: 18px; 
+        height: 18px; 
+        margin-left: 10px; 
+        animation: spin 0.8s linear infinite;
+    "></span>
+                <span class="checkmark" style="
+        display: none; 
+        font-size: 18px; 
+        margin-left: 10px; 
+        color: #28a745; 
+        opacity: 0; 
+        animation: fadeIn 0.5s ease forwards;
+    ">✔️</span>
+              </button>
+
               {% else %}
-                <button type="button" class="btn btn-secondary" disabled>Out of Stock</button>
+              <button type="button" class="btn btn-secondary" disabled>Out of Stock</button>
               {% endif %}
             </div>
           </form>
           <div class="product-single__addtolinks">
-            <a href="#" class="menu-link menu-link_us-s add-to-wishlist" onclick="addToWishlist('{{ product.id }}', this)">
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <use href="#icon_heart" style="fill: {% if product.id in wishlist_product_ids %} red {% else %} none {% endif %}; stroke: red;"></use>
-                </svg>
-                <span class="wishlist-text">Add to Wishlist</span>
+            <a href="#" class="menu-link menu-link_us-s add-to-wishlist"
+              onclick="addToWishlist('{{ product.id }}', this)">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <use href="#icon_heart"
+                  style="fill: {% if product.id in wishlist_product_ids %} red {% else %} none {% endif %}; stroke: red;">
+                </use>
+              </svg>
+              <span class="wishlist-text">Add to Wishlist</span>
             </a>
             <share-button class="share-button">
               <button class="menu-link menu-link_us-s to-share border-0 bg-transparent d-flex align-items-center">
-                <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_sharing"></use></svg>
+                <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <use href="#icon_sharing"></use>
+                </svg>
                 <span>Share</span>
               </button>
               <details id="Details-share-template__main" class="m-1 xl:m-1.5" hidden="">
                 <summary class="btn-solid m-1 xl:m-1.5 pt-3.5 pb-3 px-5">+</summary>
-                <div id="Article-share-template__main" class="share-button__fallback flex items-center absolute top-full left-0 w-full px-2 py-4 bg-container shadow-theme border-t z-10">
+                <div id="Article-share-template__main"
+                  class="share-button__fallback flex items-center absolute top-full left-0 w-full px-2 py-4 bg-container shadow-theme border-t z-10">
                   <div class="field grow mr-4">
                     <label class="field__label sr-only" for="url">Link</label>
-                    <input type="text" class="field__input w-full" id="url" value="https://uomo-crystal.myshopify.com/blogs/news/go-to-wellness-tips-for-mental-health" placeholder="Link" onclick="this.select();" readonly="">
+                    <input type="text" class="field__input w-full" id="url"
+                      value="https://uomo-crystal.myshopify.com/blogs/news/go-to-wellness-tips-for-mental-health"
+                      placeholder="Link" onclick="this.select();" readonly="">
                   </div>
                   <button class="share-button__copy no-js-hidden">
-                    <svg class="icon icon-clipboard inline-block mr-1" width="11" height="13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 11 13">
-                      <path fill-rule="evenodd" clip-rule="evenodd" d="M2 1a1 1 0 011-1h7a1 1 0 011 1v9a1 1 0 01-1 1V1H2zM1 2a1 1 0 00-1 1v9a1 1 0 001 1h7a1 1 0 001-1V3a1 1 0 00-1-1H1zm0 10V3h7v9H1z" fill="currentColor"></path>
+                    <svg class="icon icon-clipboard inline-block mr-1" width="11" height="13" fill="none"
+                      xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 11 13">
+                      <path fill-rule="evenodd" clip-rule="evenodd"
+                        d="M2 1a1 1 0 011-1h7a1 1 0 011 1v9a1 1 0 01-1 1V1H2zM1 2a1 1 0 00-1 1v9a1 1 0 001 1h7a1 1 0 001-1V3a1 1 0 00-1-1H1zm0 10V3h7v9H1z"
+                        fill="currentColor"></path>
                     </svg>
                     <span class="sr-only">Copy link</span>
                   </button>
@@ -362,7 +470,7 @@
             <script src="{% static 'js/details-disclosure.js' %}" defer="defer"></script>
             <script src="{% static 'js/share.js' %}" defer="defer"></script>
           </div>
-          
+
           <div class="product-single__meta-info">
             <div class="meta-item">
               <label>SKU:</label>
@@ -372,7 +480,7 @@
               <label>Category:</label>
               <span>{{ product.subcategory }} (ID: {{ product.category }})</span>
             </div>
-            
+
             <div class="meta-item">
               <label>Stock:</label>
               <span>{{ product.stock }} items</span>
@@ -383,77 +491,93 @@
       <div class="product-single__details-tab">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
           <li class="nav-item" role="presentation">
-            <a class="nav-link nav-link_underscore active" id="tab-description-tab" data-bs-toggle="tab" href="#tab-description" role="tab" aria-controls="tab-description" aria-selected="true">Description</a>
+            <a class="nav-link nav-link_underscore active" id="tab-description-tab" data-bs-toggle="tab"
+              href="#tab-description" role="tab" aria-controls="tab-description" aria-selected="true">Description</a>
           </li>
           <li class="nav-item" role="presentation">
-            <a class="nav-link nav-link_underscore" id="tab-additional-info-tab" data-bs-toggle="tab" href="#tab-additional-info" role="tab" aria-controls="tab-additional-info" aria-selected="false">Additional Information</a>
+            <a class="nav-link nav-link_underscore" id="tab-additional-info-tab" data-bs-toggle="tab"
+              href="#tab-additional-info" role="tab" aria-controls="tab-additional-info"
+              aria-selected="false">Additional Information</a>
           </li>
           <li class="nav-item" role="presentation">
-            <a class="nav-link nav-link_underscore" id="tab-reviews-tab" data-bs-toggle="tab" href="#tab-reviews" role="tab" aria-controls="tab-reviews" aria-selected="false">Reviews ({{ product.formatted_reviews_count }})</a>
+            <a class="nav-link nav-link_underscore" id="tab-reviews-tab" data-bs-toggle="tab" href="#tab-reviews"
+              role="tab" aria-controls="tab-reviews" aria-selected="false">Reviews ({{ product.formatted_reviews_count
+              }})</a>
           </li>
         </ul>
         <div class="tab-content">
-          <div class="tab-pane fade show active" id="tab-description" role="tabpanel" aria-labelledby="tab-description-tab">
+          <div class="tab-pane fade show active" id="tab-description" role="tabpanel"
+            aria-labelledby="tab-description-tab">
             <div class="product-single__description">
-                <h3 class="block-title mb-4">Sed do eiusmod tempor incididunt ut labore</h3>
-                <p class="content">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-        
-                <!-- Product Images Section (Full Screen & Responsive) -->
-                <div class="product-images-section mt-4">
-                    <h3 class="block-title">Product Images & Descriptions</h3>
-                    <div class="row">
-                        <!-- Image 1 -->
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <img src="https://th.bing.com/th/id/OIP.8VpqeD2VzK-3WU6YfwKijQHaFI?w=272&h=188&c=7&r=0&o=5&dpr=1.3&pid=1.7" class="w-100 vh-50 object-fit-cover rounded shadow-lg" alt="Product Image 1">
-                            <p class="mt-3 text-center">This variant comes with a sleek, modern finish and enhanced durability.</p>
-                        </div>
-                        <!-- Image 2 -->
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <img src="https://th.bing.com/th/id/OIP.8VpqeD2VzK-3WU6YfwKijQHaFI?w=272&h=188&c=7&r=0&o=5&dpr=1.3&pid=1.7" class="w-100 vh-50 object-fit-cover rounded shadow-lg" alt="Product Image 2">
-                            <p class="mt-3 text-center">An eco-friendly design with premium materials for comfort and style.</p>
-                        </div>
-                        <!-- Image 3 -->
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <img src="https://th.bing.com/th/id/OIP.8VpqeD2VzK-3WU6YfwKijQHaFI?w=272&h=188&c=7&r=0&o=5&dpr=1.3&pid=1.7" class="w-100 vh-50 object-fit-cover rounded shadow-lg" alt="Product Image 3">
-                            <p class="mt-3 text-center">Lightweight and breathable, perfect for everyday use.</p>
-                        </div>
-                    </div>
+              <h3 class="block-title mb-4">Sed do eiusmod tempor incididunt ut labore</h3>
+              <p class="content">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+                incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+                laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+                velit esse cillum dolore eu fugiat nulla pariatur.</p>
+
+              <!-- Product Images Section (Full Screen & Responsive) -->
+              <div class="product-images-section mt-4">
+                <h3 class="block-title">Product Images & Descriptions</h3>
+                <div class="row">
+                  <!-- Image 1 -->
+                  <div class="col-lg-4 col-md-6 mb-4">
+                    <img
+                      src="https://th.bing.com/th/id/OIP.8VpqeD2VzK-3WU6YfwKijQHaFI?w=272&h=188&c=7&r=0&o=5&dpr=1.3&pid=1.7"
+                      class="w-100 vh-50 object-fit-cover rounded shadow-lg" alt="Product Image 1">
+                    <p class="mt-3 text-center">This variant comes with a sleek, modern finish and enhanced durability.
+                    </p>
+                  </div>
+                  <!-- Image 2 -->
+                  <div class="col-lg-4 col-md-6 mb-4">
+                    <img
+                      src="https://th.bing.com/th/id/OIP.8VpqeD2VzK-3WU6YfwKijQHaFI?w=272&h=188&c=7&r=0&o=5&dpr=1.3&pid=1.7"
+                      class="w-100 vh-50 object-fit-cover rounded shadow-lg" alt="Product Image 2">
+                    <p class="mt-3 text-center">An eco-friendly design with premium materials for comfort and style.</p>
+                  </div>
+                  <!-- Image 3 -->
+                  <div class="col-lg-4 col-md-6 mb-4">
+                    <img
+                      src="https://th.bing.com/th/id/OIP.8VpqeD2VzK-3WU6YfwKijQHaFI?w=272&h=188&c=7&r=0&o=5&dpr=1.3&pid=1.7"
+                      class="w-100 vh-50 object-fit-cover rounded shadow-lg" alt="Product Image 3">
+                    <p class="mt-3 text-center">Lightweight and breathable, perfect for everyday use.</p>
+                  </div>
                 </div>
-        
-                <!-- Why Choose This Product -->
-                <div class="row mt-5">
-                    <div class="col-lg-6">
-                        <h3 class="block-title">Why Choose This Product?</h3>
-                        <ul class="list text-list">
-                            <li>Made from high-quality cotton fabric, soft and smooth</li>
-                            <li>Simple, Configurable (e.g. size, color, etc.), bundled</li>
-                            <li>Downloadable/Digital Products, Virtual Products</li>
-                        </ul>
-                    </div>
-                    <div class="col-lg-6">
-                        <h3 class="block-title">Product Features</h3>
-                        <ol class="list text-list">
-                            <li>Easy customization with multiple size and color options</li>
-                            <li>High-quality stitching for long-lasting durability</li>
-                            <li>Modern and stylish design for all occasions</li>
-                        </ol>
-                    </div>
+              </div>
+
+              <!-- Why Choose This Product -->
+              <div class="row mt-5">
+                <div class="col-lg-6">
+                  <h3 class="block-title">Why Choose This Product?</h3>
+                  <ul class="list text-list">
+                    <li>Made from high-quality cotton fabric, soft and smooth</li>
+                    <li>Simple, Configurable (e.g. size, color, etc.), bundled</li>
+                    <li>Downloadable/Digital Products, Virtual Products</li>
+                  </ul>
                 </div>
-        
-                <!-- Additional Details -->
-                <h3 class="block-title mb-0 mt-4">Lining</h3>
-                <p class="content">100% Polyester, Main: 100% Polyester.</p>
+                <div class="col-lg-6">
+                  <h3 class="block-title">Product Features</h3>
+                  <ol class="list text-list">
+                    <li>Easy customization with multiple size and color options</li>
+                    <li>High-quality stitching for long-lasting durability</li>
+                    <li>Modern and stylish design for all occasions</li>
+                  </ol>
+                </div>
+              </div>
+
+              <!-- Additional Details -->
+              <h3 class="block-title mb-0 mt-4">Lining</h3>
+              <p class="content">100% Polyester, Main: 100% Polyester.</p>
             </div>
-        </div>
-        
-        <!-- Custom CSS for Better Image Fit -->
-        <style>
+          </div>
+
+          <!-- Custom CSS for Better Image Fit -->
+          <style>
             .object-fit-cover {
-                object-fit: cover;
+              object-fit: cover;
             }
-        </style>
-        
-        
+          </style>
+
+
           <div class="tab-pane fade" id="tab-additional-info" role="tabpanel" aria-labelledby="tab-additional-info-tab">
             <div class="product-single__addtional-info">
               <div class="item">
@@ -462,30 +586,32 @@
               </div>
               <div class="item">
                 <label class="h6">Dimensions</label>
-                <span>{{ product.dimensions.length }} x {{ product.dimensions.width }} x {{ product.dimensions.height }} cm</span>
-              </div><div class="item">
+                <span>{{ product.dimensions.length }} x {{ product.dimensions.width }} x {{ product.dimensions.height }}
+                  cm</span>
+              </div>
+              <div class="item">
                 <label class="h6">Available Sizes</label>
                 <span>
-                    {% for size in product.variants.sizes %}
-                        {{ size }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
+                  {% for size in product.variants.sizes %}
+                  {{ size }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
                 </span>
-            </div>
-            
-            <div class="item">
+              </div>
+
+              <div class="item">
                 <label class="h6">Available Colors</label>
                 <span>
-                    {% for color in product.variants.colors %}
-                        {{ color|capfirst }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
+                  {% for color in product.variants.colors %}
+                  {{ color|capfirst }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
                 </span>
-            </div>
-            
+              </div>
+
               <div class="item">
                 <label class="h6">Tags</label>
                 <span>
                   {% for tag in product.tags %}
-                    {{ tag|capfirst }}{% if not forloop.last %}, {% endif %}
+                  {{ tag|capfirst }}{% if not forloop.last %}, {% endif %}
                   {% endfor %}
                 </span>
               </div>
@@ -495,176 +621,181 @@
               </div>
             </div>
           </div>
-          
+
           <div class="tab-pane fade" id="tab-reviews" role="tabpanel" aria-labelledby="tab-reviews-tab">
             <h2 class="product-single__reviews-title">Reviews</h2>
             {% for review in reviews %}
             <div class="product-single__reviews-item">
-                <div class="customer-avatar">
-                    {% if review.avatar %}
-                        <img loading="lazy" src="{{ review.avatar }}" alt="Avatar">
-                    {% else %}
-                        <img loading="lazy" src="{% static 'images/avatar.jpg' %}" alt="Default Avatar">
-                    {% endif %}
+              <div class="customer-avatar">
+                {% if review.avatar %}
+                <img loading="lazy" src="{{ review.avatar }}" alt="Avatar">
+                {% else %}
+                <img loading="lazy" src="{% static 'images/avatar.jpg' %}" alt="Default Avatar">
+                {% endif %}
+              </div>
+              <div class="customer-review">
+                <div class="customer-name">
+                  <h6>{{ review.UID }}</h6>
+                  <div class="reviews-group d-flex">
+                    {% for i in "12345"|make_list %}
+                    {% if forloop.counter <= review.ReviewStars %} <svg class="review-star" viewBox="0 0 9 9"
+                      xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_star"></use></svg>
+                      {% else %}
+                      <svg class="review-star-empty" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                        <use href="#icon_star_empty"></use>
+                      </svg>
+                      {% endif %}
+                      {% endfor %}
+                  </div>
                 </div>
-                <div class="customer-review">
-                    <div class="customer-name">
-                        <h6>{{ review.UID }}</h6>
-                        <div class="reviews-group d-flex">
-                            {% for i in "12345"|make_list %}
-                                {% if forloop.counter <= review.ReviewStars %}
-                                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-                                {% else %}
-                                    <svg class="review-star-empty" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star_empty"></use></svg>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="review-date">{{ review.Date|date:"Y-m-d H:i" }}</div>
-                    <div class="review-text">
-                        <p>{{ review.ReviewText }}</p>
-                    </div>
+                <div class="review-date">{{ review.Date|date:"Y-m-d H:i" }}</div>
+                <div class="review-text">
+                  <p>{{ review.ReviewText }}</p>
                 </div>
+              </div>
             </div>
-        {% empty %}
+            {% empty %}
             <p>No reviews yet.</p>
-        {% endfor %}
-            </div>
-        
-            <div class="product-single__review-form">
-                <form name="customer-review-form" method="POST" action="{% url 'add_review' product.id %}">
-                    {% csrf_token %}
-                    <h5>Review "{{ product.name }}"</h5>
-                    <p>Your email address will not be published. Required fields are marked *</p>
-                    <div class="select-star-rating">
-                        <label>Your rating *</label>
-                        <span class="star-rating">
-                            {% for i in "12345"|make_list %}
-                            <svg class="star-rating__star-icon" width="12" height="12" fill="#ccc" viewBox="0 0 12 12" 
-                                 xmlns="http://www.w3.org/2000/svg" data-rating="{{ forloop.counter }}"
-                                 onclick="setRating({{ forloop.counter }})">
-                                <path d="M11.1429 5.04687C11.1429 4.84598 10.9286 4.76562 10.7679 4.73884L7.40625 4.25L5.89955 1.20312C5.83929 1.07589 5.72545 0.928571 5.57143 0.928571C5.41741 0.928571 5.30357 1.07589 5.2433 1.20312L3.73661 4.25L0.375 4.73884C0.207589 4.76562 0 4.84598 0 5.04687C0 5.16741 0.0870536 5.28125 0.167411 5.3683L2.60491 7.73884L2.02902 11.0871C2.02232 11.1339 2.01563 11.1741 2.01563 11.221C2.01563 11.3951 2.10268 11.5558 2.29688 11.5558C2.39063 11.5558 2.47768 11.5223 2.56473 11.4754L5.57143 9.89509L8.57813 11.4754C8.65848 11.5223 8.75223 11.5558 8.84598 11.5558C9.04018 11.5558 9.12054 11.3951 9.12054 11.221C9.12054 11.1741 9.12054 11.1339 9.11384 11.0871L8.53795 7.73884L10.9688 5.3683C11.0558 5.28125 11.1429 5.16741 11.1429 5.04687Z"></path>
-                            </svg>
-                            {% endfor %}
-                        </span>
-                        <input type="hidden" id="form-input-rating" name="rating" value="">
-                    </div>
-                    <div class="mb-4">
-                        <textarea id="form-input-review" name="review_text" class="form-control form-control_gray" 
-                                  placeholder="Your Review" cols="30" rows="8" required></textarea>
-                    </div>
-                    <div class="form-label-fixed mb-4">
-                        <label for="form-input-name" class="form-label">Name *</label>
-                        <input id="form-input-name" name="name" class="form-control form-control-md form-control_gray" required>
-                    </div>
-                    <div class="form-label-fixed mb-4">
-                        <label for="form-input-email" class="form-label">Email address *</label>
-                        <input id="form-input-email" name="email" type="email" 
-                               class="form-control form-control-md form-control_gray" required>
-                    </div>
-                    <div class="form-check mb-4">
-                        <input class="form-check-input form-check-input_fill" type="checkbox" 
-                               name="remember" id="remember_checkbox">
-                        <label class="form-check-label" for="remember_checkbox">
-                            Save my name, email, and website in this browser for the next time I comment.
-                        </label>
-                    </div>
-                    <div class="form-action">
-                        <button type="submit" class="btn btn-primary">Submit Review</button>
-                    </div>
-                </form>
-            </div>
-            <script>
+            {% endfor %}
+          </div>
+
+          <div class="product-single__review-form">
+            <form name="customer-review-form" method="POST" action="{% url 'add_review' product.id %}">
+              {% csrf_token %}
+              <h5>Review "{{ product.name }}"</h5>
+              <p>Your email address will not be published. Required fields are marked *</p>
+              <div class="select-star-rating">
+                <label>Your rating *</label>
+                <span class="star-rating">
+                  {% for i in "12345"|make_list %}
+                  <svg class="star-rating__star-icon" width="12" height="12" fill="#ccc" viewBox="0 0 12 12"
+                    xmlns="http://www.w3.org/2000/svg" data-rating="{{ forloop.counter }}"
+                    onclick="setRating({{ forloop.counter }})">
+                    <path
+                      d="M11.1429 5.04687C11.1429 4.84598 10.9286 4.76562 10.7679 4.73884L7.40625 4.25L5.89955 1.20312C5.83929 1.07589 5.72545 0.928571 5.57143 0.928571C5.41741 0.928571 5.30357 1.07589 5.2433 1.20312L3.73661 4.25L0.375 4.73884C0.207589 4.76562 0 4.84598 0 5.04687C0 5.16741 0.0870536 5.28125 0.167411 5.3683L2.60491 7.73884L2.02902 11.0871C2.02232 11.1339 2.01563 11.1741 2.01563 11.221C2.01563 11.3951 2.10268 11.5558 2.29688 11.5558C2.39063 11.5558 2.47768 11.5223 2.56473 11.4754L5.57143 9.89509L8.57813 11.4754C8.65848 11.5223 8.75223 11.5558 8.84598 11.5558C9.04018 11.5558 9.12054 11.3951 9.12054 11.221C9.12054 11.1741 9.12054 11.1339 9.11384 11.0871L8.53795 7.73884L10.9688 5.3683C11.0558 5.28125 11.1429 5.16741 11.1429 5.04687Z">
+                    </path>
+                  </svg>
+                  {% endfor %}
+                </span>
+                <input type="hidden" id="form-input-rating" name="rating" value="">
+              </div>
+              <div class="mb-4">
+                <textarea id="form-input-review" name="review_text" class="form-control form-control_gray"
+                  placeholder="Your Review" cols="30" rows="8" required></textarea>
+              </div>
+              <div class="form-label-fixed mb-4">
+                <label for="form-input-name" class="form-label">Name *</label>
+                <input id="form-input-name" name="name" class="form-control form-control-md form-control_gray" required>
+              </div>
+              <div class="form-label-fixed mb-4">
+                <label for="form-input-email" class="form-label">Email address *</label>
+                <input id="form-input-email" name="email" type="email"
+                  class="form-control form-control-md form-control_gray" required>
+              </div>
+              <div class="form-check mb-4">
+                <input class="form-check-input form-check-input_fill" type="checkbox" name="remember"
+                  id="remember_checkbox">
+                <label class="form-check-label" for="remember_checkbox">
+                  Save my name, email, and website in this browser for the next time I comment.
+                </label>
+              </div>
+              <div class="form-action">
+                <button type="submit" class="btn btn-primary">Submit Review</button>
+              </div>
+            </form>
+          </div>
+          <script>
             function setRating(rating) {
-                document.getElementById('form-input-rating').value = rating;
-                
-                // Update star colors
-                const stars = document.querySelectorAll('.star-rating__star-icon');
-                stars.forEach((star, index) => {
-                    if (index < rating) {
-                        star.style.fill = '#ffc107'; // filled star color
-                    } else {
-                        star.style.fill = '#ccc'; // empty star color
-                    }
-                });
+              document.getElementById('form-input-rating').value = rating;
+
+              // Update star colors
+              const stars = document.querySelectorAll('.star-rating__star-icon');
+              stars.forEach((star, index) => {
+                if (index < rating) {
+                  star.style.fill = '#ffc107'; // filled star color
+                } else {
+                  star.style.fill = '#ccc'; // empty star color
+                }
+              });
             }
 
             // Add hover effects
             document.querySelectorAll('.star-rating__star-icon').forEach(star => {
-                star.addEventListener('mouseover', function() {
-                    const rating = this.dataset.rating;
-                    const stars = document.querySelectorAll('.star-rating__star-icon');
-                    stars.forEach((s, index) => {
-                        if (index < rating) {
-                            s.style.fill = '#ffc107';
-                        }
-                    });
+              star.addEventListener('mouseover', function () {
+                const rating = this.dataset.rating;
+                const stars = document.querySelectorAll('.star-rating__star-icon');
+                stars.forEach((s, index) => {
+                  if (index < rating) {
+                    s.style.fill = '#ffc107';
+                  }
                 });
+              });
 
-                star.addEventListener('mouseout', function() {
-                    const currentRating = document.getElementById('form-input-rating').value;
-                    const stars = document.querySelectorAll('.star-rating__star-icon');
-                    stars.forEach((s, index) => {
-                        if (index < currentRating) {
-                            s.style.fill = '#ffc107';
-                        } else {
-                            s.style.fill = '#ccc';
-                        }
-                    });
+              star.addEventListener('mouseout', function () {
+                const currentRating = document.getElementById('form-input-rating').value;
+                const stars = document.querySelectorAll('.star-rating__star-icon');
+                stars.forEach((s, index) => {
+                  if (index < currentRating) {
+                    s.style.fill = '#ffc107';
+                  } else {
+                    s.style.fill = '#ccc';
+                  }
                 });
+              });
             });
 
             function validateForm() {
-                const rating = document.getElementById('form-input-rating').value;
-                const review = document.getElementById('form-input-review').value;
-                const name = document.getElementById('form-input-name').value;
-                const email = document.getElementById('form-input-email').value;
+              const rating = document.getElementById('form-input-rating').value;
+              const review = document.getElementById('form-input-review').value;
+              const name = document.getElementById('form-input-name').value;
+              const email = document.getElementById('form-input-email').value;
 
-                if (!rating) {
-                    alert('Please select a rating');
-                    return false;
-                }
+              if (!rating) {
+                alert('Please select a rating');
+                return false;
+              }
 
-                if (!review.trim()) {
-                    alert('Please write a review');
-                    return false;
-                }
+              if (!review.trim()) {
+                alert('Please write a review');
+                return false;
+              }
 
-                if (!name.trim()) {
-                    alert('Please enter your name');
-                    return false;
-                }
+              if (!name.trim()) {
+                alert('Please enter your name');
+                return false;
+              }
 
-                if (!email.trim()) {
-                    alert('Please enter your email');
-                    return false;
-                }
+              if (!email.trim()) {
+                alert('Please enter your email');
+                return false;
+              }
 
-                // Log form data before submission
-                console.log('Submitting review:', {
-                    rating,
-                    review,
-                    name,
-                    email,
-                    productId: '{{ product.id }}'
-                });
+              // Log form data before submission
+              console.log('Submitting review:', {
+                rating,
+                review,
+                name,
+                email,
+                productId: '{{ product.id }}'
+              });
 
-                return true;
+              return true;
             }
-            </script>
+          </script>
 
-            <!-- Add this to display Django messages -->
-            {% if messages %}
-            <div class="messages">
-                {% for message in messages %}
-                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-                    {{ message }}
-                </div>
-                {% endfor %}
+          <!-- Add this to display Django messages -->
+          {% if messages %}
+          <div class="messages">
+            {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+              {{ message }}
             </div>
-            {% endif %}
+            {% endfor %}
           </div>
+          {% endif %}
         </div>
+      </div>
       </div>
     </section>
     <section class="products-carousel container">
@@ -672,30 +803,35 @@
 
       <div id="related_products" class="position-relative">
         <div 14="" 24="" 30="" class="swiper-container js-swiper-slider" data-settings="{
-            " autoplay":="" false,="" "slidesperview":="" 4,="" "slidespergroup":="" "effect":="" "none",="" "loop":="" true,="" "pagination":="" {="" "el":="" "#related_products="" .products-pagination",="" "type":="" "bullets",="" "clickable":="" true="" },="" "navigation":="" "nextel":="" .products-carousel__next",="" "prevel":="" .products-carousel__prev"="" "breakpoints":="" "320":="" 2,="" "spacebetween":="" "768":="" 3,="" "992":="" }="" }"="">
+            " autoplay":="" false,="" "slidesperview" :="" 4,="" "slidespergroup" :="" "effect" :="" "none" ,="" "loop"
+          :="" true,="" "pagination" :="" {="" "el" :="" "#related_products="" .products-pagination" ,="" "type"
+          :="" "bullets" ,="" "clickable" :="" true="" },="" "navigation" :="" "nextel" :=""
+          .products-carousel__next",="" "prevel" :="" .products-carousel__prev"="" "breakpoints" :="" "320" :=""
+          2,="" "spacebetween" :="" "768" :="" 3,="" "992" :="" }="" }"="">
           <div class="swiper-wrapper">
             <div class="swiper-slide product-card">
               <div class="pc__img-wrapper">
                 <a href="{% static './product1_simple.html' %}">
-                  <img loading="lazy" src="{% static 'images/product_3.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img">
-                  <img loading="lazy" src="{% static 'images/product_3-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
+                  <img loading="lazy" src="{% static 'images/product_3.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img">
+                  <img loading="lazy" src="{% static 'images/product_3-1.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
                 </a>
                 <!-- Add this temporarily for debugging -->
                 <!-- Stock value: {{ product.stock }} -->
 
                 {% if product.stock > 0 %}
-                    <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside btn-primary"
-                            data-aside="cartDrawer" 
-                            data-product-id="{{ product.id }}" 
-                            title="Add To Cart">
-                        Add To Cart
-                    </button>
+                <button
+                  class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside btn-primary"
+                  data-aside="cartDrawer" data-product-id="{{ product.id }}" title="Add To Cart">
+                  Add To Cart
+                </button>
                 {% else %}
-                    <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium btn-secondary"
-                            disabled
-                            title="Out of Stock">
-                        Out of Stock
-                    </button>
+                <button
+                  class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium btn-secondary"
+                  disabled title="Out of Stock">
+                  Out of Stock
+                </button>
                 {% endif %}
               </div>
 
@@ -706,8 +842,11 @@
                   <span class="money price">$17</span>
                 </div>
 
-                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Add To Wishlist">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart"></use></svg>
+                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist"
+                  title="Add To Wishlist">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_heart"></use>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -715,31 +854,49 @@
             <div class="swiper-slide product-card">
               <div class="pc__img-wrapper">
                 <a href="{% static './product1_simple.html' %}">
-                  <img loading="lazy" src="{% static 'images/product_1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img">
-                  <img loading="lazy" src="{% static 'images/product_1-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
+                  <img loading="lazy" src="{% static 'images/product_1.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img">
+                  <img loading="lazy" src="{% static 'images/product_1-1.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
                 </a>
-                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside" data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
+                <button
+                  class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside"
+                  data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
               </div>
 
               <div class="pc__info position-relative">
                 <p class="pc__category">Dresses</p>
-                <h6 class="pc__title"><a href="{% static './product1_simple.html' %}">Cropped Faux Leather Jacket</a></h6>
+                <h6 class="pc__title"><a href="{% static './product1_simple.html' %}">Cropped Faux Leather Jacket</a>
+                </h6>
                 <div class="product-card__price d-flex">
                   <span class="money price">$29</span>
                 </div>
                 <div class="product-card__review d-flex align-items-center">
                   <div class="reviews-group d-flex">
-                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
+                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_star"></use>
+                    </svg>
+                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_star"></use>
+                    </svg>
+                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_star"></use>
+                    </svg>
+                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_star"></use>
+                    </svg>
+                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_star"></use>
+                    </svg>
                   </div>
                   <span class="reviews-note text-lowercase text-secondary ms-1">8k+ reviews</span>
                 </div>
 
-                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Add To Wishlist">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart"></use></svg>
+                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist"
+                  title="Add To Wishlist">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_heart"></use>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -747,10 +904,14 @@
             <div class="swiper-slide product-card">
               <div class="pc__img-wrapper">
                 <a href="{% static './product1_simple.html' %}">
-                  <img loading="lazy" src="{% static 'images/product_2.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img">
-                  <img loading="lazy" src="{% static 'images/product_2-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
+                  <img loading="lazy" src="{% static 'images/product_2.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img">
+                  <img loading="lazy" src="{% static 'images/product_2-1.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
                 </a>
-                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside" data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
+                <button
+                  class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside"
+                  data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
               </div>
 
               <div class="pc__info position-relative">
@@ -760,8 +921,11 @@
                   <span class="money price">$62</span>
                 </div>
 
-                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Add To Wishlist">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart"></use></svg>
+                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist"
+                  title="Add To Wishlist">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_heart"></use>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -769,21 +933,29 @@
             <div class="swiper-slide product-card">
               <div class="pc__img-wrapper">
                 <a href="{% static './product1_simple.html' %}">
-                  <img loading="lazy" src="{% static 'images/product_6.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img">
-                  <img loading="lazy" src="{% static 'images/product_6-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
+                  <img loading="lazy" src="{% static 'images/product_6.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img">
+                  <img loading="lazy" src="{% static 'images/product_6-1.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
                 </a>
-                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside" data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
+                <button
+                  class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside"
+                  data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
               </div>
 
               <div class="pc__info position-relative">
                 <p class="pc__category">Dresses</p>
-                <h6 class="pc__title"><a href="{% static './product1_simple.html' %}">Shirt In Botanical Cheetah Print</a></h6>
+                <h6 class="pc__title"><a href="{% static './product1_simple.html' %}">Shirt In Botanical Cheetah
+                    Print</a></h6>
                 <div class="product-card__price d-flex">
                   <span class="money price">$62</span>
                 </div>
 
-                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Add To Wishlist">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart"></use></svg>
+                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist"
+                  title="Add To Wishlist">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_heart"></use>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -791,10 +963,14 @@
             <div class="swiper-slide product-card">
               <div class="pc__img-wrapper">
                 <a href="{% static './product1_simple.html' %}">
-                  <img loading="lazy" src="{% static 'images/product_7.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img">
-                  <img loading="lazy" src="{% static 'images/product_7-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
+                  <img loading="lazy" src="{% static 'images/product_7.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img">
+                  <img loading="lazy" src="{% static 'images/product_7-1.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
                 </a>
-                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside" data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
+                <button
+                  class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside"
+                  data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
               </div>
 
               <div class="pc__info position-relative">
@@ -804,8 +980,11 @@
                   <span class="money price">$17</span>
                 </div>
 
-                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Add To Wishlist">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart"></use></svg>
+                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist"
+                  title="Add To Wishlist">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_heart"></use>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -813,10 +992,14 @@
             <div class="swiper-slide product-card">
               <div class="pc__img-wrapper">
                 <a href="{% static './product1_simple.html' %}">
-                  <img loading="lazy" src="{% static 'images/product_4.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img">
-                  <img loading="lazy" src="{% static 'images/product_4-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
+                  <img loading="lazy" src="{% static 'images/product_4.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img">
+                  <img loading="lazy" src="{% static 'images/product_4-1.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
                 </a>
-                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside" data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
+                <button
+                  class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside"
+                  data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
               </div>
 
               <div class="pc__info position-relative">
@@ -827,8 +1010,11 @@
                   <span class="money price price-sale">$99</span>
                 </div>
 
-                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Add To Wishlist">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart"></use></svg>
+                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist"
+                  title="Add To Wishlist">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_heart"></use>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -836,10 +1022,14 @@
             <div class="swiper-slide product-card">
               <div class="pc__img-wrapper">
                 <a href="{% static './product1_simple.html' %}">
-                  <img loading="lazy" src="{% static 'images/product_5.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img">
-                  <img loading="lazy" src="{% static 'images/product_5-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
+                  <img loading="lazy" src="{% static 'images/product_5.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img">
+                  <img loading="lazy" src="{% static 'images/product_5-1.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
                 </a>
-                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside" data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
+                <button
+                  class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside"
+                  data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
               </div>
 
               <div class="pc__info position-relative">
@@ -849,8 +1039,11 @@
                   <span class="money price">$29</span>
                 </div>
 
-                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Add To Wishlist">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart"></use></svg>
+                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist"
+                  title="Add To Wishlist">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_heart"></use>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -858,10 +1051,14 @@
             <div class="swiper-slide product-card">
               <div class="pc__img-wrapper">
                 <a href="{% static './product1_simple.html' %}">
-                  <img loading="lazy" src="{% static 'images/product_8.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img">
-                  <img loading="lazy" src="{% static 'images/product_8-1.jpg' %}" width="330" height="400" alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
+                  <img loading="lazy" src="{% static 'images/product_8.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img">
+                  <img loading="lazy" src="{% static 'images/product_8-1.jpg' %}" width="330" height="400"
+                    alt="Cropped Faux leather Jacket" class="pc__img pc__img-second">
                 </a>
-                <button class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside" data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
+                <button
+                  class="pc__atc btn anim_appear-bottom btn position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside"
+                  data-aside="cartDrawer" title="Add To Cart">Add To Cart</button>
               </div>
 
               <div class="pc__info position-relative">
@@ -872,8 +1069,11 @@
                   <span class="money price price-sale">$99</span>
                 </div>
 
-                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Add To Wishlist">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart"></use></svg>
+                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist"
+                  title="Add To Wishlist">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_heart"></use>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -881,10 +1081,14 @@
         </div><!-- /.swiper-container js-swiper-slider -->
 
         <div class="products-carousel__prev position-absolute top-50 d-flex align-items-center justify-content-center">
-          <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg"><use href="#icon_prev_md"></use></svg>
+          <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
+            <use href="#icon_prev_md"></use>
+          </svg>
         </div><!-- /.products-carousel__prev -->
         <div class="products-carousel__next position-absolute top-50 d-flex align-items-center justify-content-center">
-          <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg"><use href="#icon_next_md"></use></svg>
+          <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
+            <use href="#icon_next_md"></use>
+          </svg>
         </div><!-- /.products-carousel__next -->
 
         <div class="products-pagination mt-4 mb-5 d-flex align-items-center justify-content-center"></div>
@@ -895,7 +1099,7 @@
   </main>
 
   <div class="mb-5 pb-xl-5"></div>
-  
+
   <!-- Footer Type 1 -->
   <footer class="footer footer_type_1">
     <div class="footer-middle container">
@@ -918,27 +1122,44 @@
           <ul class="social-links list-unstyled d-flex flex-wrap mb-0">
             <li>
               <a href="https://www.facebook.com" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_facebook" width="9" height="15" viewBox="0 0 9 15" xmlns="http://www.w3.org/2000/svg"><use href="#icon_facebook"></use></svg>
+                <svg class="svg-icon svg-icon_facebook" width="9" height="15" viewBox="0 0 9 15"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <use href="#icon_facebook"></use>
+                </svg>
               </a>
             </li>
             <li>
               <a href="https://www.twitter.com" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_twitter" width="14" height="13" viewBox="0 0 14 13" xmlns="http://www.w3.org/2000/svg"><use href="#icon_twitter"></use></svg>
+                <svg class="svg-icon svg-icon_twitter" width="14" height="13" viewBox="0 0 14 13"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <use href="#icon_twitter"></use>
+                </svg>
               </a>
             </li>
             <li>
               <a href="https://www.instagram.com" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_instagram" width="14" height="13" viewBox="0 0 14 13" xmlns="http://www.w3.org/2000/svg"><use href="#icon_instagram"></use></svg>
+                <svg class="svg-icon svg-icon_instagram" width="14" height="13" viewBox="0 0 14 13"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <use href="#icon_instagram"></use>
+                </svg>
               </a>
             </li>
             <li>
               <a href="https://www.youtube.com" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_youtube" width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg"><path d="M15.0117 1.8584C14.8477 1.20215 14.3281 0.682617 13.6992 0.518555C12.5234 0.19043 7.875 0.19043 7.875 0.19043C7.875 0.19043 3.19922 0.19043 2.02344 0.518555C1.39453 0.682617 0.875 1.20215 0.710938 1.8584C0.382812 3.00684 0.382812 5.46777 0.382812 5.46777C0.382812 5.46777 0.382812 7.90137 0.710938 9.07715C0.875 9.7334 1.39453 10.2256 2.02344 10.3896C3.19922 10.6904 7.875 10.6904 7.875 10.6904C7.875 10.6904 12.5234 10.6904 13.6992 10.3896C14.3281 10.2256 14.8477 9.7334 15.0117 9.07715C15.3398 7.90137 15.3398 5.46777 15.3398 5.46777C15.3398 5.46777 15.3398 3.00684 15.0117 1.8584ZM6.34375 7.68262V3.25293L10.2266 5.46777L6.34375 7.68262Z"></path></svg>
+                <svg class="svg-icon svg-icon_youtube" width="16" height="11" viewBox="0 0 16 11"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M15.0117 1.8584C14.8477 1.20215 14.3281 0.682617 13.6992 0.518555C12.5234 0.19043 7.875 0.19043 7.875 0.19043C7.875 0.19043 3.19922 0.19043 2.02344 0.518555C1.39453 0.682617 0.875 1.20215 0.710938 1.8584C0.382812 3.00684 0.382812 5.46777 0.382812 5.46777C0.382812 5.46777 0.382812 7.90137 0.710938 9.07715C0.875 9.7334 1.39453 10.2256 2.02344 10.3896C3.19922 10.6904 7.875 10.6904 7.875 10.6904C7.875 10.6904 12.5234 10.6904 13.6992 10.3896C14.3281 10.2256 14.8477 9.7334 15.0117 9.07715C15.3398 7.90137 15.3398 5.46777 15.3398 5.46777C15.3398 5.46777 15.3398 3.00684 15.0117 1.8584ZM6.34375 7.68262V3.25293L10.2266 5.46777L6.34375 7.68262Z">
+                  </path>
+                </svg>
               </a>
             </li>
             <li>
               <a href="https://www.pinterest.com" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_pinterest" width="14" height="15" viewBox="0 0 14 15" xmlns="http://www.w3.org/2000/svg"><use href="#icon_pinterest"></use></svg>
+                <svg class="svg-icon svg-icon_pinterest" width="14" height="15" viewBox="0 0 14 15"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <use href="#icon_pinterest"></use>
+                </svg>
               </a>
             </li>
           </ul>
@@ -947,34 +1168,50 @@
         <div class="footer-column footer-menu mb-4 mb-lg-0">
           <h6 class="sub-menu__title text-uppercase">Company</h6>
           <ul class="sub-menu__list list-unstyled">
-            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">About Us</a></li>
-            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Careers</a></li>
-            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Affiliates</a></li>
-            <li class="sub-menu__item"><a href="{% static './blog_list1.html' %}" class="menu-link menu-link_us-s">Blog</a></li>
-            <li class="sub-menu__item"><a href="{% static './contact.html' %}" class="menu-link menu-link_us-s">Contact Us</a></li>
+            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">About
+                Us</a></li>
+            <li class="sub-menu__item"><a href="{% static './about.html' %}"
+                class="menu-link menu-link_us-s">Careers</a></li>
+            <li class="sub-menu__item"><a href="{% static './about.html' %}"
+                class="menu-link menu-link_us-s">Affiliates</a></li>
+            <li class="sub-menu__item"><a href="{% static './blog_list1.html' %}"
+                class="menu-link menu-link_us-s">Blog</a></li>
+            <li class="sub-menu__item"><a href="{% static './contact.html' %}" class="menu-link menu-link_us-s">Contact
+                Us</a></li>
           </ul>
         </div><!-- /.footer-column -->
 
         <div class="footer-column footer-menu mb-4 mb-lg-0">
           <h6 class="sub-menu__title text-uppercase">Shop</h6>
           <ul class="sub-menu__list list-unstyled">
-            <li class="sub-menu__item"><a href="{% static './shop2.html' %}" class="menu-link menu-link_us-s">New Arrivals</a></li>
-            <li class="sub-menu__item"><a href="{% static './shop3.html' %}" class="menu-link menu-link_us-s">Accessories</a></li>
-            <li class="sub-menu__item"><a href="{% static './shop4.html' %}" class="menu-link menu-link_us-s">Men</a></li>
-            <li class="sub-menu__item"><a href="{% static './shop5.html' %}" class="menu-link menu-link_us-s">Women</a></li>
-            <li class="sub-menu__item"><a href="{% static './shop1.html' %}" class="menu-link menu-link_us-s">Shop All</a></li>
+            <li class="sub-menu__item"><a href="{% static './shop2.html' %}" class="menu-link menu-link_us-s">New
+                Arrivals</a></li>
+            <li class="sub-menu__item"><a href="{% static './shop3.html' %}"
+                class="menu-link menu-link_us-s">Accessories</a></li>
+            <li class="sub-menu__item"><a href="{% static './shop4.html' %}" class="menu-link menu-link_us-s">Men</a>
+            </li>
+            <li class="sub-menu__item"><a href="{% static './shop5.html' %}" class="menu-link menu-link_us-s">Women</a>
+            </li>
+            <li class="sub-menu__item"><a href="{% static './shop1.html' %}" class="menu-link menu-link_us-s">Shop
+                All</a></li>
           </ul>
         </div><!-- /.footer-column -->
 
         <div class="footer-column footer-menu mb-4 mb-lg-0">
           <h6 class="sub-menu__title text-uppercase">Help</h6>
           <ul class="sub-menu__list list-unstyled">
-            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Customer Service</a></li>
-            <li class="sub-menu__item"><a href="{% static './account_dashboard.html' %}" class="menu-link menu-link_us-s">My Account</a></li>
-            <li class="sub-menu__item"><a href="{% static './store_location.html' %}" class="menu-link menu-link_us-s">Find a Store</a></li>
-            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Legal & Privacy</a></li>
-            <li class="sub-menu__item"><a href="{% static './contact.html' %}" class="menu-link menu-link_us-s">Contact</a></li>
-            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Gift Card</a></li>
+            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Customer
+                Service</a></li>
+            <li class="sub-menu__item"><a href="{% static './account_dashboard.html' %}"
+                class="menu-link menu-link_us-s">My Account</a></li>
+            <li class="sub-menu__item"><a href="{% static './store_location.html' %}"
+                class="menu-link menu-link_us-s">Find a Store</a></li>
+            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Legal &
+                Privacy</a></li>
+            <li class="sub-menu__item"><a href="{% static './contact.html' %}"
+                class="menu-link menu-link_us-s">Contact</a></li>
+            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Gift
+                Card</a></li>
           </ul>
         </div><!-- /.footer-column -->
 
@@ -1002,7 +1239,8 @@
         <div class="footer-settings d-block d-md-flex align-items-center">
           <div class="d-flex align-items-center">
             <label for="footerSettingsLanguage" class="me-2 text-secondary">Language</label>
-            <select id="footerSettingsLanguage" class="form-select form-select-sm bg-transparent" aria-label="Default select example" name="store-language">
+            <select id="footerSettingsLanguage" class="form-select form-select-sm bg-transparent"
+              aria-label="Default select example" name="store-language">
               <option class="footer-select__option" selected="">United Kingdom | English</option>
               <option class="footer-select__option" value="1">United States | English</option>
               <option class="footer-select__option" value="2">German</option>
@@ -1013,7 +1251,8 @@
 
           <div class="d-flex align-items-center">
             <label for="footerSettingsCurrency" class="ms-md-3 me-2 text-secondary">Currency</label>
-            <select id="footerSettingsCurrency" class="form-select form-select-sm bg-transparent" aria-label="Default select example" name="store-language">
+            <select id="footerSettingsCurrency" class="form-select form-select-sm bg-transparent"
+              aria-label="Default select example" name="store-language">
               <option selected="">$ USD</option>
               <option value="1">£ GBP</option>
               <option value="2">€ EURO</option>
@@ -1037,12 +1276,19 @@
       <div class="accordion" id="categories-list">
         <div class="accordion-item mb-4">
           <h5 class="accordion-header" id="accordion-heading-1">
-            <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-1" aria-expanded="true" aria-controls="accordion-filter-1">
+            <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
+              data-bs-target="#accordion-filter-1" aria-expanded="true" aria-controls="accordion-filter-1">
               Product Categories
-              <svg class="accordion-button__icon" viewBox="0 0 14 14"><g aria-hidden="true" stroke="none" fill-rule="evenodd"><path class="svg-path-vertical" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path><path class="svg-path-horizontal" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path></g></svg>
+              <svg class="accordion-button__icon" viewBox="0 0 14 14">
+                <g aria-hidden="true" stroke="none" fill-rule="evenodd">
+                  <path class="svg-path-vertical" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path>
+                  <path class="svg-path-horizontal" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path>
+                </g>
+              </svg>
             </button>
           </h5>
-          <div id="accordion-filter-1" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-1" data-bs-parent="#categories-list">
+          <div id="accordion-filter-1" class="accordion-collapse collapse show border-0"
+            aria-labelledby="accordion-heading-1" data-bs-parent="#categories-list">
             <div class="accordion-body px-0 pb-0">
               <ul class="list list-inline row row-cols-2 mb-0">
                 <li class="list-item">
@@ -1084,12 +1330,19 @@
       <div class="accordion" id="color-filters">
         <div class="accordion-item mb-4">
           <h5 class="accordion-header" id="accordion-heading-11">
-            <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-2" aria-expanded="true" aria-controls="accordion-filter-2">
+            <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
+              data-bs-target="#accordion-filter-2" aria-expanded="true" aria-controls="accordion-filter-2">
               Color
-              <svg class="accordion-button__icon" viewBox="0 0 14 14"><g aria-hidden="true" stroke="none" fill-rule="evenodd"><path class="svg-path-vertical" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path><path class="svg-path-horizontal" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path></g></svg>
+              <svg class="accordion-button__icon" viewBox="0 0 14 14">
+                <g aria-hidden="true" stroke="none" fill-rule="evenodd">
+                  <path class="svg-path-vertical" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path>
+                  <path class="svg-path-horizontal" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path>
+                </g>
+              </svg>
             </button>
           </h5>
-          <div id="accordion-filter-2" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-11" data-bs-parent="#color-filters">
+          <div id="accordion-filter-2" class="accordion-collapse collapse show border-0"
+            aria-labelledby="accordion-heading-11" data-bs-parent="#color-filters">
             <div class="accordion-body px-0 pb-0">
               <div class="d-flex flex-wrap">
                 <a href="#" class="swatch-color js-filter" style="color: #0a2472"></a>
@@ -1112,12 +1365,19 @@
       <div class="accordion" id="size-filters">
         <div class="accordion-item mb-4">
           <h5 class="accordion-header" id="accordion-heading-size">
-            <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-size" aria-expanded="true" aria-controls="accordion-filter-size">
+            <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
+              data-bs-target="#accordion-filter-size" aria-expanded="true" aria-controls="accordion-filter-size">
               Sizes
-              <svg class="accordion-button__icon" viewBox="0 0 14 14"><g aria-hidden="true" stroke="none" fill-rule="evenodd"><path class="svg-path-vertical" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path><path class="svg-path-horizontal" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path></g></svg>
+              <svg class="accordion-button__icon" viewBox="0 0 14 14">
+                <g aria-hidden="true" stroke="none" fill-rule="evenodd">
+                  <path class="svg-path-vertical" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path>
+                  <path class="svg-path-horizontal" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path>
+                </g>
+              </svg>
             </button>
           </h5>
-          <div id="accordion-filter-size" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-size" data-bs-parent="#size-filters">
+          <div id="accordion-filter-size" class="accordion-collapse collapse show border-0"
+            aria-labelledby="accordion-heading-size" data-bs-parent="#size-filters">
             <div class="accordion-body px-0 pb-0">
               <div class="d-flex flex-wrap">
                 <a href="#" class="swatch-size btn btn-sm btn-outline-light mb-3 me-3 js-filter">XS</a>
@@ -1136,12 +1396,19 @@
       <div class="accordion" id="brand-filters">
         <div class="accordion-item mb-4">
           <h5 class="accordion-header" id="accordion-heading-brand">
-            <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-brand" aria-expanded="true" aria-controls="accordion-filter-brand">
+            <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
+              data-bs-target="#accordion-filter-brand" aria-expanded="true" aria-controls="accordion-filter-brand">
               Brands
-              <svg class="accordion-button__icon" viewBox="0 0 14 14"><g aria-hidden="true" stroke="none" fill-rule="evenodd"><path class="svg-path-vertical" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path><path class="svg-path-horizontal" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path></g></svg>
+              <svg class="accordion-button__icon" viewBox="0 0 14 14">
+                <g aria-hidden="true" stroke="none" fill-rule="evenodd">
+                  <path class="svg-path-vertical" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path>
+                  <path class="svg-path-horizontal" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path>
+                </g>
+              </svg>
             </button>
           </h5>
-          <div id="accordion-filter-brand" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-brand" data-bs-parent="#brand-filters">
+          <div id="accordion-filter-brand" class="accordion-collapse collapse show border-0"
+            aria-labelledby="accordion-heading-brand" data-bs-parent="#brand-filters">
             <div class="search-field multi-select accordion-body px-0 pb-0">
               <select class="d-none" multiple="" name="total-numbers-list">
                 <option value="1">Adidas</option>
@@ -1153,7 +1420,8 @@
                 <option value="5">Zara</option>
               </select>
               <div class="search-field__input-wrapper mb-3">
-                <input type="text" name="search_text" class="search-field__input form-control form-control-sm border-light border-2" placeholder="SEARCH">
+                <input type="text" name="search_text"
+                  class="search-field__input form-control form-control-sm border-light border-2" placeholder="SEARCH">
               </div>
               <ul class="multi-select__list list-unstyled">
                 <li class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
@@ -1194,13 +1462,21 @@
       <div class="accordion" id="price-filters">
         <div class="accordion-item mb-4">
           <h5 class="accordion-header mb-2" id="accordion-heading-price">
-            <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-price" aria-expanded="true" aria-controls="accordion-filter-price">
+            <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
+              data-bs-target="#accordion-filter-price" aria-expanded="true" aria-controls="accordion-filter-price">
               Price
-              <svg class="accordion-button__icon" viewBox="0 0 14 14"><g aria-hidden="true" stroke="none" fill-rule="evenodd"><path class="svg-path-vertical" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path><path class="svg-path-horizontal" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path></g></svg>
+              <svg class="accordion-button__icon" viewBox="0 0 14 14">
+                <g aria-hidden="true" stroke="none" fill-rule="evenodd">
+                  <path class="svg-path-vertical" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path>
+                  <path class="svg-path-horizontal" d="M14,6 L14,8 L0,8 L0,6 L14,6"></path>
+                </g>
+              </svg>
             </button>
           </h5>
-          <div id="accordion-filter-price" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-price" data-bs-parent="#price-filters">
-            <input class="price-range-slider" type="text" name="price_range" value="" data-slider-min="10" data-slider-max="1000" data-slider-step="5" data-slider-value="[250,450]" data-currency="$">
+          <div id="accordion-filter-price" class="accordion-collapse collapse show border-0"
+            aria-labelledby="accordion-heading-price" data-bs-parent="#price-filters">
+            <input class="price-range-slider" type="text" name="price_range" value="" data-slider-min="10"
+              data-slider-max="1000" data-slider-step="5" data-slider-value="[250,450]" data-currency="$">
             <div class="price-range__info d-flex align-items-center mt-2">
               <div class="me-auto">
                 <span class="text-secondary">Min Price: </span>
@@ -1346,13 +1622,16 @@
             <div class="modal-header">
               <ul class="nav nav-pills" id="pills-tab" role="tablist">
                 <li class="nav-item" role="presentation">
-                  <a class="nav-link active rounded-1 text-uppercase" id="pills-item-1-tab" data-bs-toggle="pill" href="#pills-item-1" role="tab" aria-controls="pills-item-1" aria-selected="true">WOMEN</a>
+                  <a class="nav-link active rounded-1 text-uppercase" id="pills-item-1-tab" data-bs-toggle="pill"
+                    href="#pills-item-1" role="tab" aria-controls="pills-item-1" aria-selected="true">WOMEN</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                  <a class="nav-link rounded-1 text-uppercase" id="pills-item-2-tab" data-bs-toggle="pill" href="#pills-item-2" role="tab" aria-controls="pills-item-2" aria-selected="false">MEN</a>
+                  <a class="nav-link rounded-1 text-uppercase" id="pills-item-2-tab" data-bs-toggle="pill"
+                    href="#pills-item-2" role="tab" aria-controls="pills-item-2" aria-selected="false">MEN</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                  <a class="nav-link rounded-1 text-uppercase" id="pills-item-3-tab" data-bs-toggle="pill" href="#pills-item-3" role="tab" aria-controls="pills-item-3" aria-selected="false">KIDS</a>
+                  <a class="nav-link rounded-1 text-uppercase" id="pills-item-3-tab" data-bs-toggle="pill"
+                    href="#pills-item-3" role="tab" aria-controls="pills-item-3" aria-selected="false">KIDS</a>
                 </li>
               </ul>
               <button type="button" class="btn-close-lg" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1360,17 +1639,24 @@
 
             <div class="modal-body">
               <div class="tab-content col-12" id="pills-tabContent">
-                <div class="tab-pane fade show active" id="pills-item-1" role="tabpanel" aria-labelledby="pills-item-1-tab">
+                <div class="tab-pane fade show active" id="pills-item-1" role="tabpanel"
+                  aria-labelledby="pills-item-1-tab">
                   <div class="row">
                     <ul class="nav nav-tabs list-unstyled col-5 d-block" id="myTab1" role="tablist">
                       <li class="nav-item position-relative" role="presentation">
-                        <a class="nav-link nav-link_rline active" id="tab-item-1-tab" data-bs-toggle="tab" href="#tab-item-1" role="tab" aria-controls="tab-item-1" aria-selected="true"><span class="rline-content">WOMEN</span></a>
+                        <a class="nav-link nav-link_rline active" id="tab-item-1-tab" data-bs-toggle="tab"
+                          href="#tab-item-1" role="tab" aria-controls="tab-item-1" aria-selected="true"><span
+                            class="rline-content">WOMEN</span></a>
                       </li>
                       <li class="nav-item position-relative" role="presentation">
-                        <a class="nav-link nav-link_rline" id="tab-item-2-tab" data-bs-toggle="tab" href="#tab-item-2" role="tab" aria-controls="tab-item-2" aria-selected="false"><span class="rline-content">MAN</span></a>
+                        <a class="nav-link nav-link_rline" id="tab-item-2-tab" data-bs-toggle="tab" href="#tab-item-2"
+                          role="tab" aria-controls="tab-item-2" aria-selected="false"><span
+                            class="rline-content">MAN</span></a>
                       </li>
                       <li class="nav-item position-relative" role="presentation">
-                        <a class="nav-link nav-link_rline" id="tab-item-3-tab" data-bs-toggle="tab" href="#tab-item-3" role="tab" aria-controls="tab-item-3" aria-selected="false"><span class="rline-content">KIDS</span></a>
+                        <a class="nav-link nav-link_rline" id="tab-item-3-tab" data-bs-toggle="tab" href="#tab-item-3"
+                          role="tab" aria-controls="tab-item-3" aria-selected="false"><span
+                            class="rline-content">KIDS</span></a>
                       </li>
                       <li class="nav-item position-relative" role="presentation">
                         <a class="nav-link nav-link_rline" href="#"><span class="rline-content">HOME</span></a>
@@ -1399,7 +1685,8 @@
                     </ul>
 
                     <div class="tab-content col-7" id="myTabContent">
-                      <div class="tab-pane fade show active" id="tab-item-1" role="tabpanel" aria-labelledby="tab-item-1-tab">
+                      <div class="tab-pane fade show active" id="tab-item-1" role="tabpanel"
+                        aria-labelledby="tab-item-1-tab">
                         <ul class="sub-menu list-unstyled">
                           <li class="sub-menu__item">
                             <a href="#" class="menu-link menu-link_us-s">New</a>
@@ -1568,12 +1855,19 @@
                   </div><!-- /.row -->
                 </div>
                 <div class="tab-pane fade" id="pills-item-2" role="tabpanel" aria-labelledby="pills-item-2-tab">
-                  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
+                    et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+                    aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+                    cillum dolore eu fugiat nulla pariatur.</p>
                   Elementum lectus a porta commodo suspendisse arcu, aliquam lectus faucibus.
                 </div>
                 <div class="tab-pane fade" id="pills-item-3" role="tabpanel" aria-labelledby="pills-item-3-tab">
-                  <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
-                  Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur?
+                  <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,
+                    totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae
+                    dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit,
+                    sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
+                  Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut
+                  aliquid ex ea commodi consequatur?
                 </div>
               </div>
             </div><!-- /.modal-body -->
@@ -1594,7 +1888,7 @@
   <script src="{% static 'js/jquery.min.js' %}"></script>
   <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
   <script src="{% static 'js/bootstrap-slider.min.js' %}"></script>
-  
+
   <script src="{% static 'js/swiper.min.js' %}"></script>
   <script src="{% static 'js/countdown.js' %}"></script>
   <script src="{% static 'js/jquery.fancybox.js' %}"></script>
@@ -1604,6 +1898,7 @@
 
   <!-- Add this at the end of your body tag, before closing -->
   <script src="{% static 'js/cart.js' %}"></script>
+  <script src="{% static 'js/buynow.js' %}"></script>
 
   <!-- <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -1654,33 +1949,35 @@
 
   <script>
     function addToWishlist(productId, element) {
-        fetch('/api/wishlist/add/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({ product_id: productId })
-        })
+      fetch('/api/wishlist/add/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ product_id: productId })
+      })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                alert(data.message);
-                // Update the icon to filled red
-                const wishlistIcon = element.querySelector('svg use');
-                wishlistIcon.setAttribute('style', 'fill: red; stroke: red;'); // Set inline style to filled red
-                // Change the button text
-                const wishlistText = element.querySelector('.wishlist-text');
-                wishlistText.textContent = 'Added to Wishlist'; // Update text
-            } else {
-                alert(data.message || data.error);
-            }
+          if (data.success) {
+            alert(data.message);
+            // Update the icon to filled red
+            const wishlistIcon = element.querySelector('svg use');
+            wishlistIcon.setAttribute('style', 'fill: red; stroke: red;'); // Set inline style to filled red
+            // Change the button text
+            const wishlistText = element.querySelector('.wishlist-text');
+            wishlistText.textContent = 'Added to Wishlist'; // Update text
+          } else {
+            alert(data.message || data.error);
+          }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while adding to wishlist.');
+          console.error('Error:', error);
+          alert('An error occurred while adding to wishlist.');
         });
     }
   </script>
 
-</body></html>
+</body>
+
+</html>

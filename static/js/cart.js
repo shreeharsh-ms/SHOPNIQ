@@ -208,4 +208,34 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return cookieValue;
     }
+
+    // function buyNow(productId) {
+    //     const quantity = document.querySelector('input[name="quantity"]').value || 1; // Get the quantity from the input
+    //     fetch('/add-to-cart/', {  // Ensure this endpoint matches your API for adding to cart
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //             'X-CSRFToken': '{{ csrf_token }}'  // Ensure CSRF token is included
+    //         },
+    //         body: JSON.stringify({ product_id: productId, quantity: quantity })
+    //     })
+    //     .then(response => {
+    //         if (!response.ok) {
+    //             throw new Error('Network response was not ok');
+    //         }
+    //         return response.json();
+    //     })
+    //     .then(data => {
+    //         if (data.success) {
+    //             // Redirect to checkout page after adding to cart
+    //             window.location.href = '/checkout/';
+    //         } else {
+    //             alert(data.error || 'Failed to add to cart.');
+    //         }
+    //     })
+    //     .catch(error => {
+    //         console.error('Error:', error);
+    //         alert('An error occurred while processing your request.');
+    //     });
+    // }
 });
