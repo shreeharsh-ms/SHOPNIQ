@@ -644,55 +644,43 @@ def checkout(request):
     # Ensure user is logged in
     user_id = request.session.get('user_id')
     if not user_id:
-        print("\n❌ User not logged in. Redirecting to login.\n")
         return redirect('login')
 
-    # Fetch user's saved address
+    user = MongoDBUser.get_user_by_id(user_id)
     saved_address = MongoDBUser.get_address(user_id)
-    print(f"\n📌 Saved address: {saved_address}\n")
 
-    # State Options (for dropdown)
-    state_options = ["Andhra Pradesh", "Assam", "Bihar", "Delhi", "Goa", "Gujarat", "Haryana",
-                     "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
-                     "Maharashtra", "Odisha", "Punjab", "Rajasthan", "Tamil Nadu", "Telangana",
-                     "Uttar Pradesh", "West Bengal"]
+    state_options = [
+        "Andhra Pradesh", "Assam", "Bihar", "Delhi", "Goa", "Gujarat", "Haryana",
+        "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
+        "Maharashtra", "Odisha", "Punjab", "Rajasthan", "Tamil Nadu", "Telangana",
+        "Uttar Pradesh", "West Bengal"
+    ]
 
-    # Handle Checkout Flow: Cart vs Buy Now
-    is_buy_now = False
+    # Detecting Checkout Type (Only in GET request)
+    if request.method == 'GET':
+        is_buy_now = request.GET.get('is_buy_now', '').strip().lower() == 'true'
+        is_cart = request.GET.get('is_cart', '').strip().lower() == 'true'
+        request.session['checkout_type'] = 'buy_now' if is_buy_now else 'cart' if is_cart else None
+
+    # Restore checkout type from session (if lost between requests)
+    checkout_type = request.session.get('checkout_type')
+    is_buy_now = checkout_type == 'buy_now'
+    is_cart = checkout_type == 'cart'
+    print(f"🔍 Checkout Type Detection: is_buy_now = {is_buy_now}, is_cart = {is_cart}")
+
+    # Prepare checkout items and total amount
     items, total_amount = [], 0
 
-    # Capture "Buy Now" flag from request (both GET and POST)
-    if request.method == 'POST':
-        is_buy_now = request.POST.get('is_buy_now', 'false') == 'true'
-        print(f"\n🔍 Checkout Flow (from POST): {'Buy Now' if is_buy_now else 'Cart'}\n")
-    else:  # Handle GET method
-        is_buy_now = request.GET.get('is_buy_now', 'false') == 'true'
-        print(f"\n🔍 Checkout Flow (from GET): {'Buy Now' if is_buy_now else 'Cart'}\n")
-
-    # Store "Buy Now" session if provided via GET
-    if is_buy_now and request.method == 'GET':
-        product_id = request.GET.get('product_id')
-        quantity = int(request.GET.get('quantity', 1))
-        print(f"\n💾 Storing 'Buy Now' session: Product ID: {product_id}, Quantity: {quantity}\n")
-
-        if product_id:
-            request.session['buy_now'] = {'product_id': product_id, 'quantity': quantity}
-            request.session.modified = True
-            return redirect('checkout')
-
-    # Handle "Buy Now" Flow (Retrieve from session)
+    # 🛒 Handle Buy Now Flow
     if is_buy_now:
         buy_now_data = request.session.get('buy_now')
-        print(f"\n🛒 Buy Now Data (from session): {buy_now_data}\n")
-
         if not buy_now_data:
-            print("\n❌ Missing 'Buy Now' session data. Redirecting to cart.\n")
+            print("@@@ No Buy Now data found.")
             return redirect('cart')
 
-        # Fetch product details
         product = MongoDBProduct.get_product_by_id(buy_now_data['product_id'])
         if not product:
-            print("\n❌ Product not found. Redirecting to cart.\n")
+            print("@@@ Product not found.")
             return redirect('cart')
 
         quantity = buy_now_data['quantity']
@@ -707,40 +695,45 @@ def checkout(request):
             'image_url': product.get('banner_img', 'img'),
         })
 
-    # Handle Cart Checkout Flow (if not Buy Now)
-    else:
-        cart = cart_collection.find_one({"user_id": ObjectId(user_id)})
-        print(f"\n🛍️ Cart fetched: {cart}\n")
+        print(f"\n✅ Buy Now Item: {items}\n")
 
+    # 🛍️ Handle Cart Checkout Flow
+    elif is_cart:
+        cart = MongoDBCart.get_user_cart(user_id)
         if not cart or not cart.get('products'):
-            print("\n❌ Cart is empty. Redirecting to checkout.\n")
-            return render(request, 'USER/CheckOut.html', {
-                "error": "Your cart is empty.",
-                "state_options": state_options
-            })
+            print("@@@ Cart is empty.")
+            return redirect('cart')
 
-        for item in cart['products']:
-            product = MongoDBProduct.get_product_by_id(item['product_id'])
+        for cart_item in cart['products']:
+            product = MongoDBProduct.get_product_by_id(cart_item['product_id'])
             if product:
-                price = product['price']
-                quantity = item['quantity']
-                subtotal = price * quantity
+                quantity = cart_item['quantity']
+                subtotal = product['price'] * quantity
                 total_amount += subtotal
 
                 items.append({
                     'product_id': str(product['_id']),
                     'product_name': product['name'],
                     'quantity': quantity,
-                    'price_per_unit': price,
+                    'price_per_unit': product['price'],
                     'subtotal': subtotal,
                     'image_url': product.get('banner_img', 'img'),
                 })
 
-    # Handle Order Placement (POST Request)
-    if request.method == 'POST':
-        print("\n📤 Processing order placement.\n")
+        print(f"\n✅ Cart Items: {items}\n")
 
-        # Extract Shipping Address
+    else:
+        print("@@@ Invalid Checkout Flow.")
+        return redirect('cart')
+
+    # ✅ Calculate GST (18%) and Grand Total
+    gst = round(total_amount * 0.18, 2)
+    grand_total = total_amount + gst
+
+    # 📤 Handle Order Placement (Only on POST request)
+    if request.method == 'POST':
+        print("\n📤 Placing order...\n")
+
         shipping_address = {
             "FirstName": request.POST.get('checkout_first_name', '').strip(),
             "LastName": request.POST.get('checkout_last_name', '').strip(),
@@ -756,24 +749,25 @@ def checkout(request):
             "OrderNotes": request.POST.get('order_notes', '').strip(),
         }
 
-        # Validate Required Fields
+        # Ensure all required fields are filled
         required_fields = ["FirstName", "LastName", "StreetAddress", "City", "State", "Zipcode", "Phone", "Email"]
         if not all(shipping_address[field] for field in required_fields):
-            print("\n❌ Missing required fields.\n")
             return render(request, 'USER/CheckOut.html', {
                 "error": "Please fill in all required fields.",
+                "user": user,
                 "items": items,
                 "total_amount": total_amount,
+                "gst": gst,
+                "grand_total": grand_total,
                 "saved_address": saved_address,
                 "is_buy_now": is_buy_now,
                 "state_options": state_options,
+                "shipping_address": shipping_address,  # Preserve form data
             })
 
-        # Generate Transaction ID
+        # Generate a unique transaction ID (only on successful POST)
         transaction_id = f"TXN{ObjectId()}"
-        print(f"\n🔢 Generated Transaction ID: {transaction_id}\n")
 
-        # Place Order
         try:
             order_id = MongoDBOrders.place_order(
                 user_id=user_id,
@@ -784,29 +778,35 @@ def checkout(request):
                 transaction_id=transaction_id,
                 estimated_delivery_days=5
             )
-            print(f"\n✅ Order placed successfully. Order ID: {order_id}\n")
         except Exception as e:
-            print(f"\n❌ Error placing order: {e}\n")
-            return render(request, 'USER/CheckOut.html', {"error": "Error processing your order."})
+            print(f"❌ Order placement error: {e}")
+            return render(request, 'USER/CheckOut.html', {
+                "error": "Error processing your order. Please try again.",
+                "user": user,
+                "items": items,
+                "total_amount": total_amount,
+                "gst": gst,
+                "grand_total": grand_total,
+                "saved_address": saved_address,
+                "is_buy_now": is_buy_now,
+                "state_options": state_options,
+                "shipping_address": shipping_address,
+            })
 
-        # Clear relevant session
+        # 🗑️ Clear session/cart after successful order
         if is_buy_now:
             request.session.pop('buy_now', None)
         else:
-            cart_collection.update_one({"user_id": ObjectId(user_id)}, {"$set": {"products": []}})
-            print("\n🗑️ Cart cleared after successful order.\n")
+            MongoDBCart.clear_cart(user_id)
 
-        # Redirect to Order Confirmation
+        request.session.pop('checkout_type', None)  # Clear checkout type
         request.session['order_id'] = str(order_id)
+
         return redirect('order_complete')
 
-    # Calculate GST (18%) and Grand Total
-    gst = round(total_amount * 0.18, 2)
-    grand_total = total_amount + gst
-
-    # Render Checkout Page
+    # 🖼️ Render checkout page (GET or invalid POST)
     return render(request, 'USER/CheckOut.html', {
-        'user': MongoDBUser.get_user_by_id(user_id),
+        'user': user,
         'items': items,
         'total_amount': total_amount,
         'gst': gst,
@@ -814,7 +814,34 @@ def checkout(request):
         'saved_address': saved_address,
         'is_buy_now': is_buy_now,
         'state_options': state_options,
+        'shipping_address': {},  # Empty initially
     })
+
+
+# Buy Now API (Stores Product in Session)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def buy_now(request):
+    data = request.data
+    product_id = data.get('product_id')
+    quantity = int(data.get('quantity', 1))
+
+    product = MongoDBProduct.get_product_by_id(product_id)
+
+    if not product:
+        return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=404)
+
+    if product['stock'] < quantity:
+        return JsonResponse({'status': 'error', 'message': 'Insufficient stock'}, status=400)
+
+    # Store Buy Now Data in Session
+    request.session['buy_now'] = {
+        'product_id': str(product['_id']),
+        'quantity': quantity
+    }
+    request.session.modified = True
+
+    return JsonResponse({'status': 'success', 'redirect_url': '/checkout?is_buy_now=true'})
 
 @login_required
 def order_complete(request):
@@ -2561,43 +2588,39 @@ def wishlist(request):
 
 # views.py
 
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
+# from django.http import JsonResponse
+# from django.contrib.auth.decorators import login_required
 
-@api_view(['POST'])
-@login_required
-@permission_classes([IsMongoAuthenticated])
-def buy_now(request):
-    if request.method == 'POST':
-        data = request.data
-        # product_id = request.POST.get('product_id')
-        # quantity = int(request.POST.get('quantity', 1))
+# @api_view(['POST'])
+# @login_required
+# @permission_classes([IsMongoAuthenticated])
+# def buy_now(request):
+#     if request.method == 'POST':
+#         data = request.data
+#         product_id = data.get('product_id')
+#         quantity = int(data.get('quantity', 1))
 
-        product_id = data.get('product_id')
-        quantity = int(data.get('quantity', 1))
+#         print(f"📦 Buy Now Request - Product ID: {product_id}, Quantity: {quantity}")
 
+#         # Fetch the product from MongoDB
+#         product = MongoDBProduct.get_product_by_id(product_id)
 
-        print("ProducyID:                 " , product_id)
+#         if not product:
+#             return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=404)
 
-        # Fetch the product from MongoDB
-        product = MongoDBProduct.get_product_by_id(product_id)
+#         # Ensure stock availability
+#         if product['stock'] < quantity:
+#             return JsonResponse({'status': 'error', 'message': 'Insufficient stock'}, status=400)
 
+#         # Store Buy Now data in session
+#         request.session['buy_now'] = {
+#             'product_id': str(product['_id']),
+#             'quantity': quantity
+#         }
+#         request.session.modified = True
 
-        if not product:
-            return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=404)
+#         print(f"✅ Buy Now Data Stored in Session: {request.session['buy_now']}")
 
-        # Ensure stock availability
-        if product['stock'] < quantity:
-            return JsonResponse({'status': 'error', 'message': 'Insufficient stock'}, status=400)
+#         return JsonResponse({'status': 'success', 'redirect_url': '/checkout?is_buy_now=true'})
 
-        # Store Buy Now data in session (Order Context)
-        request.session['buy_now'] = {
-            'product_id': str(product['_id']),
-            'quantity': quantity
-        }
-        request.session.modified = True
-
-        return JsonResponse({'status': 'success', 'redirect_url': '/checkout/'})
-
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
-
+#     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)

@@ -27,8 +27,8 @@
   <script src="https://unpkg.com/split-type"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
-  <script src="{% static 'js/loader.js' %}"></script>
-  <link rel="stylesheet" href="{% static 'css/loader.css' %}">
+  <!-- <script src="{% static 'js/loader.js' %}"></script> -->
+  <!-- <link rel="stylesheet" href="{% static 'css/loader.css' %}"> -->
   <script src="https://cdn.jsdelivr.net/npm/libphonenumber-js@1.9.43/bundle/libphonenumber-js.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
   <link href="https://cdn.geodatasource.com/css/geodatasource-countryflag.css" rel="stylesheet" />
@@ -131,7 +131,7 @@
                   <label for="checkout_company_name">Company Name (optional)</label>
                 </div>
               </div>
-              <input type="hidden" name="is_buy_now" value="{{ is_buy_now|yesno:'true,false' }}">
+              <!-- <input type="hidden" name="is_buy_now" value="true"> -->
       
               <!-- Country (Read-only) -->
               <div class="col-md-12">
