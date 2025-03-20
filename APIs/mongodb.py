@@ -1283,7 +1283,7 @@ class MongoDBCustomers:
         """
         # Ensure the user has the necessary fields
         loyalty_points = user.get("loyalty_points", 0)
-        orders_count = user.get("orders_count", 0)
+        orders_count = user.get("total_orders", 0)
         created_at = user.get("date_of_register")
         last_order_date = user.get("last_order_date")
 
