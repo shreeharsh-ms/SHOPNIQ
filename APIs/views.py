@@ -635,7 +635,10 @@ def save_address(request):
 from bson import ObjectId
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from bson import ObjectId
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
+
 @login_required
 @permission_classes([IsMongoAuthenticated])
 def checkout(request):
@@ -656,13 +659,17 @@ def checkout(request):
         "Uttar Pradesh", "West Bengal"
     ]
 
-    # Detecting Checkout Type (Only in GET request)
+    # Detect Checkout Type (Only in GET request)
     if request.method == 'GET':
         is_buy_now = request.GET.get('is_buy_now', '').strip().lower() == 'true'
         is_cart = request.GET.get('is_cart', '').strip().lower() == 'true'
         request.session['checkout_type'] = 'buy_now' if is_buy_now else 'cart' if is_cart else None
 
-    # Restore checkout type from session (if lost between requests)
+        # Clear old coupon and discount on a fresh checkout page load
+        request.session.pop('applied_coupon', None)
+        request.session.pop('discount_amount', None)
+
+    # Restore checkout type from session
     checkout_type = request.session.get('checkout_type')
     is_buy_now = checkout_type == 'buy_now'
     is_cart = checkout_type == 'cart'
@@ -726,30 +733,66 @@ def checkout(request):
         print("@@@ Invalid Checkout Flow.")
         return redirect('cart')
 
+    # ✅ Apply Coupon (If available in session)
+    discount_amount = 0
+    coupon_code = request.session.get('applied_coupon')
+
+    if coupon_code:
+        print(f"🎟️ Applying coupon: {coupon_code}")
+        validation_result = coupon_manager.validate_coupon(coupon_code)
+
+        if validation_result["status"] == "success":
+            discount = validation_result.get("discount", "0%")
+
+            # Determine the discount amount (percentage or fixed)
+            if discount.endswith("%"):
+                discount_value = float(discount.strip('%')) / 100
+                discount_amount = round(total_amount * discount_value, 2)
+            else:
+                discount_amount = float(discount)
+
+            # Ensure the discount does not exceed the total amount
+            discount_amount = min(discount_amount, total_amount)
+            print(f"✅ Coupon Applied: {discount_amount} off")
+
+            # Update session values
+            request.session['applied_coupon'] = coupon_code
+            request.session['discount_amount'] = discount_amount
+
+        else:
+            print(f"❌ Invalid Coupon: {validation_result['message']}")
+            messages.error(request, validation_result["message"])
+            request.session.pop('applied_coupon', None)
+            request.session.pop('discount_amount', None)
+
+    else:
+        # Ensure stale discount data is cleared
+        request.session.pop('discount_amount', None)
+
     # ✅ Calculate GST (18%) and Grand Total
-    gst = round(total_amount * 0.18, 2)
-    grand_total = total_amount + gst
+    gst = round((total_amount - discount_amount) * 0.18, 2)
+    grand_total = (total_amount - discount_amount) + gst
 
     # 📤 Handle Order Placement (Only on POST request)
     if request.method == 'POST':
         print("\n📤 Placing order...\n")
 
         shipping_address = {
-            "FirstName": request.POST.get('checkout_first_name', '').strip(),
-            "LastName": request.POST.get('checkout_last_name', '').strip(),
-            "CompanyName": request.POST.get('checkout_company_name', '').strip(),
-            "CountryRegion": request.POST.get('search-keyword', '').strip(),
-            "StreetAddress": request.POST.get('checkout_street_address', '').strip(),
-            "StreetAddress2": request.POST.get('checkout_street_address_2', '').strip(),
-            "City": request.POST.get('city', '').strip(),
-            "State": request.POST.get('state', '').strip(),
-            "Zipcode": request.POST.get('checkout_zipcode', '').strip(),
-            "Phone": request.POST.get('checkout_phone', '').strip(),
-            "Email": request.POST.get('checkout_email', '').strip(),
-            "OrderNotes": request.POST.get('order_notes', '').strip(),
-        }
+             "FirstName": request.POST.get('checkout_first_name', '').strip(),
+             "LastName": request.POST.get('checkout_last_name', '').strip(),
+             "CompanyName": request.POST.get('checkout_company_name', '').strip(),
+             "CountryRegion": request.POST.get('search-keyword', '').strip(),
+             "StreetAddress": request.POST.get('checkout_street_address', '').strip(),
+             "StreetAddress2": request.POST.get('checkout_street_address_2', '').strip(),
+             "City": request.POST.get('city', '').strip(),
+             "State": request.POST.get('state', '').strip(),
+             "Zipcode": request.POST.get('checkout_zipcode', '').strip(),
+             "Phone": request.POST.get('checkout_phone', '').strip(),
+             "Email": request.POST.get('checkout_email', '').strip(),
+             "OrderNotes": request.POST.get('order_notes', '').strip(),
+         }
 
-        # Ensure all required fields are filled
+
         required_fields = ["FirstName", "LastName", "StreetAddress", "City", "State", "Zipcode", "Phone", "Email"]
         if not all(shipping_address[field] for field in required_fields):
             return render(request, 'USER/CheckOut.html', {
@@ -762,59 +805,51 @@ def checkout(request):
                 "saved_address": saved_address,
                 "is_buy_now": is_buy_now,
                 "state_options": state_options,
-                "shipping_address": shipping_address,  # Preserve form data
+                "shipping_address": shipping_address,
             })
 
-        # Generate a unique transaction ID (only on successful POST)
         transaction_id = f"TXN{ObjectId()}"
 
         try:
             order_id = MongoDBOrders.place_order(
                 user_id=user_id,
                 items=items,
-                total_amount=total_amount,
+                total_amount=total_amount - discount_amount,
                 shipping_address=shipping_address,
                 payment_status="Pending",
                 transaction_id=transaction_id,
-                estimated_delivery_days=5
+                estimated_delivery_days=5,
+                applied_coupon=coupon_code,
             )
         except Exception as e:
             print(f"❌ Order placement error: {e}")
-            return render(request, 'USER/CheckOut.html', {
-                "error": "Error processing your order. Please try again.",
-                "user": user,
-                "items": items,
-                "total_amount": total_amount,
-                "gst": gst,
-                "grand_total": grand_total,
-                "saved_address": saved_address,
-                "is_buy_now": is_buy_now,
-                "state_options": state_options,
-                "shipping_address": shipping_address,
-            })
+            return redirect('checkout')
 
-        # 🗑️ Clear session/cart after successful order
         if is_buy_now:
             request.session.pop('buy_now', None)
         else:
             MongoDBCart.clear_cart(user_id)
 
-        request.session.pop('checkout_type', None)  # Clear checkout type
+        # Clear session after successful order
+        request.session.pop('checkout_type', None)
+        request.session.pop('applied_coupon', None)
+        request.session.pop('discount_amount', None)
         request.session['order_id'] = str(order_id)
 
         return redirect('order_complete')
 
-    # 🖼️ Render checkout page (GET or invalid POST)
     return render(request, 'USER/CheckOut.html', {
         'user': user,
         'items': items,
         'total_amount': total_amount,
+        'discount_amount': discount_amount,
         'gst': gst,
         'grand_total': grand_total,
+        'applied_coupon': coupon_code,
         'saved_address': saved_address,
         'is_buy_now': is_buy_now,
         'state_options': state_options,
-        'shipping_address': {},  # Empty initially
+        'shipping_address': {},
     })
 
 
@@ -2383,6 +2418,85 @@ def delete_expired_coupons(request):
     """Admin API to delete expired coupons"""
     result = coupon_manager.delete_expired_coupons()
     return Response(result, status=status.HTTP_200_OK)
+
+
+
+import json
+from django.http import JsonResponse
+from django.contrib.sessions.models import Session
+
+def apply_coupon(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            coupon_code = data.get("coupon_code", "").strip()
+
+            if not coupon_code:
+                return JsonResponse({"success": False, "message": "Coupon code is required."})
+
+            # Validate the coupon
+            validation_result = coupon_manager.validate_coupon(coupon_code)
+
+            if validation_result["status"] == "error":
+                return JsonResponse({"success": False, "message": validation_result["message"]})
+
+            discount = validation_result.get("discount", "0%")
+            discount_percentage = discount
+            # Extract numerical discount value
+            if discount.endswith("%"):
+                discount = float(discount.strip('%')) / 100
+            else:
+                discount = float(discount)
+
+            # Get cart total from session or calculate dynamically
+            checkout_type = request.session.get('checkout_type')
+            if checkout_type == "buy_now":
+                buy_now_data = request.session.get('buy_now')
+                if not buy_now_data:
+                    return JsonResponse({"success": False, "message": "No Buy Now data found."})
+                product = MongoDBProduct.get_product_by_id(buy_now_data['product_id'])
+                if not product:
+                    return JsonResponse({"success": False, "message": "Product not found."})
+                total_amount = product['price'] * buy_now_data['quantity']
+
+            elif checkout_type == "cart":
+                cart = MongoDBCart.get_user_cart(request.session.get('user_id'))
+                if not cart or not cart.get('products'):
+                    return JsonResponse({"success": False, "message": "Cart is empty."})
+                total_amount = sum(
+                    MongoDBProduct.get_product_by_id(item['product_id'])['price'] * item['quantity']
+                    for item in cart['products']
+                )
+            else:
+                return JsonResponse({"success": False, "message": "Invalid checkout type."})
+
+            # Apply discount
+            discount_amount = total_amount * discount
+
+            # Update GST (18%) and shipping logic
+            gst = (total_amount - discount_amount) * 0.18
+            shipping = 0 if total_amount >= 50 else 5.00
+            grand_total = (total_amount - discount_amount) + gst + shipping
+
+            # Save coupon and discount in session
+            request.session['applied_coupon'] = coupon_code
+            request.session['discount_amount'] = discount_amount
+
+            return JsonResponse({
+                "success": True,
+                "message": "Coupon applied successfully.",
+                "total_amount": round(total_amount - discount_amount, 2),
+                "discount_amount": round(discount_amount, 2),
+                "discount_percentage": discount_percentage,
+                "gst": round(gst, 2),
+                "shipping": shipping,
+                "grand_total": round(grand_total, 2)
+            })
+
+        except json.JSONDecodeError:
+            return JsonResponse({"success": False, "message": "Invalid JSON format."})
+
+    return JsonResponse({"success": False, "message": "Invalid request method."})
 
 from django.shortcuts import render, redirect
 from django.contrib import messages

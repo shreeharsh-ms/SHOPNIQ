@@ -141,10 +141,10 @@
             </tbody>
           </table>
           <div class="cart-table-footer">
-            <form action="./" class="position-relative bg-body">
+            <!-- <form action="./" class="position-relative bg-body">
               <input class="form-control" type="text" name="coupon_code" placeholder="Coupon Code">
               <input class="btn-link fw-medium position-absolute top-0 end-0 h-100 px-4" type="submit" value="APPLY COUPON">
-            </form>
+            </form> -->
             <button class="btn btn-light">UPDATE CART</button>
           </div>
         </div>
@@ -189,7 +189,7 @@
             </div>
             <div class="mobile_fixed-btn_wrapper">
               <div class="button-wrapper container">
-                <button class="btn btn-primary btn-checkout">PROCEED TO CHECKOUT</button>
+                <button href="{% url 'checkout' %}?is_cart=true" class="btn btn-primary btn-checkout">PROCEED TO CHECKOUT</button>
               </div>
             </div>
           </div>

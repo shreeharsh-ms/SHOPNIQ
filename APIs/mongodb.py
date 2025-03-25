@@ -5,6 +5,7 @@ from bson import ObjectId
 import pytz
 import datetime as dt
 from datetime import datetime, timedelta
+from .coupons_manager import MongoDBCoupons
 
 # Connect to MongoDB client and set the database
 # client = MongoClient("mongodb://localhost:27017/")
@@ -799,6 +800,8 @@ from bson import ObjectId
 import datetime
 from datetime import datetime, timedelta
 from bson import ObjectId
+from bson import ObjectId, errors
+from datetime import datetime, timedelta
 
 orders_collection = MONGO_DB["orders"]  # Assuming you have an 'orders' collection
 order_counters_collection = MONGO_DB["order_counters"]
@@ -835,57 +838,80 @@ class MongoDBOrders:
         return f"ORD-{today_date}-{order_number}"  # Return the formatted order number
 
 
-
-
     @staticmethod
-
-    def place_order(user_id, items, total_amount, shipping_address, payment_status="Pending", transaction_id=None, estimated_delivery_days=5, applied_coupon="XYZOFF50"):
+    def place_order(user_id, items, total_amount, shipping_address, payment_status="Pending", transaction_id=None, estimated_delivery_days=5, applied_coupon=None):
         """
         Places an order with multiple items and sets an estimated delivery date.
         """
-        ordera_no = MongoDBOrders.generate_order_number()
-        # product_details = MongoDBProduct.get_product_by_id(item["product_id"])
+        def is_valid_objectid(oid):
+            try:
+                return ObjectId(oid)
+            except errors.InvalidId:
+                return None
+        # Validate ObjectIds
+        user_id = is_valid_objectid(user_id)
+        if not user_id:
+            raise ValueError("Invalid user_id format")
+
+        for item in items:
+            item["product_id"] = is_valid_objectid(item["product_id"])
+            if not item["product_id"]:
+                raise ValueError("Invalid product_id format")
+
+        # Redeem coupon if provided
+        if applied_coupon:
+            MongoDBCoupons().redeem_coupon(applied_coupon)
+
+        # Generate unique order number
+        order_no = MongoDBOrders.generate_order_number()
+
+        # Create order data
         order_data = {
-            "UID": ObjectId(user_id),  # User who placed the order
-            "OrderNo": ordera_no,
+            "UID": user_id,
+            "OrderNo": order_no,
             "Items": [
                 {
-                    "PID": ObjectId(item["product_id"]),
+                    "PID": item["product_id"],
                     "ProductName": item["product_name"],
                     "Quantity": item["quantity"],
                     "PricePerUnit": item["price_per_unit"],
                     "Subtotal": item["subtotal"],
-                    "ImageURL": item["image_url"]  # Add the image URL here
+                    "ImageURL": item["image_url"]
                 }
                 for item in items
             ],
-            "FirstName": shipping_address["FirstName"],
-            "LastName": shipping_address["LastName"],
-            "CompanyName": shipping_address["CompanyName"],
-            "CountryRegion": shipping_address["CountryRegion"],
+            "FirstName": shipping_address.get("FirstName", ""),
+            "LastName": shipping_address.get("LastName", ""),
+            "CompanyName": shipping_address.get("CompanyName", ""),
+            "CountryRegion": shipping_address.get("CountryRegion", ""),
             "StreetAddress": shipping_address["StreetAddress"],
-            "StreetAddress2": shipping_address["StreetAddress2"],
+            "StreetAddress2": shipping_address.get("StreetAddress2", ""),
             "City": shipping_address["City"],
             "State": shipping_address["State"],
             "Zipcode": shipping_address["Zipcode"],
             "Phone": shipping_address["Phone"],
             "Email": shipping_address["Email"],
-            "OrderNotes": shipping_address["OrderNotes"],
+            "OrderNotes": shipping_address.get("OrderNotes", ""),
             "TotalAmount": total_amount,
             "AppliedCoupon": applied_coupon,
-            "ShippingAddress": shipping_address,  # Stores entire shipping address
-            "Status": "Pending",  # Initial order status
-            "PaymentStatus": payment_status,  # Payment status
-            "TransactionID": transaction_id,  # Unique transaction ID
-            "OrderDate": datetime.utcnow(),  # Timestamp of order placement
-            "EstimatedDelivery": datetime.utcnow() + timedelta(days=estimated_delivery_days),  # Expected delivery date
-            "Tracking": [],  # Stores tracking updates
-            "RefundStatus": None,  # Tracks refund status if applicable
-            "Cancelled": False  # Order cancellation flag
+            "ShippingAddress": shipping_address,
+            "Status": "Pending",
+            "PaymentStatus": payment_status,
+            "TransactionID": transaction_id,
+            "OrderDate": datetime.utcnow(),
+            "EstimatedDelivery": datetime.utcnow() + timedelta(days=estimated_delivery_days),
+            "Tracking": [],
+            "RefundStatus": None,
+            "Cancelled": False
         }
 
-        result = orders_collection.insert_one(order_data)
-        return str(result.inserted_id)
+        # Insert order and handle errors
+        try:
+            result = orders_collection.insert_one(order_data)
+            return str(result.inserted_id)
+        except Exception as e:
+            print(f"Order placement error: {e}")
+            return None
 
 
     @staticmethod

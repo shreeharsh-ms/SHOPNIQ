@@ -117,6 +117,7 @@ urlpatterns = [
     path("validate-coupon/<str:code>/", views.validate_coupon, name="validate_coupon"),
     path("redeem-coupon/<str:code>/", views.redeem_coupon, name="redeem_coupon"),
     path("delete-expired-coupons/", views.delete_expired_coupons, name="delete_expired_coupons"),
+    path('apply-coupon/', views.apply_coupon, name='apply_coupon'),
 
 
     # TEST

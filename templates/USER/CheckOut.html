@@ -24,6 +24,9 @@
   <!-- Document Title -->
  <title>SHOPNIQ Checkout</title>
 
+  <script src="{% static 'js/coupons.js' %}"></script>
+
+
   <script src="https://unpkg.com/split-type"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
@@ -215,88 +218,123 @@
           </div>
       
           <!-- Order Summary -->
-          <div class="checkout__totals-wrapper">
-            <div class="sticky-content">
-              <div class="checkout__totals">
-                <h3>Your Order</h3>
-              
-                <!-- Cart Items Table -->
-                <table class="checkout-cart-items">
-                  <thead>
-                    <tr>
-                      <th>PRODUCT</th>
-                      <th>SUBTOTAL</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for item in items %}
-                    <tr>
-                      <td>{{ item.product_name }} x {{ item.quantity }}</td>
-                      <td>${{ item.subtotal|floatformat:2 }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="2">No items in your cart.</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              
-                <!-- Totals Section -->
-                <table class="checkout-totals">
-                  <tbody>
-                    <tr>
-                      <th>SUBTOTAL</th>
-                      <td>${{ total_amount|floatformat:2 }}</td>
-                    </tr>
-              
-                    <tr>
-                      <th>SHIPPING</th>
-                      <td>
-                        {% if total_amount >= 50 %}
-                        Free shipping
-                        {% else %}
-                        $5.00
-                        {% endif %}
-                      </td>
-                    </tr>
-              
-                    <tr>
-                      <th>GST (18%)</th>
-                      <td>${{ gst|floatformat:2 }}</td> <!-- Updated from VAT to GST -->
-                    </tr>
-              
-                    <tr>
-                      <th>TOTAL</th>
-                      <td>${{ grand_total|floatformat:2 }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              
-              <!-- Payment Methods -->
-              <div class="checkout__payment-methods">
-                <div class="form-check">
-                  <input class="form-check-input form-check-input_fill" type="radio" name="checkout_payment_method" id="checkout_payment_method_3" value="cash_on_delivery">
-                  <label class="form-check-label" for="checkout_payment_method_3">Cash on delivery</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input form-check-input_fill" type="radio" name="checkout_payment_method" id="checkout_payment_method_4" value="paypal">
-                  <label class="form-check-label" for="checkout_payment_method_4">Paypal</label>
-                </div>
-      
-                <!-- Privacy Policy -->
-                <div class="policy-text">
-                  Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our <a href="{% static './terms.html' %}" target="_blank">privacy policy</a>.
-                </div>
-              </div>
-      
-              <!-- Submit Button -->
-              <button class="btn btn-primary btn-checkout" type="submit">PLACE ORDER</button>
-            </div>
-          </div>
+<!-- Main Checkout Form -->
+<form method="POST" action="" class="checkout-form">
+  {% csrf_token %}
+
+  <div class="checkout__totals-wrapper">
+    <div class="sticky-content">
+      <div class="checkout__totals">
+        <h3>Your Order</h3>
+
+        <!-- Cart Items Table -->
+        <table class="checkout-cart-items">
+          <thead>
+            <tr>
+              <th>PRODUCT</th>
+              <th>SUBTOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td>{{ item.product_name }} x {{ item.quantity }}</td>
+              <td>${{ item.subtotal|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="2">No items in your cart.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <!-- Totals Section -->
+        <table class="checkout-totals">
+          <tbody>
+            <!-- Subtotal -->
+            <tr>
+              <th>SUBTOTAL</th>
+              <td>
+                ${{ total_amount|floatformat:2 }}
+                {% if discount_amount > 0 %}
+                  <span style="color: green;">(Coupon Applied: -${{ discount_amount|floatformat:2 }} | {{ discount_percentage|floatformat:0 }}%)</span>
+                {% endif %}
+              </td>
+            </tr>
+        
+            <!-- Shipping -->
+            <tr>
+              <th>SHIPPING</th>
+              <td>
+                {% if total_amount >= 50 %}
+                  Free shipping
+                {% else %}
+                  $5.00
+                {% endif %}
+              </td>
+            </tr>
+        
+            <!-- GST (18%) -->
+            <tr>
+              <th>GST (18%)</th>
+              <td>${{ gst|floatformat:2 }}</td>
+            </tr>
+        
+            <!-- Total -->
+            <tr>
+              <th>TOTAL</th>
+              <td>${{ grand_total|floatformat:2 }}</td>
+            </tr>
+        
+            <!-- Coupon Info (Optional: Show only if a coupon is applied) -->
+            {% if applied_coupon %}
+              <tr>
+                <th>Applied Coupon</th>
+                <td><strong>{{ applied_coupon }}</strong> - Saved ${{ discount_amount|floatformat:2 }}</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+        
+      </div>
+
+      <!-- Separate Coupon Form -->
+      <div class="checkout__coupon-code">
+        <form id="applyCouponForm" class="position-relative bg-body">
+            <input class="form-control" type="text" id="coupon_code" name="coupon_code" placeholder="Coupon Code">
+            <button id="applyCouponBtn" class="btn-link fw-medium position-absolute top-0 end-0 h-100 px-4" type="button">APPLY COUPON</button>
+        </form>
+    </div>
+    
+    <div id="couponMessage" style="margin-top: 10px; color: red;"></div>
+
+      <br>
+
+      <!-- Payment Methods -->
+      <!-- <div class="checkout__payment-methods">
+        <div class="form-check">
+          <input class="form-check-input form-check-input_fill" type="radio" name="checkout_payment_method" id="checkout_payment_method_3" value="cash_on_delivery" required>
+          <label class="form-check-label" for="checkout_payment_method_3">Cash on delivery</label>
         </div>
-      </form>
+
+        <div class="form-check">
+          <input class="form-check-input form-check-input_fill" type="radio" name="checkout_payment_method" id="checkout_payment_method_4" value="paypal" required>
+          <label class="form-check-label" for="checkout_payment_method_4">Paypal</label>
+        </div>
+
+        <!-- Privacy Policy -->
+        <!-- <div class="policy-text">
+          Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our <a href="{% static './terms.html' %}" target="_blank">privacy policy</a>.
+        </div>
+      </div> --> -->
+
+      <!-- Submit Button -->
+      <button class="btn btn-primary btn-checkout" type="submit">PLACE ORDER</button>
+    </div>
+  </div>
+</form>
+
       
     </section>
   </main>

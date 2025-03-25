@@ -139,7 +139,7 @@
     <footer id="androidFooter">
         <div class="nav-container">
             <!-- Home -->
-            <a href="#" class="nav-item active">
+            <a href="{% url 'index' %}" class="nav-item active">
                 <div style="position: relative;">
                     <i class='bx bx-home nav-icon'></i>
                     <span class="active-indicator"></span>
@@ -148,13 +148,13 @@
             </a>
 
             <!-- Shop -->
-            <a href="#" class="nav-item">
+            <a href="{% url 'item_sort' %}" class="nav-item">
                 <i class='bx bx-store nav-icon'></i>
                 <span class="nav-text">Shop</span>
             </a>
 
             <!-- Cart -->
-            <a href="#" class="nav-item">
+            <a href="{% url 'cart' %}" class="nav-item">
                 <div style="position: relative;">
                     <i class='bx bx-cart nav-icon'></i>
                     <span class="badge" style="background: #28a745;">2</span>
@@ -163,7 +163,7 @@
             </a>
 
             <!-- Wishlist -->
-            <a href="#" class="nav-item">
+            <a href="{% url 'wishlist' %}" class="nav-item">
                 <div style="position: relative;">
                     <i class='bx bx-bookmark-heart nav-icon'></i>
                     <span class="badge" style="background: #dc3545;">3</span>
@@ -172,7 +172,7 @@
             </a>
 
             <!-- Profile -->
-            <a href="#" class="nav-item">
+            <a href="{% url 'acc_details' %}" class="nav-item">
                 <div style="
                     width: 24px;
                     height: 24px;
