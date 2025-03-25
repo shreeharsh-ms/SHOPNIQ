@@ -771,6 +771,7 @@ def checkout(request):
 
     # ✅ Calculate GST (18%) and Grand Total
     gst = round((total_amount - discount_amount) * 0.18, 2)
+    shipping = 0 if total_amount >= 50 else 5.00
     grand_total = (total_amount - discount_amount) + gst
 
     # 📤 Handle Order Placement (Only on POST request)
@@ -814,7 +815,11 @@ def checkout(request):
             order_id = MongoDBOrders.place_order(
                 user_id=user_id,
                 items=items,
-                total_amount=total_amount - discount_amount,
+                original_total_amount = total_amount,
+                discount_amount = discount_amount,
+                gst = gst,
+                delevery_fee = shipping,
+                total_amount=(total_amount + gst + shipping) - discount_amount,
                 shipping_address=shipping_address,
                 payment_status="Pending",
                 transaction_id=transaction_id,
@@ -2355,6 +2360,9 @@ def login_dashboard(request):
 def order_details(request, order_no):
 
     order = MongoDBOrders.get_order_by_order_no(order_no)
+    # print("Order details: ", order)
+    # print("OriginalTotalAmount: ", order['OriginalTotalAmount'])
+    # print("DiscountAmount: ", order['DiscountAmount'])
     user_id = order['UserID']
     print(user_id)
     customer_details = MongoDBUser.get_user_by_id(user_id)

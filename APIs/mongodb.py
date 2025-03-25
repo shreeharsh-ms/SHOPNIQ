@@ -839,7 +839,7 @@ class MongoDBOrders:
 
 
     @staticmethod
-    def place_order(user_id, items, total_amount, shipping_address, payment_status="Pending", transaction_id=None, estimated_delivery_days=5, applied_coupon=None):
+    def place_order(user_id, items,original_total_amount,discount_amount, gst, delevery_fee, total_amount, shipping_address, payment_status="Pending", transaction_id=None, estimated_delivery_days=5, applied_coupon=None):
         """
         Places an order with multiple items and sets an estimated delivery date.
         """
@@ -892,6 +892,10 @@ class MongoDBOrders:
             "Phone": shipping_address["Phone"],
             "Email": shipping_address["Email"],
             "OrderNotes": shipping_address.get("OrderNotes", ""),
+            "OriginalTotalAmount": original_total_amount,
+            "DiscountAmount": discount_amount,
+            "GST": gst,
+            "DeliveryFee": delevery_fee,
             "TotalAmount": total_amount,
             "AppliedCoupon": applied_coupon,
             "ShippingAddress": shipping_address,
@@ -1031,6 +1035,10 @@ class MongoDBOrders:
                 "OrderID": str(order["_id"]),
                 "OrderNo": str(order["OrderNo"]),
                 "UserID": str(order["UID"]),
+                "OriginalTotalAmount": order.get("OriginalTotalAmount", 0),
+                "DiscountAmount": order.get("DiscountAmount", 0),
+                "GST": order.get("GST", 0),
+                "DeliveryFee": order.get("DeliveryFee", 0),
                 "TotalAmount": order.get("TotalAmount", 0),
                 "AppliedCoupon": order.get("AppliedCoupon", None),
                 "ShippingAddress": {
