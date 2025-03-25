@@ -2490,7 +2490,8 @@ def apply_coupon(request):
                 "discount_percentage": discount_percentage,
                 "gst": round(gst, 2),
                 "shipping": shipping,
-                "grand_total": round(grand_total, 2)
+                "grand_total": round(grand_total, 2),
+                "applied_coupon": coupon_code
             })
 
         except json.JSONDecodeError:

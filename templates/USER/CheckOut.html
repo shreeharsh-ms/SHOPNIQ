@@ -257,9 +257,9 @@
               <th>SUBTOTAL</th>
               <td>
                 ${{ total_amount|floatformat:2 }}
-                {% if discount_amount > 0 %}
+                <!-- {% if discount_amount > 0 %}
                   <span style="color: green;">(Coupon Applied: -${{ discount_amount|floatformat:2 }} | {{ discount_percentage|floatformat:0 }}%)</span>
-                {% endif %}
+                {% endif %} -->
               </td>
             </tr>
         
@@ -288,12 +288,12 @@
             </tr>
         
             <!-- Coupon Info (Optional: Show only if a coupon is applied) -->
-            {% if applied_coupon %}
+            <!-- {% if applied_coupon %}
               <tr>
                 <th>Applied Coupon</th>
                 <td><strong>{{ applied_coupon }}</strong> - Saved ${{ discount_amount|floatformat:2 }}</td>
               </tr>
-            {% endif %}
+            {% endif %} -->
           </tbody>
         </table>
         
@@ -301,11 +301,12 @@
 
       <!-- Separate Coupon Form -->
       <div class="checkout__coupon-code">
-        <form id="applyCouponForm" class="position-relative bg-body">
-            <input class="form-control" type="text" id="coupon_code" name="coupon_code" placeholder="Coupon Code">
-            <button id="applyCouponBtn" class="btn-link fw-medium position-absolute top-0 end-0 h-100 px-4" type="button">APPLY COUPON</button>
+        <form id="applyCouponForm" class="d-flex align-items-center bg-body">
+            <input class="form-control me-2" type="text" id="coupon_code" name="coupon_code" placeholder="Enter Coupon Code" style="flex: 1; min-width: 200px;">
+            <button id="applyCouponBtn" class="btn btn-primary fw-medium px-4" type="button">Apply Coupon</button>
         </form>
     </div>
+    
     
     <div id="couponMessage" style="margin-top: 10px; color: red;"></div>
 
