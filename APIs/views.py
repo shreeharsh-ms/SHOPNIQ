@@ -334,13 +334,13 @@ def manager_dashboard(request):
 
 from social_django.utils import psa
 from django.contrib.auth import login
-from datetime import datetime
-import pytz
+# from datetime import datetime
+# import pytz
 from django.http import JsonResponse
 import requests
 from SHOPNIQ import settings
 
-ist = pytz.timezone('Asia/Kolkata')
+# ist = pytz.timezone('Asia/Kolkata')
 
 users_collection = settings.MONGO_DB["users"]
 @api_view(['POST'])
@@ -1149,7 +1149,7 @@ def contact_us(request):
     return render(request, 'Home/ContactUS.html')
 
 
-from datetime import datetime
+# from datetime import datetime
 from bson import ObjectId
 import json
 from rest_framework.decorators import api_view
@@ -1478,7 +1478,7 @@ def get_product_by_id(product_id):
 
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
-import datetime
+# import datetime
 from django.conf import settings
 import json
 from bson import ObjectId
@@ -1972,127 +1972,106 @@ def get_cart_items(request):
         print(f"Traceback: {traceback.format_exc()}")  # Detailed error trace
         return JsonResponse({"error": str(e)}, status=500)
 
+
+
+from django.http import JsonResponse
+from bson import ObjectId
+import datetime
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_cart_quantity(request):
     try:
         data = request.data
-        product_id = data.get('item_id')
+        product_id = data.get('product_id')
         quantity = int(data.get('quantity', 1))
-        
+
         if quantity < 1:
             return JsonResponse({"error": "Quantity must be at least 1"}, status=400)
-            
-        user_id = request.session.get('user_id')
-        if not user_id:
-            return JsonResponse({"error": "User session not found"}, status=401)
-            
+
+        if not ObjectId.is_valid(product_id):
+            return JsonResponse({"error": "Invalid product ID"}, status=400)
+
+        user_id = request.user.id
+        product_id = ObjectId(product_id)
+
         # Update cart
         cart = cart_collection.find_one_and_update(
-            {
-                "user_id": ObjectId(user_id),
-                "products.product_id": product_id
-            },
-            {
-                "$set": {
-                    "products.$.quantity": quantity,
-                    "updated_at": datetime.now(ist)
-                }
-            },
+            {"user_id": ObjectId(user_id), "products.product_id": product_id},
+            {"$set": {
+                "products.$.quantity": quantity,
+                "updated_at": datetime.datetime.utcnow()
+            }},
             return_document=True
         )
-        
+
         if not cart:
             return JsonResponse({"error": "Item not found in cart"}, status=404)
-            
-        # Calculate totals
+
         cart_total = 0
-        item_total = 0
-        
-        for item in cart.get("products", []):
-            product = products_collection.find_one({"_id": ObjectId(item["product_id"])})
+        for item in cart["products"]:
+            product = products_collection.find_one({"_id": item["product_id"]})
             if product:
-                price = float(product.get("discounted_price") or product.get("price", 0))
-                if item["product_id"] == product_id:
-                    item_total = price * quantity
+                price = float(product.get("discounted_price", product["price"]))
                 cart_total += price * item["quantity"]
-        
+
         return JsonResponse({
             "success": True,
-            "item_total": "{:.2f}".format(item_total),
-            "cart_total": "{:.2f}".format(cart_total),
-            "cart_items_count": sum(item["quantity"] for item in cart.get("products", []))
+            "cart_items_count": sum(item["quantity"] for item in cart["products"]),
+            "cart_total": f"{cart_total:.2f}"
         })
-        
-    except Exception as e:
-        print(f"Error updating cart quantity: {str(e)}")
-        import traceback
-        print(f"Traceback: {traceback.format_exc()}")
-        return JsonResponse({"error": str(e)}, status=500)
 
-@api_view(['POST', 'DELETE'])  # Allow DELETE method
+    except Exception as e:
+        print(f"Error: {e}")
+        return JsonResponse({"error": "Internal server error"}, status=500)
+
+
+@api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def remove_from_cart(request, product_id=None):  # Accept product_id from URL
+def remove_from_cart(request, product_id):
     try:
-        # If DELETE request, get product_id from URL instead of request body
-        if request.method == "DELETE":
-            if not product_id:
-                return JsonResponse({"error": "Product ID is required"}, status=400)
-        else:  # For POST requests, get product_id from request body
-            data = request.data
-            product_id = data.get('item_id')
+        # Validate product_id
+        if not ObjectId.is_valid(product_id):
+            return JsonResponse({"error": "Invalid product ID"}, status=400)
 
-        if not product_id:
-            return JsonResponse({"error": "Product ID is required"}, status=400)
+        # Ensure user_id is in ObjectId format
+        user_id = request.user.id
+        user_id = ObjectId(user_id) if ObjectId.is_valid(user_id) else None
 
-        # Get user's MongoDB ID from session
-        user_id = request.session.get('user_id')
         if not user_id:
-            return JsonResponse({"error": "User session not found"}, status=401)
+            return JsonResponse({"error": "Invalid user session"}, status=401)
 
-        # Remove item from cart
-        removed = MongoDBCart.remove_from_cart(user_id, product_id)
-        if not removed:
-            return JsonResponse({"error": "Item not found in cart"}, status=404)
+        product_id = ObjectId(product_id)
 
-        # Get updated cart details
-        cart = MongoDBCart.get_user_cart(user_id)
-        cart_items = []
+        # Find and update the cart by removing the product
+        updated_cart = cart_collection.find_one_and_update(
+            {"user_id": user_id},
+            {"$pull": {"products": {"product_id": product_id}}},
+            return_document=True
+        )
+
+        if not updated_cart:
+            return JsonResponse({"error": "Item not found in cart or cart does not exist"}, status=404)
+
+        # Recalculate cart total
         cart_total = 0
-
-        if cart:
-            for item in cart.get("products", []):
-                product = db["products"].find_one({"_id": ObjectId(item["product_id"])})
-                if product:
-                    price = float(product.get("discounted_price") or product.get("price", 0))
-                    item_total = price * item["quantity"]
-                    cart_total += item_total
-
-                    cart_items.append({
-                        "product": {
-                            "id": str(product["_id"]),
-                            "name": product["name"],
-                            "image": {"url": product.get("image_url", "")},
-                            "price": price
-                        },
-                        "quantity": item["quantity"],
-                        "total_price": "{:.2f}".format(item_total)
-                    })
+        for item in updated_cart.get("products", []):
+            product = products_collection.find_one({"_id": item["product_id"]})
+            if product:
+                price = float(product.get("discounted_price") or product["price"])
+                cart_total += price * item["quantity"]
 
         return JsonResponse({
             "success": True,
-            "message": "Item removed from cart successfully",
-            "cart_items": cart_items,
-            "cart_total": "{:.2f}".format(cart_total),
-            "cart_items_count": len(cart_items)
+            "cart_total": f"{cart_total:.2f}",
+            "cart_items_count": len(updated_cart["products"])
         })
 
     except Exception as e:
-        import traceback
-        print(f"Error removing item from cart: {str(e)}")
-        print(f"Traceback: {traceback.format_exc()}")
-        return JsonResponse({"error": str(e)}, status=500)
-
+        print("Error:", e)
+        return JsonResponse({"error": "Internal server error"}, status=500)
 def cart(request):
     """Render cart page"""
     try:

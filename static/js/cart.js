@@ -1,241 +1,161 @@
 document.addEventListener('DOMContentLoaded', function () {
-    console.log("🛒 Cart Script Loaded");
+    console.log("🛒 Cart System Initialized");
 
-    // ✅ Attach Add to Cart event listener
-    document.querySelectorAll('.js-add-cart').forEach(button => {
-        button.addEventListener('click', function (e) {
+    // Attach event listeners
+    attachAddToCartListeners();
+    attachQuantityListeners();
+    attachRemoveListeners();
+});
+
+// Get CSRF Token
+function getCSRFToken() {
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
+}
+
+// 🟢 Add to Cart
+function attachAddToCartListeners() {
+    document.body.addEventListener('click', (e) => {
+        if (e.target.classList.contains('js-add-cart')) {
             e.preventDefault();
-            console.log("Add to Cart button clicked");
+            const productId = e.target.getAttribute('data-product-id');
+            const quantityInput = e.target.closest('.product-single__addtocart')
+                ?.querySelector('.qty-control__number');
+            const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
 
-            const productId = this.getAttribute('data-product-id');
-            console.log('Product ID:', productId);
+            console.log(`🛒 Adding product: ${productId}, Quantity: ${quantity}`);
 
-            // Find the closest quantity input
-            let quantity = 1;
-            const productContainer = this.closest('.product-single__addtocart, .pc__img-wrapper');
-            if (productContainer) {
-                const quantityInput = productContainer.querySelector('.qty-control__number');
-                if (quantityInput) {
-                    quantity = parseInt(quantityInput.value) || 1;
-                }
-            }
-
-            console.log('🛒 Adding to cart:', { productId, quantity });
-
-            // Make AJAX request to add to cart
             fetch('/add-to-cart/', {
                 method: 'POST',
-                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'X-CSRFToken': getCSRFToken()
                 },
-                body: JSON.stringify({
-                    product_id: productId,
-                    quantity: quantity
-                })
+                body: JSON.stringify({ product_id: productId, quantity: quantity })
             })
-            .then(response => {
-                console.log('Response status:', response.status);
-                if (response.status === 401) {
-                    // Redirect to login page
-                    window.location.href = '/login/?next=' + window.location.pathname;
-                    return;
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log('Response data:', data);
-                if (data) {
-                    console.log('Success:', data);
+                if (data.success) {
+                    alert('✅ Product added to cart');
                     updateCartCount(data.cart_items_count);
                     updateCartDrawer(data.cart_items);
-                    showNotification('Product added to cart successfully!');
                     openCartDrawer();
+                } else {
+                    alert(`❌ Error: ${data.error}`);
                 }
             })
-            .catch((error) => {
-                console.error('Error:', error);
-                showNotification('Error adding product to cart. Please try again.', 'error');
-            });
-        });
-    });
-
-    // ✅ Quantity Control Handling
-    document.querySelectorAll('.qty-control').forEach(control => {
-        const input = control.querySelector('.qty-control__number');
-        const reduceBtn = control.querySelector('.qty-control__reduce');
-        const increaseBtn = control.querySelector('.qty-control__increase');
-
-        if (input && reduceBtn && increaseBtn) {
-            // Prevent multiple updates
-            let isUpdating = false;
-
-            // Reduce quantity
-            reduceBtn.addEventListener('click', () => {
-                if (isUpdating) return;
-                isUpdating = true;
-
-                let value = parseInt(input.value) || 1;
-                if (value > 1) {
-                    input.value = value - 1;
-                }
-
-                isUpdating = false;
-            });
-
-            // Increase quantity
-            increaseBtn.addEventListener('click', () => {
-                if (isUpdating) return;
-                isUpdating = true;
-
-                let value = parseInt(input.value) || 1;
-                const max = input.getAttribute('max');
-                if (!max || value < parseInt(max)) {
-                    input.value = value + 1;
-                }
-
-                isUpdating = false;
-            });
-
-            // Validate manual input
-            input.addEventListener('change', () => {
-                let value = parseInt(input.value) || 1;
-                const max = input.getAttribute('max');
-                if (value < 1) {
-                    input.value = 1;
-                } else if (max && value > parseInt(max)) {
-                    input.value = max;
-                }
-            });
+            .catch(err => console.error("❌ Failed to add to cart:", err));
         }
     });
+}
 
-    // ✅ Helper function to update cart count in header
-    function updateCartCount(count) {
-        document.querySelectorAll('.js-cart-items-count').forEach(element => {
-            element.textContent = count;
-        });
-    }
+// 🔢 Update Quantity
+function attachQuantityListeners() {
+    document.body.addEventListener('click', (e) => {
+        if (e.target.classList.contains('qty-control__reduce') || e.target.classList.contains('qty-control__increase')) {
+            const control = e.target.closest('.qty-control');
+            const input = control.querySelector('.qty-control__number');
+            const productId = input.dataset.productId;
+            let newQuantity = parseInt(input.value) || 1;
 
-    // ✅ Helper function to update cart drawer
-    function updateCartDrawer(cartItems) {
-        const cartDrawer = document.querySelector('.cart-drawer-items-list');
-        if (!cartDrawer) return;
-
-        if (!cartItems || cartItems.length === 0) {
-            cartDrawer.innerHTML = `
-                <div class="text-center py-4">
-                    <p>Your cart is empty</p>
-                </div>
-            `;
-            return;
-        }
-
-        let html = '';
-        cartItems.forEach((item, index) => {
-            html += `
-                <div class="cart-drawer-item d-flex position-relative">
-                    <div class="position-relative">
-                        <a href="/product/${item.product.id}">
-                            <img loading="lazy" class="cart-drawer-item__img" 
-                                 src="${item.product.image.url}" 
-                                 alt="${item.product.name}">
-                        </a>
-                    </div>
-                    <div class="cart-drawer-item__info flex-grow-1">
-                        <h6 class="cart-drawer-item__title fw-normal">
-                            <a href="/product/${item.product.id}">${item.product.name}</a>
-                        </h6>
-                        <div class="d-flex align-items-center justify-content-between mt-1">
-                            <div class="qty-control position-relative">
-                                <input type="number" name="quantity" value="${item.quantity}" min="1" 
-                                       class="qty-control__number border-0 text-center"
-                                       data-product-id="${item.product.id}">
-                                <div class="qty-control__reduce text-start">-</div>
-                                <div class="qty-control__increase text-end">+</div>
-                            </div>
-                            <span class="cart-drawer-item__price money price">$${item.get_total_price}</span>
-                        </div>
-                    </div>
-                    <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove" 
-                            data-product-id="${item.product.id}"></button>
-                </div>
-                ${index < cartItems.length - 1 ? '<hr class="cart-drawer-divider">' : ''}
-            `;
-        });
-
-        cartDrawer.innerHTML = html;
-
-        // Update cart subtotal
-        const subtotalElement = document.querySelector('.js-cart-subtotal');
-        if (subtotalElement) {
-            const total = cartItems.reduce((sum, item) => sum + parseFloat(item.get_total_price), 0);
-            subtotalElement.textContent = total.toFixed(2);
-        }
-    }
-
-    // ✅ Helper function to open cart drawer
-    function openCartDrawer() {
-        const cartDrawer = document.getElementById('cartDrawer');
-        if (cartDrawer) {
-            cartDrawer.classList.add('aside_active');
-            document.body.classList.add('overflow-hidden');
-        }
-    }
-
-    // ✅ Helper function to show notifications
-    function showNotification(message, type = 'success') {
-        if (type === 'error') {
-            alert(`❌ ${message}`);
-        } else {
-            alert(`✅ ${message}`);
-        }
-    }
-
-    // ✅ Helper function to get CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+            if (e.target.classList.contains('qty-control__reduce')) {
+                newQuantity = Math.max(1, newQuantity - 1);
+            } else if (e.target.classList.contains('qty-control__increase')) {
+                newQuantity += 1;
             }
+
+            input.value = newQuantity;
+            updateCart(productId, newQuantity);
         }
-        return cookieValue;
+    });
+
+    // Handle manual input change
+    document.body.addEventListener('change', (e) => {
+        if (e.target.classList.contains('qty-control__number')) {
+            const input = e.target;
+            const productId = input.dataset.productId;
+            const newQuantity = Math.max(1, parseInt(input.value) || 1);
+            input.value = newQuantity;
+            updateCart(productId, newQuantity);
+        }
+    });
+}
+
+// 🗑️ Remove from Cart
+function attachRemoveListeners() {
+    document.body.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-cart')) {
+            e.preventDefault();
+            const productId = e.target.getAttribute('data-product-id');
+            if (!confirm("🗑️ Remove this item?")) return;
+
+            fetch(`/api/remove-from-cart/${productId}/`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': getCSRFToken() }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Item removed');
+                    updateCartCount(data.cart_items_count);
+                    updateCartDrawer(data.cart_items);
+                } else {
+                    alert(`❌ Error: ${data.error}`);
+                }
+            })
+            .catch(err => console.error("❌ Failed to remove item:", err));
+        }
+    });
+}
+
+// 📊 Update Cart Count
+function updateCartCount(count) {
+    document.querySelectorAll('.js-cart-items-count')
+        .forEach(el => el.textContent = count);
+}
+
+// 🛍️ Update Cart Drawer
+function updateCartDrawer(cartItems) {
+    const cartDrawer = document.querySelector('.cart-drawer-items-list');
+    if (!cartDrawer) return;
+
+    if (!cartItems.length) {
+        cartDrawer.innerHTML = "<p>Your cart is empty</p>";
+        return;
     }
 
-    // function buyNow(productId) {
-    //     const quantity = document.querySelector('input[name="quantity"]').value || 1; // Get the quantity from the input
-    //     fetch('/add-to-cart/', {  // Ensure this endpoint matches your API for adding to cart
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json',
-    //             'X-CSRFToken': '{{ csrf_token }}'  // Ensure CSRF token is included
-    //         },
-    //         body: JSON.stringify({ product_id: productId, quantity: quantity })
-    //     })
-    //     .then(response => {
-    //         if (!response.ok) {
-    //             throw new Error('Network response was not ok');
-    //         }
-    //         return response.json();
-    //     })
-    //     .then(data => {
-    //         if (data.success) {
-    //             // Redirect to checkout page after adding to cart
-    //             window.location.href = '/checkout/';
-    //         } else {
-    //             alert(data.error || 'Failed to add to cart.');
-    //         }
-    //     })
-    //     .catch(error => {
-    //         console.error('Error:', error);
-    //         alert('An error occurred while processing your request.');
-    //     });
-    // }
-});
+    cartDrawer.innerHTML = cartItems.map(item => `
+        <div class="cart-item">
+            <p>${item.product.name} x ${item.quantity}</p>
+        </div>
+    `).join('');
+}
+
+// 📦 Update Cart (Helper)
+function updateCart(productId, quantity) {
+    fetch('/update-cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({ product_id: productId, quantity: quantity })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateCartCount(data.cart_items_count);
+            updateCartDrawer(data.cart_items);
+        } else {
+            alert(`❌ Error: ${data.error}`);
+        }
+    })
+    .catch(err => console.error("❌ Update failed:", err));
+}
+
+// 📤 Open Cart Drawer
+function openCartDrawer() {
+    document.getElementById('cartDrawer')?.classList.add('aside_active');
+    document.body.classList.add('overflow-hidden');
+}

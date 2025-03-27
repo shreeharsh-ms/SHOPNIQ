@@ -1132,39 +1132,59 @@ class MongoDBCart:
     @staticmethod
     def add_to_cart(user_id, product_id, quantity=1):
         """Add a product to the user's cart or create a new cart if needed."""
-        
-        user_id = ObjectId(user_id)
-        product_id = ObjectId(product_id)
 
-        cart = MONGO_DB["cart"].find_one({"user_id": user_id})
+        try:
+            print(f"🔹 Debug: Received - user_id={user_id}, product_id={product_id}, quantity={quantity}")
 
-        if cart:
-            # Check if product already exists in the cart
-            existing_product = next((item for item in cart["products"] if item["product_id"] == product_id), None)
+            # Validate and convert ObjectId
+            user_id = ObjectId(user_id)
+            product_id = ObjectId(product_id)
+            
+            # Connect to MongoDB collection
+            cart_collection = MONGO_DB["cart"]
 
-            if existing_product:
-                # Increase quantity
-                db["cart"].update_one(
-                    {"user_id": user_id, "products.product_id": product_id},
-                    {"$inc": {"products.$.quantity": quantity}, "$set": {"updated_at": datetime.utcnow()}}
-                )
+            # Check if the user's cart exists
+            cart = cart_collection.find_one({"user_id": user_id})
+            print(f"🔹 Debug: Fetched Cart - {cart}")
+
+            if cart:
+                # Check if product already exists in the cart
+                existing_product = next((item for item in cart["products"] if item["product_id"] == product_id), None)
+
+                if existing_product:
+                    # Increase quantity of existing product
+                    print(f"🛒 Updating existing product {product_id} quantity")
+                    cart_collection.update_one(
+                        {"user_id": user_id, "products.product_id": product_id},
+                        {"$inc": {"products.$.quantity": quantity}, "$set": {"updated_at": datetime.now(ist)}}
+                    )
+                else:
+                    # Add new product to the cart
+                    print(f"🛍️ Adding new product {product_id} to cart")
+                    cart_collection.update_one(
+                        {"user_id": user_id},
+                        {
+                            "$push": {"products": {"product_id": product_id, "quantity": quantity}},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
             else:
-                # Add new product
-                db["cart"].update_one(
-                    {"user_id": user_id},
-                    {"$push": {"products": {"product_id": product_id, "quantity": quantity}},
-                     "$set": {"updated_at": datetime.utcnow()}}
-                )
-        else:
-            # Create new cart for the user
-            new_cart = {
-                "user_id": user_id,
-                "products": [{"product_id": product_id, "quantity": quantity}],
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
-            }
-            db["cart"].insert_one(new_cart)
+                # Create a new cart for the user
+                print(f"🆕 Creating new cart for user {user_id}")
+                new_cart = {
+                    "user_id": user_id,
+                    "products": [{"product_id": product_id, "quantity": quantity}],
+                    "created_at": datetime.now(ist),
+                    "updated_at": datetime.now(ist)
+                }
+                cart_collection.insert_one(new_cart)
 
+            return {"success": True, "message": "Product added to cart successfully"}
+
+        except Exception as e:
+            print(f"❌ Error in add_to_cart: {e}")
+            return {"success": False, "error": str(e)}
+        
     @staticmethod
     def get_cart_items(user_id):
         """Retrieve all cart items for a specific user."""
