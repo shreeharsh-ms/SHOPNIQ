@@ -811,14 +811,24 @@ def checkout(request):
 
         transaction_id = f"TXN{ObjectId()}"
 
+
+
         try:
+            WEBHOOK_URL = "https://ram013.app.n8n.cloud/webhook-test/526fd864-6f85-4cde-97aa-39b61a3e5b83"
+
+            class JSONEncoder(json.JSONEncoder):
+                    def default(self, obj):
+                        if isinstance(obj, ObjectId):
+                            return str(obj)  # Convert ObjectId to string
+                        return super().default(obj)
+
             order_id = MongoDBOrders.place_order(
                 user_id=user_id,
                 items=items,
-                original_total_amount = total_amount,
-                discount_amount = discount_amount,
-                gst = gst,
-                delevery_fee = shipping,
+                original_total_amount=total_amount,
+                discount_amount=discount_amount,
+                gst=gst,
+                delevery_fee=shipping,
                 total_amount=(total_amount + gst + shipping) - discount_amount,
                 shipping_address=shipping_address,
                 payment_status="Pending",
@@ -826,6 +836,33 @@ def checkout(request):
                 estimated_delivery_days=5,
                 applied_coupon=coupon_code,
             )
+
+            # Prepare payload for webhook
+            order_data = {
+                "order_id": str(order_id),  # Convert ObjectId to string
+                "user_id": str(user_id),    # Ensure user_id is also a string
+                "items": items,
+                "original_total_amount": total_amount,
+                "discount_amount": discount_amount,
+                "gst": gst,
+                "delivery_fee": shipping,
+                "total_amount": (total_amount + gst + shipping) - discount_amount,
+                "shipping_address": shipping_address,
+                "payment_status": "Pending",
+                "transaction_id": transaction_id,
+                "estimated_delivery_days": 5,
+                "applied_coupon": coupon_code,
+            }
+
+            # Send data to webhook
+            response = requests.post(WEBHOOK_URL, data=json.dumps(order_data, cls=JSONEncoder), headers={'Content-Type': 'application/json'})
+
+            # Check response
+            if response.status_code == 200:
+                print("✅ Order data sent to webhook successfully.")
+            else:
+                print(f"⚠️ Webhook error: {response.status_code}, {response.text}")
+
         except Exception as e:
             print(f"❌ Order placement error: {e}")
             return redirect('checkout')
@@ -1019,6 +1056,16 @@ def item_sort(request):
             except Exception as e:
                 print(f"⚠️ Error processing product {product['_id']}: {e}")
 
+
+        wishlist_product_ids = []
+        if request.session.get('user_id'):
+            try:
+                wishlist_product_ids = MongoDBWishlist.get_product_ids_by_user(request.session.get('user_id'))
+            except Exception as e:
+                print(f"Error fetching wishlist: {e}")
+
+        print(f"################################Wishlist Product IDs: {wishlist_product_ids}")
+
         # 🔹 Step 10: Debugging Info
         print(f"🔍 Query: {query}, Category: {category_query}, Brand: {brand_query}, Sort By: {sort_by}, Order: {order}, Min Price: {min_price}, Max Price: {max_price}")
         print(f"🛒 Filtered Products Count: {len(products_list)}")
@@ -1031,6 +1078,7 @@ def item_sort(request):
         print(f'fuck OFFFF {selected_category_brands if selected_category_brands else category_brands}')
         return render(request, 'USER/Item-Sort.html', {
             'products': products_list,
+            'wishlist_product_ids': wishlist_product_ids,
             'query': query,
             'category': category_query,
             'brand': brand_query,
@@ -1043,6 +1091,7 @@ def item_sort(request):
             'category_brands': [{'name': brand, 'product_count': 0} for brand in selected_category_brands] 
                 if selected_category_brands else []
         })
+
 
 
     except Exception as e:
@@ -1845,6 +1894,14 @@ def product_detail(request, product_id):
             for review in reviews:
                 user = MongoDBUser.get_user_by_id(review["UID"])  # Fetch user by UID
                 review["UID"] = user["username"] if user else "Unknown User"  # Replace UID with username
+
+            # Get reviews for the product
+            reviews = MongoDBReview.get_review_by_product_id(product_id)
+            # Get the count of reviews (using len() for a list)
+            review_count = len(reviews) if reviews else 0
+            print("Review Count:", review_count)  # Debug print
+
+            
             user_id = request.session.get('user_id')
             wishlist_product_ids = MongoDBWishlist.get_product_ids_by_user(user_id)
 
@@ -1855,6 +1912,7 @@ def product_detail(request, product_id):
                 "cart_items_count": cart_items_count,
                 "related_products": processed_related_products,
                 "reviews": sorted_reviews,
+                "review_count": review_count,  # The wishlist_product_ids are passed here as well, but this variable is not used in the current context. If you want to use it, you should pass it to the template context. For example: "wishlist_product_ids": wishlist_product_ids  # The reviews are passed here as well
                 "wishlist_product_ids": wishlist_product_ids  # The reviews are passed here as well
             }
 
@@ -1994,39 +2052,59 @@ def update_cart_quantity(request):
         if not ObjectId.is_valid(product_id):
             return JsonResponse({"error": "Invalid product ID"}, status=400)
 
-        user_id = request.user.id
+        user_id = request.user.id  
         product_id = ObjectId(product_id)
 
-        # Update cart
-        cart = cart_collection.find_one_and_update(
-            {"user_id": ObjectId(user_id), "products.product_id": product_id},
-            {"$set": {
-                "products.$.quantity": quantity,
-                "updated_at": datetime.datetime.utcnow()
-            }},
-            return_document=True
+        # Convert user_id to ObjectId (if stored as ObjectId)
+        user_object_id = ObjectId(user_id) if ObjectId.is_valid(str(user_id)) else user_id
+
+        # 🟢 1️⃣ First, Update Cart Item Quantity
+        result = cart_collection.update_one(
+            {"user_id": user_object_id, "products.product_id": product_id},
+            {"$set": {"products.$.quantity": quantity, "updated_at": datetime.datetime.utcnow()}}
         )
 
-        if not cart:
+        if result.matched_count == 0:
             return JsonResponse({"error": "Item not found in cart"}, status=404)
 
+        # 🟢 2️⃣ Fetch Updated Cart after Update
+        cart = cart_collection.find_one({"user_id": user_object_id})
+
+        if not cart:
+            return JsonResponse({"error": "Cart not found"}, status=404)
+
+        # 🛒 Calculate Cart Total and Prepare Cart Items List
         cart_total = 0
+        updated_cart_items = []
+
         for item in cart["products"]:
             product = products_collection.find_one({"_id": item["product_id"]})
             if product:
                 price = float(product.get("discounted_price", product["price"]))
                 cart_total += price * item["quantity"]
+                updated_cart_items.append({
+                    "product_id": str(item["product_id"]),
+                    "name": product["name"],
+                    "price": price,
+                    "quantity": item["quantity"]
+                })
 
         return JsonResponse({
             "success": True,
             "cart_items_count": sum(item["quantity"] for item in cart["products"]),
-            "cart_total": f"{cart_total:.2f}"
+            "cart_total": f"{cart_total:.2f}",
+            "cart_items": updated_cart_items  # ✅ Send Updated Cart Items to Frontend
         })
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"❌ Error in update_cart_quantity: {e}")
         return JsonResponse({"error": "Internal server error"}, status=500)
 
+
+from bson import ObjectId
+from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
@@ -2036,19 +2114,15 @@ def remove_from_cart(request, product_id):
         if not ObjectId.is_valid(product_id):
             return JsonResponse({"error": "Invalid product ID"}, status=400)
 
-        # Ensure user_id is in ObjectId format
-        user_id = request.user.id
-        user_id = ObjectId(user_id) if ObjectId.is_valid(user_id) else None
-
-        if not user_id:
-            return JsonResponse({"error": "Invalid user session"}, status=401)
+        # Get user ID and ensure it's a string (for MongoDB compatibility)
+        user_id = str(request.user.id)  # Convert user ID to string
 
         product_id = ObjectId(product_id)
 
         # Find and update the cart by removing the product
         updated_cart = cart_collection.find_one_and_update(
-            {"user_id": user_id},
-            {"$pull": {"products": {"product_id": product_id}}},
+            {"user_id": user_id},  # Ensure user_id is stored as a string
+            {"$pull": {"products": {"product_id": product_id}}},  # Fix pull query
             return_document=True
         )
 
@@ -2057,21 +2131,23 @@ def remove_from_cart(request, product_id):
 
         # Recalculate cart total
         cart_total = 0
-        for item in updated_cart.get("products", []):
+        for item in updated_cart.get("products", []):  # Use `.get()` to prevent NoneType error
             product = products_collection.find_one({"_id": item["product_id"]})
             if product:
-                price = float(product.get("discounted_price") or product["price"])
+                price = float(product.get("discounted_price", product.get("price", 0)))  # Avoid KeyError
                 cart_total += price * item["quantity"]
 
         return JsonResponse({
             "success": True,
             "cart_total": f"{cart_total:.2f}",
-            "cart_items_count": len(updated_cart["products"])
+            "cart_items_count": len(updated_cart.get("products", []))  # Use .get() to avoid errors
         })
 
     except Exception as e:
         print("Error:", e)
         return JsonResponse({"error": "Internal server error"}, status=500)
+
+
 def cart(request):
     """Render cart page"""
     try:

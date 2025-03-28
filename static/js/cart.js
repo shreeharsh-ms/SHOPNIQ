@@ -50,64 +50,101 @@ function attachAddToCartListeners() {
     });
 }
 
-// 🔢 Update Quantity
+// 🔢 Update Quantity (Fixed)
 function attachQuantityListeners() {
     document.body.addEventListener('click', (e) => {
-        if (e.target.classList.contains('qty-control__reduce') || e.target.classList.contains('qty-control__increase')) {
-            const control = e.target.closest('.qty-control');
+        const target = e.target;
+
+        if (target.classList.contains('qty-control__reduce') || target.classList.contains('qty-control__increase')) {
+            e.preventDefault(); // Prevent accidental double clicks
+
+            const control = target.closest('.qty-control');
             const input = control.querySelector('.qty-control__number');
             const productId = input.dataset.productId;
             let newQuantity = parseInt(input.value) || 1;
 
-            if (e.target.classList.contains('qty-control__reduce')) {
+            if (target.classList.contains('qty-control__reduce')) {
                 newQuantity = Math.max(1, newQuantity - 1);
-            } else if (e.target.classList.contains('qty-control__increase')) {
+            } else if (target.classList.contains('qty-control__increase')) {
                 newQuantity += 1;
             }
 
             input.value = newQuantity;
-            updateCart(productId, newQuantity);
+
+            // ✅ Prevent multiple rapid updates
+            if (!input.dataset.updating) {
+                input.dataset.updating = "true";
+                setTimeout(() => {
+                    updateCart(productId, newQuantity);
+                    delete input.dataset.updating;
+                }, 300); // Delay to prevent multiple executions
+            }
         }
     });
 
-    // Handle manual input change
+    // 🔹 Handle manual input change
     document.body.addEventListener('change', (e) => {
         if (e.target.classList.contains('qty-control__number')) {
             const input = e.target;
             const productId = input.dataset.productId;
             const newQuantity = Math.max(1, parseInt(input.value) || 1);
             input.value = newQuantity;
-            updateCart(productId, newQuantity);
+
+            // ✅ Prevent multiple rapid updates
+            if (!input.dataset.updating) {
+                input.dataset.updating = "true";
+                setTimeout(() => {
+                    updateCart(productId, newQuantity);
+                    delete input.dataset.updating;
+                }, 300); // Delay to prevent double execution
+            }
         }
     });
 }
 
 // 🗑️ Remove from Cart
 function attachRemoveListeners() {
-    document.body.addEventListener('click', (e) => {
+    document.body.addEventListener('click', async (e) => {
         if (e.target.classList.contains('remove-cart')) {
             e.preventDefault();
             const productId = e.target.getAttribute('data-product-id');
+
             if (!confirm("🗑️ Remove this item?")) return;
 
-            fetch(`/api/remove-from-cart/${productId}/`, {
-                method: 'DELETE',
-                headers: { 'X-CSRFToken': getCSRFToken() }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            console.log(`🚮 Removing product: ${productId}`);
+
+            try {
+                const response = await fetch(`/api/remove-from-cart/${productId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
                     alert('✅ Item removed');
                     updateCartCount(data.cart_items_count);
                     updateCartDrawer(data.cart_items);
+                    removeCartItemFromDOM(productId);
                 } else {
                     alert(`❌ Error: ${data.error}`);
                 }
-            })
-            .catch(err => console.error("❌ Failed to remove item:", err));
+            } catch (err) {
+                console.error("❌ Failed to remove item:", err);
+                alert("❌ Failed to remove item. Please try again.");
+            }
         }
     });
 }
+
+// Remove item from DOM after successful deletion
+function removeCartItemFromDOM(productId) {
+    const itemRow = document.querySelector(`.remove-cart[data-product-id="${productId}"]`).closest("tr");
+    if (itemRow) itemRow.remove();
+}
+
 
 // 📊 Update Cart Count
 function updateCartCount(count) {
@@ -127,13 +164,16 @@ function updateCartDrawer(cartItems) {
 
     cartDrawer.innerHTML = cartItems.map(item => `
         <div class="cart-item">
-            <p>${item.product.name} x ${item.quantity}</p>
+            <p>${item.name} x ${item.quantity}</p>
+            <button class="remove-cart" data-product-id="${item.product_id}">Remove</button>
         </div>
     `).join('');
 }
 
 // 📦 Update Cart (Helper)
 function updateCart(productId, quantity) {
+    console.log(`🔄 Updating product ${productId} to quantity ${quantity}`);
+
     fetch('/update-cart/', {
         method: 'POST',
         headers: {

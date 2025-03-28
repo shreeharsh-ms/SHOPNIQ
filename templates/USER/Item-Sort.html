@@ -1,14 +1,19 @@
 {% load static %}
-<!DOCTYPE html><html dir="ltr" lang="zxx"><head>
+<!DOCTYPE html>
+<html dir="ltr" lang="zxx">
 
-  
+<head>
+
+
   <meta name="author" content="flexkit">
 
   <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.gstatic.com">
 
   <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
 
   <!-- Stylesheets -->
@@ -17,6 +22,8 @@
   <script src="{% static 'js/animate-text.js' %}" type="text/javascript"></script>
   <script src="{% static 'js/custom-curosor.js' %}" type="text/javascript"></script>
   <script src="{% static 'js/animate-img.js' %}" type="text/javascript"></script>
+  <script src="{% static 'js/cart.js' %}"></script>
+  <script src="{% static 'js/wishlist.js' %}"></script>
 
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -33,17 +40,32 @@
   <script src="{% static 'js/loader.js' %}"></script>
   <link rel="stylesheet" href="{% static 'css/loader.css' %}">
 
-  </head>
-  
-  <body>
- 
-  
-      <div id="page">
-          <div class="loader">
-            <div class="loader-text"></div>
-          </div>
-      </div>
-      {% include 'partials/navbar.html' %}
+  <!-- Add this in the head section or in your CSS file -->
+  <style>
+    /* Wishlist icon styles */
+    .js-add-wishlist {
+      cursor: pointer;
+      transition: fill 0.3s ease;
+    }
+
+    .js-add-wishlist.active {
+      fill: #ff0000;
+      /* Red color for active wishlist items */
+      color: #ff0000;
+    }
+  </style>
+
+</head>
+
+<body>
+
+
+  <div id="page">
+    <div class="loader">
+      <div class="loader-text"></div>
+    </div>
+  </div>
+  {% include 'partials/navbar.html' %}
   <!-- End Header Type 1 -->
 
   <main>
@@ -57,11 +79,12 @@
         <div class="pt-4 pt-lg-0"></div>
 
         <div class="accordion" id="categories-list">
-          
+
           {% if brand_categories %}
           <div class="accordion-item mb-4 pb-3">
             <h5 class="accordion-header" id="accordion-heading-12">
-              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-2" aria-expanded="true" aria-controls="accordion-filter-2">
+              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
+                data-bs-target="#accordion-filter-2" aria-expanded="true" aria-controls="accordion-filter-2">
                 Brand Categories
               </button>
             </h5>
@@ -80,7 +103,8 @@
           {% endif %}
           <div class="accordion-item mb-4 pb-3">
             <h5 class="accordion-header" id="accordion-heading-11">
-              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-1" aria-expanded="true" aria-controls="accordion-filter-1">
+              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
+                data-bs-target="#accordion-filter-1" aria-expanded="true" aria-controls="accordion-filter-1">
                 Product Categories
               </button>
             </h5>
@@ -88,19 +112,20 @@
               <div class="accordion-body px-0 pb-0 pt-3">
                 <ul class="list list-inline mb-0">
                   {% if top_categories %}
-                    {% for category in top_categories %}
-                    <li class="list-item">
-                      <a href="?category={{ category.CategoryName|urlencode }}" class="menu-link py-1">{{ category.CategoryName }}</a>
-                    </li>
-                    {% endfor %}
+                  {% for category in top_categories %}
+                  <li class="list-item">
+                    <a href="?category={{ category.CategoryName|urlencode }}" class="menu-link py-1">{{
+                      category.CategoryName }}</a>
+                  </li>
+                  {% endfor %}
                   {% else %}
-                    <li class="list-item text-muted">No Categories Available</li>
+                  <li class="list-item text-muted">No Categories Available</li>
                   {% endif %}
                 </ul>
               </div>
             </div>
           </div>
-          
+
           <!-- /.accordion-item -->
         </div><!-- /.accordion-item -->
 
@@ -108,16 +133,20 @@
         <div class="accordion" id="color-filters">
           <div class="accordion-item mb-4 pb-3">
             <h5 class="accordion-header" id="accordion-heading-1">
-              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-2" aria-expanded="true" aria-controls="accordion-filter-2">
+              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
+                data-bs-target="#accordion-filter-2" aria-expanded="true" aria-controls="accordion-filter-2">
                 Color
                 <svg class="accordion-button__icon type2" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
                   <g aria-hidden="true" stroke="none" fill-rule="evenodd">
-                    <path d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z"></path>
+                    <path
+                      d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z">
+                    </path>
                   </g>
                 </svg>
               </button>
             </h5>
-            <div id="accordion-filter-2" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-1" data-bs-parent="#color-filters">
+            <div id="accordion-filter-2" class="accordion-collapse collapse show border-0"
+              aria-labelledby="accordion-heading-1" data-bs-parent="#color-filters">
               <div class="accordion-body px-0 pb-0">
                 <div class="d-flex flex-wrap">
                   <a href="#" class="swatch-color js-filter" style="color: #0a2472"></a>
@@ -140,16 +169,20 @@
         <div class="accordion" id="size-filters">
           <div class="accordion-item mb-4 pb-3">
             <h5 class="accordion-header" id="accordion-heading-size">
-              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-size" aria-expanded="true" aria-controls="accordion-filter-size">
+              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
+                data-bs-target="#accordion-filter-size" aria-expanded="true" aria-controls="accordion-filter-size">
                 Sizes
                 <svg class="accordion-button__icon type2" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
                   <g aria-hidden="true" stroke="none" fill-rule="evenodd">
-                    <path d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z"></path>
+                    <path
+                      d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z">
+                    </path>
                   </g>
                 </svg>
               </button>
             </h5>
-            <div id="accordion-filter-size" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-size" data-bs-parent="#size-filters">
+            <div id="accordion-filter-size" class="accordion-collapse collapse show border-0"
+              aria-labelledby="accordion-heading-size" data-bs-parent="#size-filters">
               <div class="accordion-body px-0 pb-0">
                 <div class="d-flex flex-wrap">
                   <a href="#" class="swatch-size btn btn-sm btn-outline-light mb-3 me-3 js-filter">XS</a>
@@ -168,51 +201,57 @@
         <div class="accordion" id="brand-filters">
           <div class="accordion-item mb-4 pb-3">
             <h5 class="accordion-header" id="accordion-heading-brand">
-              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-brand" aria-expanded="true" aria-controls="accordion-filter-brand">
+              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
+                data-bs-target="#accordion-filter-brand" aria-expanded="true" aria-controls="accordion-filter-brand">
                 Brands
                 <svg class="accordion-button__icon type2" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
                   <g aria-hidden="true" stroke="none" fill-rule="evenodd">
-                    <path d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z"></path>
+                    <path
+                      d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z">
+                    </path>
                   </g>
                 </svg>
               </button>
-            </h5><div id="accordion-filter-brand" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-brand" data-bs-parent="#brand-filters">
+            </h5>
+            <div id="accordion-filter-brand" class="accordion-collapse collapse show border-0"
+              aria-labelledby="accordion-heading-brand" data-bs-parent="#brand-filters">
               <div class="search-field multi-select accordion-body px-0 pb-0">
-            
+
                 <!-- Debugging Output -->
                 <script>
-                  console.log('category_brands:', {{ category_brands|safe }});
+                  console.log('category_brands:', {{ category_brands| safe }});
                 </script>
-            
+
                 <!-- Hidden Select List -->
                 <select class="d-none" multiple name="total-numbers-list">
                   {% for brand in category_brands %}
-                    <option value="{{ brand.name }}">{{ brand.name }}</option>
+                  <option value="{{ brand.name }}">{{ brand.name }}</option>
                   {% endfor %}
                 </select>
-            
+
                 <!-- Search Input -->
                 <div class="search-field__input-wrapper mb-3">
-                  <input type="text" name="search_text" class="search-field__input form-control form-control-sm border-light border-2" placeholder="SEARCH">
+                  <input type="text" name="search_text"
+                    class="search-field__input form-control form-control-sm border-light border-2" placeholder="SEARCH">
                 </div>
-            
+
                 <!-- Brand List -->
                 <ul class="multi-select__list list-unstyled">
                   {% for brand in category_brands %}
-                    <li class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                      <span class="me-auto">{{ brand.name }}</span>
-                      <span class="text-secondary">{{ brand.product_count }}</span> <!-- Display actual product counts -->
-                    </li>
+                  <li class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
+                    <span class="me-auto">{{ brand.name }}</span>
+                    <span class="text-secondary">{{ brand.product_count }}</span> <!-- Display actual product counts -->
+                  </li>
                   {% empty %}
-                    <li class="text-muted">No brands available</li>
+                  <li class="text-muted">No brands available</li>
                   {% endfor %}
                 </ul>
-            
+
               </div>
             </div>
-            
+
           </div>
-          
+
           <!-- /.accordion-item -->
         </div><!-- /.accordion -->
 
@@ -220,17 +259,22 @@
         <div class="accordion" id="price-filters">
           <div class="accordion-item mb-4">
             <h5 class="accordion-header mb-2" id="accordion-heading-price">
-              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-price" aria-expanded="true" aria-controls="accordion-filter-price">
+              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
+                data-bs-target="#accordion-filter-price" aria-expanded="true" aria-controls="accordion-filter-price">
                 Price
                 <svg class="accordion-button__icon type2" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
                   <g aria-hidden="true" stroke="none" fill-rule="evenodd">
-                    <path d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z"></path>
+                    <path
+                      d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z">
+                    </path>
                   </g>
                 </svg>
               </button>
             </h5>
-            <div id="accordion-filter-price" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-price" data-bs-parent="#price-filters">
-              <input class="price-range-slider" type="text" name="price_range" value="" data-slider-min="10" data-slider-max="1000" data-slider-step="5" data-slider-value="[250,450]" data-currency="$">
+            <div id="accordion-filter-price" class="accordion-collapse collapse show border-0"
+              aria-labelledby="accordion-heading-price" data-bs-parent="#price-filters">
+              <input class="price-range-slider" type="text" name="price_range" value="" data-slider-min="10"
+                data-slider-max="1000" data-slider-step="5" data-slider-value="[250,450]" data-currency="$">
               <div class="price-range__info d-flex align-items-center mt-2">
                 <div class="me-auto">
                   <span class="text-secondary">Min Price: </span>
@@ -248,19 +292,26 @@
 
       <div class="shop-list flex-grow-1">
         <div 5000="" class="swiper-container js-swiper-slider slideshow slideshow_small slideshow_split" data-settings="{
-            " autoplay":="" {="" "delay":="" },="" "slidesperview":="" 1,="" "effect":="" "fade",="" "loop":="" true,="" "pagination":="" "el":="" ".slideshow-pagination",="" "type":="" "bullets",="" "clickable":="" true="" }="" }"="">
+            " autoplay":="" {="" "delay" :="" },="" "slidesperview" :="" 1,="" "effect" :="" "fade" ,="" "loop" :=""
+          true,="" "pagination" :="" "el" :="" ".slideshow-pagination" ,="" "type" :="" "bullets" ,="" "clickable" :=""
+          true="" }="" }"="">
           <div class="swiper-wrapper">
             <div class="swiper-slide">
               <div class="slide-split h-100 d-block d-md-flex overflow-hidden">
-                <div class="slide-split_text position-relative d-flex align-items-center" style="background-color: #f5e6e0;">
+                <div class="slide-split_text position-relative d-flex align-items-center"
+                  style="background-color: #f5e6e0;">
                   <div class="slideshow-text container p-3 p-xl-5">
-                    <h2 class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">Women's <br><strong>ACCESSORIES</strong></h2>
-                    <p class="mb-0 animate animate_fade animate_btt animate_delay-5">Accessories are the best way to update your look. Add a title edge with new styles and new colors, or go for timeless pieces.</p>
+                    <h2
+                      class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">
+                      Women's <br><strong>ACCESSORIES</strong></h2>
+                    <p class="mb-0 animate animate_fade animate_btt animate_delay-5">Accessories are the best way to
+                      update your look. Add a title edge with new styles and new colors, or go for timeless pieces.</p>
                   </div>
                 </div>
                 <div class="slide-split_media position-relative">
                   <div class="slideshow-bg" style="background-color: #f5e6e0;">
-                    <img loading="lazy" src="{% static 'images/shop_banner3.jpg' %}" width="630" height="450" alt="Women's accessories" class="slideshow-bg__img object-fit-cover">
+                    <img loading="lazy" src="{% static 'images/shop_banner3.jpg' %}" width="630" height="450"
+                      alt="Women's accessories" class="slideshow-bg__img object-fit-cover">
                   </div>
                 </div>
               </div><!-- /.slideshow-item -->
@@ -268,15 +319,21 @@
 
             <div class="swiper-slide">
               <div class="slide-split h-100 d-block d-md-flex overflow-hidden">
-                <div class="slide-split_text position-relative d-flex align-items-center" style="background-color: #f5e6e0;">
+                <div class="slide-split_text position-relative d-flex align-items-center"
+                  style="background-color: #f5e6e0;">
                   <div class="slideshow-text container p-3 p-xl-5">
-                    <h2 class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">Choose <br><strong>Your Best Suits</strong></h2>
-                    <p class="mb-0 animate animate_fade animate_btt animate_delay-5">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                    <h2
+                      class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">
+                      Choose <br><strong>Your Best Suits</strong></h2>
+                    <p class="mb-0 animate animate_fade animate_btt animate_delay-5">Lorem ipsum dolor sit amet,
+                      consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    </p>
                   </div>
                 </div>
                 <div class="slide-split_media position-relative">
                   <div class="slideshow-bg" style="background-color: #f5e6e0;">
-                    <img loading="lazy" src="{% static 'images/shop_banner3.jpg' %}" width="630" height="450" alt="Women's accessories" class="slideshow-bg__img object-fit-cover">
+                    <img loading="lazy" src="{% static 'images/shop_banner3.jpg' %}" width="630" height="450"
+                      alt="Women's accessories" class="slideshow-bg__img object-fit-cover">
                   </div>
                 </div>
               </div><!-- /.slideshow-item -->
@@ -284,15 +341,21 @@
 
             <div class="swiper-slide">
               <div class="slide-split h-100 d-block d-md-flex overflow-hidden">
-                <div class="slide-split_text position-relative d-flex align-items-center" style="background-color: #f5e6e0;">
+                <div class="slide-split_text position-relative d-flex align-items-center"
+                  style="background-color: #f5e6e0;">
                   <div class="slideshow-text container p-3 p-xl-5">
-                    <h2 class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">World's <br><strong>Leading Quality</strong></h2>
-                    <p class="mb-0 animate animate_fade animate_btt animate_delay-5">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                    <h2
+                      class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">
+                      World's <br><strong>Leading Quality</strong></h2>
+                    <p class="mb-0 animate animate_fade animate_btt animate_delay-5">Lorem ipsum dolor sit amet,
+                      consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    </p>
                   </div>
                 </div>
                 <div class="slide-split_media position-relative">
                   <div class="slideshow-bg" style="background-color: #f5e6e0;">
-                    <img loading="lazy" src="{% static 'images/shop_banner3.jpg' %}" width="630" height="450" alt="Women's accessories" class="slideshow-bg__img object-fit-cover">
+                    <img loading="lazy" src="{% static 'images/shop_banner3.jpg' %}" width="630" height="450"
+                      alt="Women's accessories" class="slideshow-bg__img object-fit-cover">
                   </div>
                 </div>
               </div><!-- /.slideshow-item -->
@@ -315,7 +378,8 @@
           </div><!-- /.breadcrumb -->
 
           <div class="shop-acs d-flex align-items-center justify-content-between justify-content-md-end flex-grow-1">
-            <select class="shop-acs__select form-select w-auto border-0 py-0 order-1 order-md-0" aria-label="Sort Items" name="total-number">
+            <select class="shop-acs__select form-select w-auto border-0 py-0 order-1 order-md-0" aria-label="Sort Items"
+              name="total-number">
               <option selected="">Default Sorting</option>
               <option value="1">Featured</option>
               <option value="2">Best selling</option>
@@ -338,8 +402,11 @@
 
             <div class="shop-filter d-flex align-items-center order-0 order-md-3 d-lg-none">
               <button class="btn-link btn-link_f d-flex align-items-center ps-0 js-open-aside" data-aside="shopFilter">
-                <svg class="d-inline-block align-middle me-2" width="14" height="10" viewBox="0 0 14 10" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_filter"></use></svg>
-              <span class="text-uppercase fw-medium d-inline-block align-middle">Filter</span>
+                <svg class="d-inline-block align-middle me-2" width="14" height="10" viewBox="0 0 14 10" fill="none"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <use href="#icon_filter"></use>
+                </svg>
+                <span class="text-uppercase fw-medium d-inline-block align-middle">Filter</span>
               </button>
             </div><!-- /.col-size d-flex align-items-center ms-auto ms-md-3 -->
           </div><!-- /.shop-acs -->
@@ -354,23 +421,38 @@
                   <div class="swiper-wrapper">
                     <div class="swiper-slide">
                       <a href="/product/{{ product.id }}/">
-                        <img loading="lazy" src="{{ product.image }}" width="330" height="400" alt="{{ product.name }}" class="pc__img">
+                        <img loading="lazy" src="{{ product.image }}" width="330" height="400" alt="{{ product.name }}"
+                          class="pc__img">
                       </a>
                     </div>
                   </div>
                   <span class="pc__img-prev">
-                    <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg"><use href="#icon_prev_sm"></use></svg>
+                    <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_prev_sm"></use>
+                    </svg>
                   </span>
                   <span class="pc__img-next">
-                    <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg"><use href="#icon_next_sm"></use></svg>
+                    <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_next_sm"></use>
+                    </svg>
                   </span>
                 </div>
-                <button class="pc__atc btn anim_appear-bottom position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside"
-                  data-aside="cartDrawer" title="Add To Cart">
+                {% if product.in_stock %}
+                <button
+                  class="pc__atc btn anim_appear-bottom position-absolute border-0 text-uppercase fw-medium js-add-cart js-open-aside"
+                  data-aside="cartDrawer" data-product-id="{{ product.id }}" title="Add To Cart"
+                  onclick="fetchCartData()">
                   Add To Cart
                 </button>
+                {% else %}
+                <button
+                  class="pc__atc btn anim_appear-bottom position-absolute border-0 text-uppercase fw-medium bg-secondary"
+                  disabled title="Out of Stock">
+                  Out of Stock
+                </button>
+                {% endif %}
               </div>
-        
+
               <div class="pc__info position-relative">
                 <p class="pc__category">{{ product.category }}</p>
                 <h6 class="pc__title">
@@ -381,17 +463,31 @@
                 </div>
                 <div class="product-card__review d-flex align-items-center">
                   <div class="reviews-group d-flex">
-                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
-                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><use href="#icon_star"></use></svg>
+                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_star"></use>
+                    </svg>
+                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_star"></use>
+                    </svg>
+                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_star"></use>
+                    </svg>
+                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_star"></use>
+                    </svg>
+                    <svg class="review-star" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg">
+                      <use href="#icon_star"></use>
+                    </svg>
                   </div>
                   <span class="reviews-note text-lowercase text-secondary ms-1">8k+ reviews</span>
                 </div>
-        
-                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Add To Wishlist">
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart"></use></svg>
+
+                <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0">
+                  <svg class="js-add-wishlist {% if product.id in wishlist_product_ids %}active{% endif %}" 
+                       width="16" height="16" viewBox="0 0 20 20" fill="none" 
+                       xmlns="http://www.w3.org/2000/svg" data-product-id="{{ product.id }}">
+                    <use href="#icon_heart"></use>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -400,11 +496,13 @@
           <p class="text-center w-100">No products found.</p>
           {% endfor %}
         </div>
-        
-        
+
+
         <nav class="shop-pages d-flex justify-content-between mt-3" aria-label="Page navigation">
           <a href="#" class="btn-link d-inline-flex align-items-center">
-            <svg class="me-1" width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg"><use href="#icon_prev_sm"></use></svg>
+            <svg class="me-1" width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
+              <use href="#icon_prev_sm"></use>
+            </svg>
             <span class="fw-medium">PREV</span>
           </a>
           <ul class="pagination mb-0">
@@ -415,7 +513,9 @@
           </ul>
           <a href="#" class="btn-link d-inline-flex align-items-center">
             <span class="fw-medium me-1">NEXT</span>
-            <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg"><use href="#icon_next_sm"></use></svg>
+            <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
+              <use href="#icon_next_sm"></use>
+            </svg>
           </a>
         </nav>
       </div>
@@ -446,27 +546,44 @@
           <ul class="social-links list-unstyled d-flex flex-wrap mb-0">
             <li>
               <a href="https://www.facebook.com" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_facebook" width="9" height="15" viewBox="0 0 9 15" xmlns="http://www.w3.org/2000/svg"><use href="#icon_facebook"></use></svg>
+                <svg class="svg-icon svg-icon_facebook" width="9" height="15" viewBox="0 0 9 15"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <use href="#icon_facebook"></use>
+                </svg>
               </a>
             </li>
             <li>
               <a href="https://www.twitter.com" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_twitter" width="14" height="13" viewBox="0 0 14 13" xmlns="http://www.w3.org/2000/svg"><use href="#icon_twitter"></use></svg>
+                <svg class="svg-icon svg-icon_twitter" width="14" height="13" viewBox="0 0 14 13"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <use href="#icon_twitter"></use>
+                </svg>
               </a>
             </li>
             <li>
               <a href="https://www.instagram.com" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_instagram" width="14" height="13" viewBox="0 0 14 13" xmlns="http://www.w3.org/2000/svg"><use href="#icon_instagram"></use></svg>
+                <svg class="svg-icon svg-icon_instagram" width="14" height="13" viewBox="0 0 14 13"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <use href="#icon_instagram"></use>
+                </svg>
               </a>
             </li>
             <li>
               <a href="https://www.youtube.com" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_youtube" width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg"><path d="M15.0117 1.8584C14.8477 1.20215 14.3281 0.682617 13.6992 0.518555C12.5234 0.19043 7.875 0.19043 7.875 0.19043C7.875 0.19043 3.19922 0.19043 2.02344 0.518555C1.39453 0.682617 0.875 1.20215 0.710938 1.8584C0.382812 3.00684 0.382812 5.46777 0.382812 5.46777C0.382812 5.46777 0.382812 7.90137 0.710938 9.07715C0.875 9.7334 1.39453 10.2256 2.02344 10.3896C3.19922 10.6904 7.875 10.6904 7.875 10.6904C7.875 10.6904 12.5234 10.6904 13.6992 10.3896C14.3281 10.2256 14.8477 9.7334 15.0117 9.07715C15.3398 7.90137 15.3398 5.46777 15.3398 5.46777C15.3398 5.46777 15.3398 3.00684 15.0117 1.8584ZM6.34375 7.68262V3.25293L10.2266 5.46777L6.34375 7.68262Z"></path></svg>
+                <svg class="svg-icon svg-icon_youtube" width="16" height="11" viewBox="0 0 16 11"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M15.0117 1.8584C14.8477 1.20215 14.3281 0.682617 13.6992 0.518555C12.5234 0.19043 7.875 0.19043 7.875 0.19043C7.875 0.19043 3.19922 0.19043 2.02344 0.518555C1.39453 0.682617 0.875 1.20215 0.710938 1.8584C0.382812 3.00684 0.382812 5.46777 0.382812 5.46777C0.382812 5.46777 0.382812 7.90137 0.710938 9.07715C0.875 9.7334 1.39453 10.2256 2.02344 10.3896C3.19922 10.6904 7.875 10.6904 7.875 10.6904C7.875 10.6904 12.5234 10.6904 13.6992 10.3896C14.3281 10.2256 14.8477 9.7334 15.0117 9.07715C15.3398 7.90137 15.3398 5.46777 15.3398 5.46777C15.3398 5.46777 15.3398 3.00684 15.0117 1.8584ZM6.34375 7.68262V3.25293L10.2266 5.46777L6.34375 7.68262Z">
+                  </path>
+                </svg>
               </a>
             </li>
             <li>
               <a href="https://www.pinterest.com" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_pinterest" width="14" height="15" viewBox="0 0 14 15" xmlns="http://www.w3.org/2000/svg"><use href="#icon_pinterest"></use></svg>
+                <svg class="svg-icon svg-icon_pinterest" width="14" height="15" viewBox="0 0 14 15"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <use href="#icon_pinterest"></use>
+                </svg>
               </a>
             </li>
           </ul>
@@ -475,32 +592,48 @@
         <div class="footer-column footer-menu mb-4 mb-lg-0">
           <h5 class="sub-menu__title text-uppercase">Company</h5>
           <ul class="sub-menu__list list-unstyled">
-            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">About Us</a></li>
-            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Careers</a></li>
-            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Affiliates</a></li>
-            <li class="sub-menu__item"><a href="{% static './blog_list1.html' %}" class="menu-link menu-link_us-s">Blog</a></li>
-            <li class="sub-menu__item"><a href="{% static './contact.html' %}" class="menu-link menu-link_us-s">Contact Us</a></li>
+            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">About
+                Us</a></li>
+            <li class="sub-menu__item"><a href="{% static './about.html' %}"
+                class="menu-link menu-link_us-s">Careers</a></li>
+            <li class="sub-menu__item"><a href="{% static './about.html' %}"
+                class="menu-link menu-link_us-s">Affiliates</a></li>
+            <li class="sub-menu__item"><a href="{% static './blog_list1.html' %}"
+                class="menu-link menu-link_us-s">Blog</a></li>
+            <li class="sub-menu__item"><a href="{% static './contact.html' %}" class="menu-link menu-link_us-s">Contact
+                Us</a></li>
           </ul>
         </div><!-- /.footer-column -->
         <div class="footer-column footer-menu mb-4 mb-lg-0">
           <h5 class="sub-menu__title text-uppercase">Shop</h5>
           <ul class="sub-menu__list list-unstyled">
-            <li class="sub-menu__item"><a href="{% static './shop2.html' %}" class="menu-link menu-link_us-s">New Arrivals</a></li>
-            <li class="sub-menu__item"><a href="{% static './shop3.html' %}" class="menu-link menu-link_us-s">Accessories</a></li>
-            <li class="sub-menu__item"><a href="{% static './shop4.html' %}" class="menu-link menu-link_us-s">Men</a></li>
-            <li class="sub-menu__item"><a href="{% static './shop5.html' %}" class="menu-link menu-link_us-s">Women</a></li>
-            <li class="sub-menu__item"><a href="{% static './shop1.html' %}" class="menu-link menu-link_us-s">Shop All</a></li>
+            <li class="sub-menu__item"><a href="{% static './shop2.html' %}" class="menu-link menu-link_us-s">New
+                Arrivals</a></li>
+            <li class="sub-menu__item"><a href="{% static './shop3.html' %}"
+                class="menu-link menu-link_us-s">Accessories</a></li>
+            <li class="sub-menu__item"><a href="{% static './shop4.html' %}" class="menu-link menu-link_us-s">Men</a>
+            </li>
+            <li class="sub-menu__item"><a href="{% static './shop5.html' %}" class="menu-link menu-link_us-s">Women</a>
+            </li>
+            <li class="sub-menu__item"><a href="{% static './shop1.html' %}" class="menu-link menu-link_us-s">Shop
+                All</a></li>
           </ul>
         </div><!-- /.footer-column -->
         <div class="footer-column footer-menu mb-4 mb-lg-0">
           <h5 class="sub-menu__title text-uppercase">Help</h5>
           <ul class="sub-menu__list list-unstyled">
-            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Customer Service</a></li>
-            <li class="sub-menu__item"><a href="{% static './account_dashboard.html' %}" class="menu-link menu-link_us-s">My Account</a></li>
-            <li class="sub-menu__item"><a href="{% static './store_location.html' %}" class="menu-link menu-link_us-s">Find a Store</a></li>
-            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Legal & Privacy</a></li>
-            <li class="sub-menu__item"><a href="{% static './contact.html' %}" class="menu-link menu-link_us-s">Contact</a></li>
-            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Gift Card</a></li>
+            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Customer
+                Service</a></li>
+            <li class="sub-menu__item"><a href="{% static './account_dashboard.html' %}"
+                class="menu-link menu-link_us-s">My Account</a></li>
+            <li class="sub-menu__item"><a href="{% static './store_location.html' %}"
+                class="menu-link menu-link_us-s">Find a Store</a></li>
+            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Legal &
+                Privacy</a></li>
+            <li class="sub-menu__item"><a href="{% static './contact.html' %}"
+                class="menu-link menu-link_us-s">Contact</a></li>
+            <li class="sub-menu__item"><a href="{% static './about.html' %}" class="menu-link menu-link_us-s">Gift
+                Card</a></li>
           </ul>
         </div><!-- /.footer-column -->
         <div class="footer-column footer-newsletter col-12 mb-4 mb-lg-0">
@@ -514,7 +647,8 @@
           <div class="mt-4 pt-3">
             <strong class="fw-medium">Secure payments</strong>
             <p class="mt-2">
-              <img loading="lazy" src="{% static 'images/payment-options.png' %}" alt="Acceptable payment gateways" class="mw-100">
+              <img loading="lazy" src="{% static 'images/payment-options.png' %}" alt="Acceptable payment gateways"
+                class="mw-100">
             </p>
           </div>
         </div><!-- /.footer-column -->
@@ -527,7 +661,8 @@
         <div class="footer-settings d-block d-md-flex align-items-center">
           <div class="d-flex align-items-center">
             <label for="footerSettingsLanguage" class="me-2 text-secondary">Language</label>
-            <select id="footerSettingsLanguage" class="form-select form-select-sm bg-transparent" aria-label="Default select example" name="store-language">
+            <select id="footerSettingsLanguage" class="form-select form-select-sm bg-transparent"
+              aria-label="Default select example" name="store-language">
               <option class="footer-select__option" selected="">United Kingdom | English</option>
               <option class="footer-select__option" value="1">United States | English</option>
               <option class="footer-select__option" value="2">German</option>
@@ -538,7 +673,8 @@
 
           <div class="d-flex align-items-center">
             <label for="footerSettingsCurrency" class="ms-md-3 me-2 text-secondary">Currency</label>
-            <select id="footerSettingsCurrency" class="form-select form-select-sm bg-transparent" aria-label="Default select example" name="store-language">
+            <select id="footerSettingsCurrency" class="form-select form-select-sm bg-transparent"
+              aria-label="Default select example" name="store-language">
               <option selected="">$ USD</option>
               <option value="1">£ GBP</option>
               <option value="2">€ EURO</option>
@@ -563,16 +699,16 @@
     <div class="aside-content cart-drawer-items-list">
       <div class="cart-drawer-item d-flex position-relative">
         <div class="position-relative">
-          <a href="{% static './product1_simple.html' %}">
-            <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-1.jpg' %}" alt="">
+          <a href="./product1_simple.html">
+            <img loading="lazy" class="cart-drawer-item__img" src="../images/cart-item-1.jpg" alt="">
           </a>
         </div>
         <div class="cart-drawer-item__info flex-grow-1">
-          <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Zessi Dresses</a></h6>
+          <h6 class="cart-drawer-item__title fw-normal"><a href="./product1_simple.html">Zessi Dresses</a></h6>
           <p class="cart-drawer-item__option text-secondary">Color: Yellow</p>
           <p class="cart-drawer-item__option text-secondary">Size: L</p>
           <div class="d-flex align-items-center justify-content-between mt-1">
-            <div class="qty-control position-relative">
+            <div class="qty-control position-relative qty-initialized">
               <input type="number" name="quantity" value="1" min="1" class="qty-control__number border-0 text-center">
               <div class="qty-control__reduce text-start">-</div>
               <div class="qty-control__increase text-end">+</div>
@@ -588,16 +724,16 @@
 
       <div class="cart-drawer-item d-flex position-relative">
         <div class="position-relative">
-          <a href="{% static './product1_simple.html' %}">
-            <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-2.jpg' %}" alt="">
+          <a href="./product1_simple.html">
+            <img loading="lazy" class="cart-drawer-item__img" src="../images/cart-item-2.jpg" alt="">
           </a>
         </div>
         <div class="cart-drawer-item__info flex-grow-1">
-          <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Kirby T-Shirt</a></h6>
+          <h6 class="cart-drawer-item__title fw-normal"><a href="./product1_simple.html">Kirby T-Shirt</a></h6>
           <p class="cart-drawer-item__option text-secondary">Color: Black</p>
           <p class="cart-drawer-item__option text-secondary">Size: XS</p>
           <div class="d-flex align-items-center justify-content-between mt-1">
-            <div class="qty-control position-relative">
+            <div class="qty-control position-relative qty-initialized">
               <input type="number" name="quantity" value="4" min="1" class="qty-control__number border-0 text-center">
               <div class="qty-control__reduce text-start">-</div>
               <div class="qty-control__increase text-end">+</div>
@@ -613,16 +749,16 @@
 
       <div class="cart-drawer-item d-flex position-relative">
         <div class="position-relative">
-          <a href="{% static './product1_simple.html' %}">
-            <img loading="lazy" class="cart-drawer-item__img" src="{% static 'images/cart-item-3.jpg' %}" alt="">
+          <a href="./product1_simple.html">
+            <img loading="lazy" class="cart-drawer-item__img" src="../images/cart-item-3.jpg" alt="">
           </a>
         </div>
         <div class="cart-drawer-item__info flex-grow-1">
-          <h6 class="cart-drawer-item__title fw-normal"><a href="{% static './product1_simple.html' %}">Cableknit Shawl</a></h6>
+          <h6 class="cart-drawer-item__title fw-normal"><a href="./product1_simple.html">Cableknit Shawl</a></h6>
           <p class="cart-drawer-item__option text-secondary">Color: Green</p>
           <p class="cart-drawer-item__option text-secondary">Size: L</p>
           <div class="d-flex align-items-center justify-content-between mt-1">
-            <div class="qty-control position-relative">
+            <div class="qty-control position-relative qty-initialized">
               <input type="number" name="quantity" value="3" min="1" class="qty-control__number border-0 text-center">
               <div class="qty-control__reduce text-start">-</div>
               <div class="qty-control__increase text-end">+</div>
@@ -642,11 +778,10 @@
         <h6 class="fs-base fw-medium">SUBTOTAL:</h6>
         <span class="cart-subtotal fw-medium">$176.00</span>
       </div><!-- /.d-flex justify-content-between -->
-      <a href="{% static './shop_cart.html' %}" class="btn btn-light mt-3 d-block">View Cart</a>
-      <a href="{% static './shop_checkout.html' %}" class="btn btn-primary mt-3 d-block">Checkout</a>
+      <a href="{% url 'cart' %}" class="btn btn-light mt-3 d-block">View Cart</a>
+      <a href="{% url 'checkout' %}?is_cart=true" class="btn btn-primary mt-3 d-block">Checkout</a>
     </div><!-- /.aside-content -->
-  </div><!-- /.aside -->
-
+  </div>
 
   <!-- Sitemap -->
   <div class="modal fade" id="siteMap" tabindex="-1">
@@ -660,13 +795,16 @@
             <div class="modal-header">
               <ul class="nav nav-pills" id="pills-tab" role="tablist">
                 <li class="nav-item" role="presentation">
-                  <a class="nav-link active rounded-1 text-uppercase" id="pills-item-1-tab" data-bs-toggle="pill" href="#pills-item-1" role="tab" aria-controls="pills-item-1" aria-selected="true">WOMEN</a>
+                  <a class="nav-link active rounded-1 text-uppercase" id="pills-item-1-tab" data-bs-toggle="pill"
+                    href="#pills-item-1" role="tab" aria-controls="pills-item-1" aria-selected="true">WOMEN</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                  <a class="nav-link rounded-1 text-uppercase" id="pills-item-2-tab" data-bs-toggle="pill" href="#pills-item-2" role="tab" aria-controls="pills-item-2" aria-selected="false">MEN</a>
+                  <a class="nav-link rounded-1 text-uppercase" id="pills-item-2-tab" data-bs-toggle="pill"
+                    href="#pills-item-2" role="tab" aria-controls="pills-item-2" aria-selected="false">MEN</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                  <a class="nav-link rounded-1 text-uppercase" id="pills-item-3-tab" data-bs-toggle="pill" href="#pills-item-3" role="tab" aria-controls="pills-item-3" aria-selected="false">KIDS</a>
+                  <a class="nav-link rounded-1 text-uppercase" id="pills-item-3-tab" data-bs-toggle="pill"
+                    href="#pills-item-3" role="tab" aria-controls="pills-item-3" aria-selected="false">KIDS</a>
                 </li>
               </ul>
               <button type="button" class="btn-close-lg" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -674,17 +812,24 @@
 
             <div class="modal-body">
               <div class="tab-content col-12" id="pills-tabContent">
-                <div class="tab-pane fade show active" id="pills-item-1" role="tabpanel" aria-labelledby="pills-item-1-tab">
+                <div class="tab-pane fade show active" id="pills-item-1" role="tabpanel"
+                  aria-labelledby="pills-item-1-tab">
                   <div class="row">
                     <ul class="nav nav-tabs list-unstyled col-5 d-block" id="myTab" role="tablist">
                       <li class="nav-item position-relative" role="presentation">
-                        <a class="nav-link nav-link_rline active" id="tab-item-1-tab" data-bs-toggle="tab" href="#tab-item-1" role="tab" aria-controls="tab-item-1" aria-selected="true"><span class="rline-content">WOMEN</span></a>
+                        <a class="nav-link nav-link_rline active" id="tab-item-1-tab" data-bs-toggle="tab"
+                          href="#tab-item-1" role="tab" aria-controls="tab-item-1" aria-selected="true"><span
+                            class="rline-content">WOMEN</span></a>
                       </li>
                       <li class="nav-item position-relative" role="presentation">
-                        <a class="nav-link nav-link_rline" id="tab-item-2-tab" data-bs-toggle="tab" href="#tab-item-2" role="tab" aria-controls="tab-item-2" aria-selected="false"><span class="rline-content">MAN</span></a>
+                        <a class="nav-link nav-link_rline" id="tab-item-2-tab" data-bs-toggle="tab" href="#tab-item-2"
+                          role="tab" aria-controls="tab-item-2" aria-selected="false"><span
+                            class="rline-content">MAN</span></a>
                       </li>
                       <li class="nav-item position-relative" role="presentation">
-                        <a class="nav-link nav-link_rline" id="tab-item-3-tab" data-bs-toggle="tab" href="#tab-item-3" role="tab" aria-controls="tab-item-3" aria-selected="false"><span class="rline-content">KIDS</span></a>
+                        <a class="nav-link nav-link_rline" id="tab-item-3-tab" data-bs-toggle="tab" href="#tab-item-3"
+                          role="tab" aria-controls="tab-item-3" aria-selected="false"><span
+                            class="rline-content">KIDS</span></a>
                       </li>
                       <li class="nav-item position-relative" role="presentation">
                         <a class="nav-link nav-link_rline" href="#"><span class="rline-content">HOME</span></a>
@@ -713,7 +858,8 @@
                     </ul>
 
                     <div class="tab-content col-7" id="myTabContent">
-                      <div class="tab-pane fade show active" id="tab-item-1" role="tabpanel" aria-labelledby="tab-item-1-tab">
+                      <div class="tab-pane fade show active" id="tab-item-1" role="tabpanel"
+                        aria-labelledby="tab-item-1-tab">
                         <ul class="sub-menu list-unstyled">
                           <li class="sub-menu__item">
                             <a href="#" class="menu-link menu-link_us-s">New</a>
@@ -882,12 +1028,19 @@
                   </div><!-- /.row -->
                 </div>
                 <div class="tab-pane fade" id="pills-item-2" role="tabpanel" aria-labelledby="pills-item-2-tab">
-                  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
+                    et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+                    aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+                    cillum dolore eu fugiat nulla pariatur.</p>
                   Elementum lectus a porta commodo suspendisse arcu, aliquam lectus faucibus.
                 </div>
                 <div class="tab-pane fade" id="pills-item-3" role="tabpanel" aria-labelledby="pills-item-3-tab">
-                  <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
-                  Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur?
+                  <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,
+                    totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae
+                    dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit,
+                    sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
+                  Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut
+                  aliquid ex ea commodi consequatur?
                 </div>
               </div>
             </div><!-- /.modal-body -->
@@ -906,7 +1059,10 @@
           <div class="product-single__media m-0">
             <div class="product-single__image position-relative w-100">
               <div class="swiper-container js-swiper-slider" data-settings="{
-                  " slidesperview":="" 1,="" "slidespergroup":="" "effect":="" "none",="" "loop":="" false,="" "navigation":="" {="" "nextel":="" ".modal-dialog.quick-view="" .product-single__media="" .swiper-button-next",="" "prevel":="" .swiper-button-prev"="" }="" }"="">
+                  " slidesperview":="" 1,="" "slidespergroup" :="" "effect" :="" "none" ,="" "loop" :=""
+                false,="" "navigation" :="" {="" "nextel"
+                :="" ".modal-dialog.quick-view="" .product-single__media="" .swiper-button-next" ,="" "prevel" :=""
+                .swiper-button-prev"="" }="" }"="">
                 <div class="swiper-wrapper">
                   <div class="swiper-slide product-single__image-item">
                     <img loading="lazy" src="{% static 'images/quickview_1.jpg' %}" alt="">
@@ -921,8 +1077,14 @@
                     <img loading="lazy" src="{% static 'images/quickview_4.jpg' %}" alt="">
                   </div>
                 </div>
-                <div class="swiper-button-prev"><svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg"><use href="#icon_prev_sm"></use></svg></div>
-                <div class="swiper-button-next"><svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg"><use href="#icon_next_sm"></use></svg></div>
+                <div class="swiper-button-prev"><svg width="7" height="11" viewBox="0 0 7 11"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_prev_sm"></use>
+                  </svg></div>
+                <div class="swiper-button-next"><svg width="7" height="11" viewBox="0 0 7 11"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_next_sm"></use>
+                  </svg></div>
               </div>
             </div>
           </div>
@@ -932,7 +1094,9 @@
               <span class="current-price">$449</span>
             </div>
             <div class="product-single__short-desc">
-              <p>Phasellus sed volutpat orci. Fusce eget lore mauris vehicula elementum gravida nec dui. Aenean aliquam varius ipsum, non ultricies tellus sodales eu. Donec dignissim viverra nunc, ut aliquet magna posuere eget.</p>
+              <p>Phasellus sed volutpat orci. Fusce eget lore mauris vehicula elementum gravida nec dui. Aenean aliquam
+                varius ipsum, non ultricies tellus sodales eu. Donec dignissim viverra nunc, ut aliquet magna posuere
+                eget.</p>
             </div>
             <form name="addtocart-form" method="post">
               <div class="product-single__swatches">
@@ -940,15 +1104,20 @@
                   <label>Sizes</label>
                   <div class="swatch-list">
                     <input type="radio" name="size" id="swatch-1">
-                    <label class="swatch js-swatch" for="swatch-1" aria-label="Extra Small" data-bs-toggle="tooltip" data-bs-placement="top" title="Extra Small">XS</label>
+                    <label class="swatch js-swatch" for="swatch-1" aria-label="Extra Small" data-bs-toggle="tooltip"
+                      data-bs-placement="top" title="Extra Small">XS</label>
                     <input type="radio" name="size" id="swatch-2" checked="">
-                    <label class="swatch js-swatch" for="swatch-2" aria-label="Small" data-bs-toggle="tooltip" data-bs-placement="top" title="Small">S</label>
+                    <label class="swatch js-swatch" for="swatch-2" aria-label="Small" data-bs-toggle="tooltip"
+                      data-bs-placement="top" title="Small">S</label>
                     <input type="radio" name="size" id="swatch-3">
-                    <label class="swatch js-swatch" for="swatch-3" aria-label="Middle" data-bs-toggle="tooltip" data-bs-placement="top" title="Middle">M</label>
+                    <label class="swatch js-swatch" for="swatch-3" aria-label="Middle" data-bs-toggle="tooltip"
+                      data-bs-placement="top" title="Middle">M</label>
                     <input type="radio" name="size" id="swatch-4">
-                    <label class="swatch js-swatch" for="swatch-4" aria-label="Large" data-bs-toggle="tooltip" data-bs-placement="top" title="Large">L</label>
+                    <label class="swatch js-swatch" for="swatch-4" aria-label="Large" data-bs-toggle="tooltip"
+                      data-bs-placement="top" title="Large">L</label>
                     <input type="radio" name="size" id="swatch-5">
-                    <label class="swatch js-swatch" for="swatch-5" aria-label="Extra Large" data-bs-toggle="tooltip" data-bs-placement="top" title="Extra Large">XL</label>
+                    <label class="swatch js-swatch" for="swatch-5" aria-label="Extra Large" data-bs-toggle="tooltip"
+                      data-bs-placement="top" title="Extra Large">XL</label>
                   </div>
                   <a href="#" class="sizeguide-link" data-bs-toggle="modal" data-bs-target="#sizeGuide">Size Guide</a>
                 </div>
@@ -956,11 +1125,14 @@
                   <label>Color</label>
                   <div class="swatch-list">
                     <input type="radio" name="color" id="swatch-11">
-                    <label class="swatch swatch-color js-swatch" for="swatch-11" aria-label="Black" data-bs-toggle="tooltip" data-bs-placement="top" title="Black" style="color: #222"></label>
+                    <label class="swatch swatch-color js-swatch" for="swatch-11" aria-label="Black"
+                      data-bs-toggle="tooltip" data-bs-placement="top" title="Black" style="color: #222"></label>
                     <input type="radio" name="color" id="swatch-12" checked="">
-                    <label class="swatch swatch-color js-swatch" for="swatch-12" aria-label="Red" data-bs-toggle="tooltip" data-bs-placement="top" title="Red" style="color: #C93A3E"></label>
+                    <label class="swatch swatch-color js-swatch" for="swatch-12" aria-label="Red"
+                      data-bs-toggle="tooltip" data-bs-placement="top" title="Red" style="color: #C93A3E"></label>
                     <input type="radio" name="color" id="swatch-13">
-                    <label class="swatch swatch-color js-swatch" for="swatch-13" aria-label="Grey" data-bs-toggle="tooltip" data-bs-placement="top" title="Grey" style="color: #E4E4E4"></label>
+                    <label class="swatch swatch-color js-swatch" for="swatch-13" aria-label="Grey"
+                      data-bs-toggle="tooltip" data-bs-placement="top" title="Grey" style="color: #E4E4E4"></label>
                   </div>
                 </div>
               </div>
@@ -970,25 +1142,37 @@
                   <div class="qty-control__reduce">-</div>
                   <div class="qty-control__increase">+</div>
                 </div><!-- .qty-control -->
-                <button type="submit" class="btn btn-primary btn-addtocart js-open-aside" data-aside="cartDrawer">Add to Cart</button>
+                <button type="submit" class="btn btn-primary btn-addtocart js-open-aside" data-aside="cartDrawer">Add to
+                  Cart</button>
               </div>
             </form>
             <div class="product-single__addtolinks">
-              <a href="#" class="menu-link menu-link_us-s add-to-wishlist"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart"></use></svg><span>Add to Wishlist</span></a>
+              <a href="#" class="menu-link menu-link_us-s add-to-wishlist"><svg width="16" height="16"
+                  viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" data-product-id="{{ product.id }}">
+                  <use href="#icon_heart"></use>
+                </svg><span>Add to Wishlist</span></a>
               <share-button class="share-button">
                 <button class="menu-link menu-link_us-s to-share border-0 bg-transparent d-flex align-items-center">
-                  <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_sharing"></use></svg>
+                  <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <use href="#icon_sharing"></use>
+                  </svg>
                 </button>
                 <details id="Details-share-template__main" class="m-1 xl:m-1.5" hidden="">
                   <summary class="btn-solid m-1 xl:m-1.5 pt-3.5 pb-3 px-5">+</summary>
-                  <div id="Article-share-template__main" class="share-button__fallback flex items-center absolute top-full left-0 w-full px-2 py-4 bg-container shadow-theme border-t z-10">
+                  <div id="Article-share-template__main"
+                    class="share-button__fallback flex items-center absolute top-full left-0 w-full px-2 py-4 bg-container shadow-theme border-t z-10">
                     <div class="field grow mr-4">
                       <label class="field__label sr-only" for="url">Link</label>
-                      <input type="text" class="field__input w-full" id="url" value="https://uomo-crystal.myshopify.com/blogs/news/go-to-wellness-tips-for-mental-health" placeholder="Link" onclick="this.select();" readonly="">
+                      <input type="text" class="field__input w-full" id="url"
+                        value="https://uomo-crystal.myshopify.com/blogs/news/go-to-wellness-tips-for-mental-health"
+                        placeholder="Link" onclick="this.select();" readonly="">
                     </div>
                     <button class="share-button__copy no-js-hidden">
-                      <svg class="icon icon-clipboard inline-block mr-1" width="11" height="13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 11 13">
-                        <path fill-rule="evenodd" clip-rule="evenodd" d="M2 1a1 1 0 011-1h7a1 1 0 011 1v9a1 1 0 01-1 1V1H2zM1 2a1 1 0 00-1 1v9a1 1 0 001 1h7a1 1 0 001-1V3a1 1 0 00-1-1H1zm0 10V3h7v9H1z" fill="currentColor"></path>
+                      <svg class="icon icon-clipboard inline-block mr-1" width="11" height="13" fill="none"
+                        xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 11 13">
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                          d="M2 1a1 1 0 011-1h7a1 1 0 011 1v9a1 1 0 01-1 1V1H2zM1 2a1 1 0 00-1 1v9a1 1 0 001 1h7a1 1 0 001-1V3a1 1 0 00-1-1H1zm0 10V3h7v9H1z"
+                          fill="currentColor"></path>
                       </svg>
                       <span class="sr-only">Copy link</span>
                     </button>
@@ -1030,13 +1214,278 @@
   <script src="{% static 'js/jquery.min.js' %}"></script>
   <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
   <script src="{% static 'js/bootstrap-slider.min.js' %}"></script>
-  
+
   <script src="{% static 'js/swiper.min.js' %}"></script>
   <script src="{% static 'js/countdown.js' %}"></script>
 
   <!-- Footer Scripts -->
   <script src="{% static 'js/theme.js' %}"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      console.log("Script Loaded");
 
+      function attachCartClickListener() {
+        const cartTrigger = document.getElementById("cartTrigger");
 
+        if (cartTrigger) {
+          console.log("Cart trigger found");
 
-</body></html>
+          cartTrigger.addEventListener("click", function (event) {
+            console.log("Cart clicked!");
+            event.preventDefault();
+            fetchCartData();
+          });
+        } else {
+          console.error("Cart trigger NOT found");
+        }
+      }
+
+      function fetchCartData() {
+        fetch("/cart/products/", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin"
+        })
+          .then(response => response.json())
+          .then(data => {
+            console.log("Cart Data:", data);
+
+            if (data.cart && data.cart.length > 0) {
+              populateCartDrawer(data.cart, data.total_amount);
+            } else {
+              clearCartDrawer();
+            }
+          })
+          .catch(error => {
+            console.error("Error fetching cart:", error);
+          });
+      }
+      function populateCartDrawer(cartItems, totalAmount) {
+        const cartList = document.querySelector(".cart-drawer-items-list");
+        const cartAmount = document.querySelector(".js-cart-items-count");
+        const cartSubtotal = document.querySelector(".cart-subtotal");
+
+        if (!cartList || !cartAmount || !cartSubtotal) {
+          console.error("Cart elements not found in the DOM.");
+          return;
+        }
+
+        cartList.innerHTML = ""; // Clear previous items
+
+        cartItems.forEach(item => {
+          const itemTotal = item.price * item.quantity;
+
+          const cartItemHTML = `
+            <div class="cart-drawer-item d-flex position-relative">
+                <div class="position-relative">
+                    <a href="/product/${item._id}/">
+                        <img loading="lazy" class="cart-drawer-item__img" src="${item.image}" alt="${item.name}">
+                    </a>
+                </div>
+                <div class="cart-drawer-item__info flex-grow-1">
+                    <h6 class="cart-drawer-item__title fw-normal">
+                        <a href="/product/${item._id}/">${item.name}</a>
+                    </h6>
+                    <p class="cart-drawer-item__option text-secondary">Price: $${item.price}</p>
+                    <div class="d-flex align-items-center justify-content-between mt-1">
+                        <div class="qty-control position-relative qty-initialized">
+                            <input type="number" name="quantity" value="${item.quantity}" min="1" class="qty-control__number border-0 text-center" data-id="${item._id}">
+                            <div class="qty-control__reduce text-start" data-id="${item._id}">-</div>
+                            <div class="qty-control__increase text-end" data-id="${item._id}">+</div>
+                        </div>
+                        <span class="cart-drawer-item__price money price">$${itemTotal.toFixed(2)}</span>
+                    </div>
+                </div>
+                <button class="btn-close-xs position-absolute top-0 end-0 js-cart-item-remove" data-id="${item._id}"></button>
+            </div>
+            <hr class="cart-drawer-divider">
+        `;
+
+          cartList.insertAdjacentHTML("beforeend", cartItemHTML);
+        });
+
+        cartAmount.innerText = cartItems.length;
+        cartSubtotal.innerText = `$${totalAmount.toFixed(2)}`; // 💡 Display the total amount correctly
+
+        attachRemoveListeners(); // Attach remove functionality to buttons
+      }
+
+      function clearCartDrawer() {
+        const cartList = document.querySelector(".cart-drawer-items-list");
+        const cartAmount = document.querySelector(".js-cart-items-count");
+        const cartSubtotal = document.querySelector(".cart-subtotal");
+
+        if (cartList && cartAmount && cartSubtotal) {
+          cartList.innerHTML = `<p class="text-center text-muted">Your cart is empty.</p>`;
+          cartAmount.innerText = "0";
+          cartSubtotal.innerText = "$0.00";
+        }
+      }
+
+      function attachRemoveListeners() {
+        document.querySelectorAll(".js-cart-item-remove").forEach(button => {
+          button.addEventListener("click", function () {
+            const productId = this.getAttribute("data-id");
+            removeCartItem(productId);
+          });
+        });
+
+        document.querySelectorAll(".qty-control__reduce").forEach(button => {
+          button.addEventListener("click", function () {
+            const productId = this.getAttribute("data-id");
+            updateCartItem(productId, -1);
+          });
+        });
+
+        document.querySelectorAll(".qty-control__increase").forEach(button => {
+          button.addEventListener("click", function () {
+            const productId = this.getAttribute("data-id");
+            updateCartItem(productId, 1);
+          });
+        });
+
+        document.querySelectorAll(".qty-control__number").forEach(input => {
+          input.addEventListener("change", function () {
+            const productId = this.getAttribute("data-id");
+            const newQuantity = parseInt(this.value);
+            updateCartItem(productId, newQuantity - 1, true);
+          });
+        });
+      }
+
+      function removeCartItem(productId) {
+        fetch(`/cart/remove/${productId}/`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin"
+        })
+          .then(response => response.json())
+          .then(data => {
+            console.log("Item removed:", data);
+            fetchCartData(); // Refresh the cart after removing item
+          })
+          .catch(error => {
+            console.error("Error removing item:", error);
+          });
+      }
+
+      function updateCartItem(productId, change, absolute = false) {
+        const inputField = document.querySelector(`.qty-control__number[data-id="${productId}"]`);
+        let newQuantity = absolute ? change : parseInt(inputField.value) + change;
+
+        if (newQuantity < 1) newQuantity = 1; // Prevent going below 1
+
+        fetch(`/cart/update/${productId}/`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ quantity: newQuantity })
+        })
+          .then(response => response.json())
+          .then(data => {
+            console.log("Item updated:", data);
+            fetchCartData(); // Refresh the cart after update
+          })
+          .catch(error => {
+            console.error("Error updating item:", error);
+          });
+      }
+
+      attachCartClickListener();
+
+      // Make functions accessible for debugging
+      window.fetchCartData = fetchCartData;
+      window.removeCartItem = removeCartItem;
+      window.updateCartItem = updateCartItem;
+    });
+
+  </script>
+  <!-- <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Add click handlers to all wishlist buttons
+      document.querySelectorAll('.js-add-wishlist').forEach(button => {
+        button.addEventListener('click', function (e) {
+          e.preventDefault();
+          const productId = this.getAttribute('data-product-id');
+          addToWishlist(productId, this);
+        });
+      });
+
+      function addToWishlist(productId, button) {
+        fetch('/api/wishlist/add/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({
+            product_id: productId
+          }),
+          credentials: 'same-origin'
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // Visual feedback - Change button style
+              button.classList.add('active');
+
+              // Update wishlist count if you have a counter element
+              updateWishlistCount();
+
+              // Optional: Show success message
+              alert('Product added to wishlist!');
+            } else {
+              alert(data.message || 'Failed to add to wishlist');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Error adding to wishlist');
+          });
+      }
+
+      // Function to update wishlist count
+      function updateWishlistCount() {
+        fetch('/api/wishlist/', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'same-origin'
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.wishlist) {
+              // If you have a wishlist counter element, update it
+              const wishlistCounter = document.querySelector('.wishlist-count');
+              if (wishlistCounter) {
+                wishlistCounter.textContent = data.wishlist.length;
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Error updating wishlist count:', error);
+          });
+      }
+
+      // Helper function to get CSRF token
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+    });
+  </script> -->
+
+</body>
+
+</html>

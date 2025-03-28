@@ -33,7 +33,18 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
   <!-- <script src="{% static 'js/loader.js' %}"></script> -->
+  <script src="{% static 'js/wishlist.js' %}"></script>
   <!-- <link rel="stylesheet" href="{% static 'css/loader.css' %}"> -->
+
+  <style>
+    .wishlist-icon.active {
+      fill: red !important;
+    }
+
+    .add-to-wishlist {
+      transition: opacity 0.3s ease;
+    }
+  </style>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       console.log("Script Loaded");
@@ -359,7 +370,7 @@
                 <use href="#icon_star"></use>
               </svg>
             </div>
-            <span class="reviews-note text-lowercase text-secondary ms-1">{{ product.formatted_reviews_count }}
+            <span class="reviews-note text-lowercase text-secondary ms-1">{{ review_count }}
               reviews</span>
           </div>
           <div class="product-single__price">
@@ -429,14 +440,13 @@
             </div>
           </form>
           <div class="product-single__addtolinks">
-            <a href="#" class="menu-link menu-link_us-s add-to-wishlist"
-              onclick="addToWishlist('{{ product.id }}', this)">
+            <a href="javascript:void(0);" class="menu-link menu-link_us-s add-to-wishlist"
+              data-product-id="{{ product.id }}">
               <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <use href="#icon_heart"
-                  style="fill: {% if product.id in wishlist_product_ids %} red {% else %} none {% endif %}; stroke: red;">
-                </use>
+                  style="fill:{% if product.id in wishlist_product_ids %}red{% else %}none{% endif %};"></use>
               </svg>
-              <span class="wishlist-text">Add to Wishlist</span>
+              <span class="wishlist-text">{% if product.id in wishlist_product_ids %}Remove from{% else %}Add to{% endif %} Wishlist</span>
             </a>
             <share-button class="share-button">
               <button class="menu-link menu-link_us-s to-share border-0 bg-transparent d-flex align-items-center">
@@ -501,8 +511,7 @@
           </li>
           <li class="nav-item" role="presentation">
             <a class="nav-link nav-link_underscore" id="tab-reviews-tab" data-bs-toggle="tab" href="#tab-reviews"
-              role="tab" aria-controls="tab-reviews" aria-selected="false">Reviews ({{ product.formatted_reviews_count
-              }})</a>
+              role="tab" aria-controls="tab-reviews" aria-selected="false">Reviews ({{ review_count }})</a>
           </li>
         </ul>
         <div class="tab-content">
@@ -695,7 +704,7 @@
               </div>
               <div class="form-check mb-4">
                 <input class="form-check-input form-check-input_fill" type="checkbox" name="remember"
-                  id="remember_checkbox">
+                  id="remember_checkbox" checked>
                 <label class="form-check-label" for="remember_checkbox">
                   Save my name, email, and website in this browser for the next time I comment.
                 </label>
@@ -750,6 +759,7 @@
               const review = document.getElementById('form-input-review').value;
               const name = document.getElementById('form-input-name').value;
               const email = document.getElementById('form-input-email').value;
+              const rememberMe = document.getElementById('remember_checkbox').checked;
 
               if (!rating) {
                 alert('Please select a rating');
@@ -771,6 +781,16 @@
                 return false;
               }
 
+              // Save user data in cookies if remember checkbox is checked
+              if (rememberMe) {
+                setCookie('review_name', name, 30); // Save for 30 days
+                setCookie('review_email', email, 30);
+              } else {
+                // Delete cookies if user unchecked the box
+                deleteCookie('review_name');
+                deleteCookie('review_email');
+              }
+
               // Log form data before submission
               console.log('Submitting review:', {
                 rating,
@@ -782,6 +802,45 @@
 
               return true;
             }
+
+            function setCookie(name, value, days) {
+              let expires = "";
+              if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+              }
+              document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
+            }
+
+            function getCookie(name) {
+              const nameEQ = name + "=";
+              const ca = document.cookie.split(';');
+              for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+              }
+              return null;
+            }
+
+            function deleteCookie(name) {
+              document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/';
+            }
+
+            // Load saved user data from cookies when page loads
+            document.addEventListener('DOMContentLoaded', function () {
+              const savedName = getCookie('review_name');
+              const savedEmail = getCookie('review_email');
+
+              if (savedName) {
+                document.getElementById('form-input-name').value = savedName;
+              }
+
+              if (savedEmail) {
+                document.getElementById('form-input-email').value = savedEmail;
+              }
+            });
           </script>
 
           <!-- Add this to display Django messages -->
@@ -1947,7 +2006,7 @@
   });
   </script> -->
 
-  <script>
+  <!-- <script>
     function addToWishlist(productId, element) {
       fetch('/api/wishlist/add/', {
         method: 'POST',
@@ -1976,7 +2035,87 @@
           alert('An error occurred while adding to wishlist.');
         });
     }
-  </script>
+  </script> -->
+  <!-- Wishlist JS Script -->
+  <!-- <script>
+    function toggleWishlist(productId, element) {
+      // Determine if the product is already in the wishlist
+      const heartIcon = element.querySelector('.wishlist-icon');
+      const isInWishlist = heartIcon.classList.contains('active');
+      const wishlistText = element.querySelector('.wishlist-text');
+      
+      // Set the endpoint based on whether we're adding or removing
+      const endpoint = isInWishlist 
+        ? `/api/wishlist/remove/${productId}/` 
+        : '/api/wishlist/add/';
+      
+      // Set the method based on the action
+      const method = isInWishlist ? 'DELETE' : 'POST';
+      
+      // Prepare the request body for POST requests
+      const body = method === 'POST' 
+        ? JSON.stringify({ product_id: productId }) 
+        : null;
+      
+      // Show loading state
+      element.style.opacity = '0.7';
+      
+      fetch(endpoint, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: body,
+        credentials: 'same-origin'
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Reset loading state
+        element.style.opacity = '1';
+        
+        if ((method === 'POST' && data.success) || (method === 'DELETE' && data.success)) {
+          // Toggle the active class and fill
+          heartIcon.classList.toggle('active');
+          heartIcon.style.fill = isInWishlist ? 'none' : 'red';
+          
+          // Update text
+          wishlistText.textContent = isInWishlist ? 'Add to Wishlist' : 'Remove from Wishlist';
+          
+          // Optional: Show success message
+          const message = isInWishlist 
+            ? 'Product removed from wishlist!' 
+            : 'Product added to wishlist!';
+          
+          // You can add a toast notification here
+          console.log(message);
+        } else {
+          console.error(data.message || 'Operation failed');
+        }
+      })
+      .catch(error => {
+        // Reset loading state
+        element.style.opacity = '1';
+        console.error('Error:', error);
+      });
+    }
+    
+    // Helper function to get CSRF token
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  </script> -->
 
 </body>
 
